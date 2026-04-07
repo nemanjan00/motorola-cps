@@ -196,6 +196,7 @@ Version prefixes observed so far:
 
 ## Tools Available
 
+- `r2` (radare2 6.1.2) with Ghidra decompiler (`pdg` command) — system-installed at `/usr/bin/r2`
 - `objdump`, `strings`, `readelf`, `nm` — binary analysis
 - Python with `pefile` library — PE file parsing
 - Standard Unix tools (`xxd`, `hexdump`, `diff`)
@@ -203,7 +204,6 @@ Version prefixes observed so far:
 
 ### Tools that need rebuilding each session (sandbox — only /work/project persists)
 
-- **radare2**: `cd /tmp && git clone --depth 1 https://github.com/radareorg/radare2.git && cd radare2 && sys/install.sh --prefix=/work/.local` then `r2pm -U && r2pm -ci r2ghidra` for Ghidra decompiler (`pdg`)
 - **unshield**: `cd /tmp && git clone https://github.com/twogood/unshield.git && cd unshield && cmake -B build . && cmake --build build -j$(nproc)` — binary at `build/src/unshield`
 - **pip packages**: `pip install pefile capstone` (pefile may already be installed)
 
