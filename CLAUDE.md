@@ -196,12 +196,16 @@ Version prefixes observed so far:
 
 ## Tools Available
 
-- `r2` (radare2 6.1.3, built from source at `/work/.local/bin/r2`) with `r2ghidra` decompiler (`pdg` command)
 - `objdump`, `strings`, `readelf`, `nm` — binary analysis
-- Python with `pefile`, `capstone` libraries — PE file parsing, disassembly
-- `unshield` (built from source at `/tmp/unshield/build/src/unshield`) — InstallShield extraction
+- Python with `pefile` library — PE file parsing
 - Standard Unix tools (`xxd`, `hexdump`, `diff`)
 - Python for scripting
+
+### Tools that need rebuilding each session (sandbox — only /work/project persists)
+
+- **radare2**: `cd /tmp && git clone --depth 1 https://github.com/radareorg/radare2.git && cd radare2 && sys/install.sh --prefix=/work/.local` then `r2pm -U && r2pm -ci r2ghidra` for Ghidra decompiler (`pdg`)
+- **unshield**: `cd /tmp && git clone https://github.com/twogood/unshield.git && cd unshield && cmake -B build . && cmake --build build -j$(nproc)` — binary at `build/src/unshield`
+- **pip packages**: `pip install pefile capstone` (pefile may already be installed)
 
 ## Supported Radios (known so far)
 
