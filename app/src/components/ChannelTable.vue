@@ -6,186 +6,135 @@ import { getFieldDef } from 'motorola-cps';
 const props = defineProps({
   selectedIndices: { type: Set, default: () => new Set() },
 });
-
 const emit = defineEmits(['update:selectedIndices']);
+const store = useCodeplugStore();
 
-const codeplugStore = useCodeplugStore();
+const blockName = computed(() => store.channelBlockName);
 
-const blockName = computed(() => {
-  return codeplugStore.format === 'S5T' ? 'S5_CHANNEL_LIST_BLOCK' : 'CP_BLOCK';
-});
-
-const channels = computed(() => codeplugStore.channels);
-
-// Column definitions with field mappings
+// Use the ACTUAL XML field names from the codeplug
 const columns = computed(() => {
-  const isS5T = codeplugStore.format === 'S5T';
+  if (store.format === 'S5T') {
+    // S5T has different field names — TODO: map these when S5T editing is implemented
+    return [
+      { label: 'Alias', field: 'S5_ACA_ALPHANUM_CH_ALIAS', type: 'text' },
+    ];
+  }
   return [
-    { key: 'alias', label: 'Alias', field: isS5T ? 'S5_CP_ALIAS' : 'CP_ALIAS', type: 'text' },
-    { key: 'rxFreq', label: 'RX Freq', field: isS5T ? 'S5_CP_RXFREQ' : 'CP_RXFREQ', type: 'frequency' },
-    { key: 'txFreq', label: 'TX Freq', field: isS5T ? 'S5_CP_TXFREQ' : 'CP_TXFREQ', type: 'frequency' },
-    { key: 'power', label: 'Power', field: isS5T ? 'S5_CP_POWER' : 'CP_POWER', type: 'enum' },
-    { key: 'bw', label: 'BW', field: isS5T ? 'S5_CP_BANDWIDTH' : 'CP_BANDWIDTH', type: 'enum' },
-    { key: 'tot', label: 'TOT', field: isS5T ? 'S5_CP_TOT' : 'CP_TOT', type: 'number' },
-    { key: 'rxOnly', label: 'RX Only', field: isS5T ? 'S5_CP_RXONLY' : 'CP_RXONLY', type: 'boolean' },
-    { key: 'vox', label: 'VOX', field: isS5T ? 'S5_CP_VOX' : 'CP_VOX', type: 'boolean' },
-    { key: 'talkaround', label: 'T/A', field: isS5T ? 'S5_CP_TALKAROUND' : 'CP_TALKAROUND', type: 'boolean' },
-    { key: 'scan', label: 'Scan', field: isS5T ? 'S5_CP_SCAN' : 'CP_SCANADD', type: 'boolean' },
+    { label: 'Alias',     field: 'ALIAS',             type: 'text', width: '90px' },
+    { label: 'RX Freq',   field: 'CP_RXFREQ',         type: 'frequency', width: '120px' },
+    { label: 'TX Freq',   field: 'CP_TXFREQ',         type: 'frequency', width: '120px' },
+    { label: 'Power',     field: 'CP_TXPWRLEVSEL',    type: 'enum', width: '70px' },
+    { label: 'BW (kHz)',  field: 'CP_CHBWSEL',         type: 'enum', width: '70px' },
+    { label: 'TOT (s)',   field: 'CP_TOT',            type: 'number', width: '70px' },
+    { label: 'Squelch',   field: 'CP_SQSET',          type: 'enum', width: '80px' },
+    { label: 'TX SQ',     field: 'CP_TXSQCODESEL',    type: 'enum', width: '60px' },
+    { label: 'RX Only',   field: 'CP_RXONLY',          type: 'boolean' },
+    { label: 'VOX',       field: 'CP_VOXEN',          type: 'boolean' },
+    { label: 'T/A',       field: 'CP_TALKAROUNDEN',    type: 'boolean' },
+    { label: 'Scan',      field: 'CP_AUTOSCANEN',      type: 'boolean' },
   ];
 });
 
-function getFieldValue(entryIndex, fieldName) {
-  if (!codeplugStore.codeplug) return '';
-  return codeplugStore.codeplug.getField(blockName.value, fieldName, entryIndex) ?? '';
+function getValue(idx, field) {
+  return store.channels[idx]?.fields?.[field] ?? '';
 }
 
-function setFieldValue(entryIndex, fieldName, value) {
-  codeplugStore.setField(blockName.value, fieldName, value, entryIndex);
+function setValue(idx, field, val) {
+  store.setField(blockName.value, field, val, idx);
 }
 
-function getEnumOptions(fieldName) {
-  const def = getFieldDef(fieldName);
+function getEnumOpts(field) {
+  const def = getFieldDef(field);
   return def?.enumValues ?? [];
 }
 
-function toggleSelected(index) {
-  const next = new Set(props.selectedIndices);
-  if (next.has(index)) {
-    next.delete(index);
-  } else {
-    next.add(index);
-  }
-  emit('update:selectedIndices', next);
+function toggleSel(idx) {
+  const s = new Set(props.selectedIndices);
+  s.has(idx) ? s.delete(idx) : s.add(idx);
+  emit('update:selectedIndices', s);
 }
 
-function formatFreq(val) {
+function isChecked(val) {
+  return val === '1' || val === 'true' || val === 'True';
+}
+
+function fmtFreq(val) {
   const n = parseFloat(val);
-  if (isNaN(n)) return val;
-  return n.toFixed(5);
-}
-
-function onFreqChange(entryIndex, fieldName, event) {
-  const val = event.target.value;
-  setFieldValue(entryIndex, fieldName, val);
-}
-
-function onTextChange(entryIndex, fieldName, event) {
-  setFieldValue(entryIndex, fieldName, event.target.value);
-}
-
-function onSelectChange(entryIndex, fieldName, event) {
-  setFieldValue(entryIndex, fieldName, event.target.value);
-}
-
-function onCheckboxChange(entryIndex, fieldName, event) {
-  setFieldValue(entryIndex, fieldName, event.target.checked ? 'On' : 'Off');
-}
-
-function isChecked(value) {
-  const v = String(value).toLowerCase();
-  return v === 'on' || v === 'true' || v === '1' || v === 'yes';
+  return isNaN(n) ? val : n.toFixed(4);
 }
 </script>
 
 <template>
-  <div class="channel-table-wrap overflow-auto">
-    <table v-if="channels.length > 0">
+  <div class="ch-table-wrap">
+    <table v-if="store.channels.length > 0">
       <thead>
         <tr>
-          <th style="width: 30px;"></th>
-          <th style="width: 40px;">#</th>
-          <th v-for="col in columns" :key="col.key">{{ col.label }}</th>
+          <th class="col-check"></th>
+          <th class="col-num">#</th>
+          <th v-for="col in columns" :key="col.field" :style="col.width ? { width: col.width } : {}">
+            {{ col.label }}
+          </th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(entry, idx) in channels" :key="idx">
-          <td>
-            <input
-              type="checkbox"
-              :checked="selectedIndices.has(idx)"
-              @change="toggleSelected(idx)"
-            />
+        <tr v-for="(entry, idx) in store.channels" :key="idx"
+            :class="{ selected: selectedIndices.has(idx) }">
+          <td class="col-check">
+            <input type="checkbox" :checked="selectedIndices.has(idx)" @change="toggleSel(idx)">
           </td>
-          <td class="text-muted text-mono">{{ idx + 1 }}</td>
+          <td class="col-num text-muted text-mono">{{ idx + 1 }}</td>
 
-          <td v-for="col in columns" :key="col.key">
-            <!-- Text (Alias) -->
-            <input
-              v-if="col.type === 'text'"
-              type="text"
-              maxlength="8"
-              :value="getFieldValue(idx, col.field)"
-              @change="onTextChange(idx, col.field, $event)"
-            />
+          <td v-for="col in columns" :key="col.field">
+            <input v-if="col.type === 'text'"
+              type="text" maxlength="8" spellcheck="false"
+              :value="getValue(idx, col.field)"
+              @change="setValue(idx, col.field, $event.target.value)">
 
-            <!-- Frequency -->
-            <input
-              v-else-if="col.type === 'frequency'"
-              type="number"
-              step="0.00025"
-              :value="formatFreq(getFieldValue(idx, col.field))"
-              @change="onFreqChange(idx, col.field, $event)"
-            />
+            <input v-else-if="col.type === 'frequency'"
+              type="text" inputmode="decimal" class="freq-input"
+              :value="fmtFreq(getValue(idx, col.field))"
+              @change="setValue(idx, col.field, $event.target.value)">
 
-            <!-- Enum (Power, BW) -->
-            <select
-              v-else-if="col.type === 'enum'"
-              :value="getFieldValue(idx, col.field)"
-              @change="onSelectChange(idx, col.field, $event)"
-            >
-              <option
-                v-for="opt in getEnumOptions(col.field)"
-                :key="opt"
-                :value="opt"
-              >{{ opt }}</option>
+            <select v-else-if="col.type === 'enum'"
+              :value="getValue(idx, col.field)"
+              @change="setValue(idx, col.field, $event.target.value)">
+              <option v-for="opt in getEnumOpts(col.field)" :key="opt" :value="opt">{{ opt }}</option>
+              <!-- Show current value even if not in enum list -->
+              <option v-if="getValue(idx, col.field) && !getEnumOpts(col.field).includes(getValue(idx, col.field))"
+                :value="getValue(idx, col.field)">{{ getValue(idx, col.field) }}</option>
             </select>
 
-            <!-- Number (TOT) -->
-            <input
-              v-else-if="col.type === 'number'"
+            <input v-else-if="col.type === 'number'"
               type="number"
-              :value="getFieldValue(idx, col.field)"
-              @change="onTextChange(idx, col.field, $event)"
-            />
+              :value="getValue(idx, col.field)"
+              @change="setValue(idx, col.field, $event.target.value)">
 
-            <!-- Boolean (checkboxes) -->
-            <input
-              v-else-if="col.type === 'boolean'"
+            <input v-else-if="col.type === 'boolean'"
               type="checkbox"
-              :checked="isChecked(getFieldValue(idx, col.field))"
-              @change="onCheckboxChange(idx, col.field, $event)"
-            />
+              :checked="isChecked(getValue(idx, col.field))"
+              @change="setValue(idx, col.field, $event.target.checked ? '1' : '0')">
           </td>
         </tr>
       </tbody>
     </table>
 
     <div v-else class="empty-state">
-      <div class="icon">&#x1F4FB;</div>
+      <div class="icon">📻</div>
       <h2>No Channels</h2>
-      <p>Add a channel to get started.</p>
+      <p class="text-muted">Add a channel to get started</p>
     </div>
   </div>
 </template>
 
 <style scoped>
-.channel-table-wrap {
-  max-height: calc(100vh - 180px);
-}
-
-td input[type="checkbox"] {
-  width: auto;
-}
-
-td input[type="text"] {
-  width: 80px;
-}
-
-td input[type="number"] {
-  width: 100px;
-}
-
-td select {
-  min-width: 70px;
-}
+.ch-table-wrap { max-height: calc(100vh - 200px); overflow: auto; }
+.col-check { width: 30px; text-align: center; }
+.col-num { width: 36px; text-align: center; }
+tr.selected td { background: var(--bg-active) !important; }
+td input[type="text"],
+td .freq-input { width: 100%; font-family: var(--font-mono); font-size: 12px; }
+td input[type="number"] { width: 100%; font-family: var(--font-mono); font-size: 12px; }
+td select { width: 100%; font-size: 12px; }
+td input[type="checkbox"] { width: auto; }
+.freq-input { text-align: right; }
 </style>

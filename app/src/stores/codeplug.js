@@ -6,62 +6,80 @@ import {
 } from 'motorola-cps';
 
 export const useCodeplugStore = defineStore('codeplug', () => {
-  // State
   const codeplug = ref(null);
   const fileName = ref(null);
   const dirty = ref(false);
   const validationResults = ref([]);
   const loading = ref(false);
 
-  // Getters
   const isLoaded = computed(() => codeplug.value !== null);
-
   const format = computed(() => codeplug.value?.format ?? null);
 
   const channels = computed(() => {
     if (!codeplug.value) return [];
-    const fmt = codeplug.value.format;
-    const blockName = fmt === 'S5T' ? 'S5_CHANNEL_LIST_BLOCK' : 'CP_BLOCK';
+    const blockName = codeplug.value.format === 'S5T' ? 'S5_CHANNEL_LIST_BLOCK' : 'CP_BLOCK';
     return codeplug.value.getBlock(blockName)?.entries ?? [];
   });
 
-  const modelInfo = computed(() => {
+  const channelBlockName = computed(() =>
+    codeplug.value?.format === 'S5T' ? 'S5_CHANNEL_LIST_BLOCK' : 'CP_BLOCK'
+  );
+
+  const modelNumber = computed(() => {
     if (!codeplug.value) return null;
-    try {
-      const riBlock = codeplug.value.getBlock('RI_BLOCK');
-      if (!riBlock) return null;
-      const partNumber = riBlock.entries?.[0]?.RI_PART_NUMBER
-        ?? riBlock.entries?.[0]?.RI_MODEL;
-      if (!partNumber) return null;
-      return decodePartNumber(partNumber);
-    } catch {
-      return null;
-    }
+    return codeplug.value.getModelNumber() || null;
+  });
+
+  const modelInfo = computed(() => {
+    const mn = modelNumber.value;
+    if (!mn) return null;
+    try { return decodePartNumber(mn); } catch { return null; }
+  });
+
+  const bandInfo = computed(() => {
+    if (!codeplug.value) return null;
+    const ri = codeplug.value.getBlock('RI_BLOCK');
+    if (!ri?.entries[0]) return null;
+    const f = ri.entries[0].fields;
+    return {
+      min: f.RI_BANDMINFREQ,
+      max: f.RI_BANDMAXFREQ,
+      band: f.RI_BANDSEL,
+    };
   });
 
   const hasErrors = computed(() =>
-    validationResults.value.some((r) => r.level === 'error'),
+    validationResults.value.some(r => r.severity === 'error')
   );
-
   const hasWarnings = computed(() =>
-    validationResults.value.some((r) => r.level === 'warning'),
+    validationResults.value.some(r => r.severity === 'warning')
+  );
+  const errorCount = computed(() =>
+    validationResults.value.filter(r => r.severity === 'error').length
+  );
+  const warningCount = computed(() =>
+    validationResults.value.filter(r => r.severity === 'warning').length
   );
 
-  // Actions
   async function openFile(file) {
     loading.value = true;
     try {
       const buffer = await file.arrayBuffer();
-      const bytes = new Uint8Array(buffer);
-      const xml = decodeCps(bytes);
-      const cp = parseCodeplugXml(xml);
-      codeplug.value = cp;
+      const xml = decodeCps(new Uint8Array(buffer));
+      codeplug.value = parseCodeplugXml(xml);
       fileName.value = file.name;
       dirty.value = false;
       validate();
     } finally {
       loading.value = false;
     }
+  }
+
+  function loadCodeplug(cp, name) {
+    codeplug.value = cp;
+    fileName.value = name || 'radio.cps';
+    dirty.value = false;
+    validate();
   }
 
   function saveFile() {
@@ -87,28 +105,28 @@ export const useCodeplugStore = defineStore('codeplug', () => {
     validate();
   }
 
+  function getField(blockName, fieldName, entryIndex = 0) {
+    if (!codeplug.value) return undefined;
+    return codeplug.value.getField(blockName, fieldName, entryIndex);
+  }
+
   function addChannel() {
     if (!codeplug.value) return;
-    const fmt = codeplug.value.format;
-    const blockName = fmt === 'S5T' ? 'S5_CHANNEL_LIST_BLOCK' : 'CP_BLOCK';
-    const block = codeplug.value.getBlock(blockName);
+    const block = codeplug.value.getBlock(channelBlockName.value);
     if (!block) return;
-    const fields = getBlockFields(blockName);
-    const entry = {};
-    for (const f of fields) {
-      const def = getFieldDef(f);
-      entry[f] = def?.default ?? '';
-    }
-    block.entries.push(entry);
+    // Copy defaults from first channel if exists, else empty
+    const template = block.entries[0]
+      ? { ...block.entries[0].fields }
+      : {};
+    template.ALIAS = `Ch${block.entries.length + 1}`;
+    block.entries.push({ fields: template });
     dirty.value = true;
     validate();
   }
 
   function removeChannel(index) {
     if (!codeplug.value) return;
-    const fmt = codeplug.value.format;
-    const blockName = fmt === 'S5T' ? 'S5_CHANNEL_LIST_BLOCK' : 'CP_BLOCK';
-    const block = codeplug.value.getBlock(blockName);
+    const block = codeplug.value.getBlock(channelBlockName.value);
     if (!block || index < 0 || index >= block.entries.length) return;
     block.entries.splice(index, 1);
     dirty.value = true;
@@ -116,15 +134,9 @@ export const useCodeplugStore = defineStore('codeplug', () => {
   }
 
   function validate() {
-    if (!codeplug.value) {
-      validationResults.value = [];
-      return;
-    }
-    try {
-      validationResults.value = validateCodeplug(codeplug.value);
-    } catch {
-      validationResults.value = [];
-    }
+    if (!codeplug.value) { validationResults.value = []; return; }
+    try { validationResults.value = validateCodeplug(codeplug.value); }
+    catch { validationResults.value = []; }
   }
 
   function closeFile() {
@@ -132,30 +144,13 @@ export const useCodeplugStore = defineStore('codeplug', () => {
     fileName.value = null;
     dirty.value = false;
     validationResults.value = [];
-    loading.value = false;
   }
 
   return {
-    // State
-    codeplug,
-    fileName,
-    dirty,
-    validationResults,
-    loading,
-    // Getters
-    isLoaded,
-    format,
-    channels,
-    modelInfo,
-    hasErrors,
-    hasWarnings,
-    // Actions
-    openFile,
-    saveFile,
-    setField,
-    addChannel,
-    removeChannel,
-    validate,
-    closeFile,
+    codeplug, fileName, dirty, validationResults, loading,
+    isLoaded, format, channels, channelBlockName, modelNumber, modelInfo, bandInfo,
+    hasErrors, hasWarnings, errorCount, warningCount,
+    openFile, loadCodeplug, saveFile, setField, getField,
+    addChannel, removeChannel, validate, closeFile,
   };
 });
