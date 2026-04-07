@@ -40,9 +40,9 @@
 | `VComESbp.dll` | `e91bb9aa7b783b07c6e7e4460f1af203f91d558412e371217da3ea5e978b2f81` | Protocol.Motorola.ESbep | ESBEP Virtual Protocol Driver Extension | R05.00.00.00 |
 | `VcomSb96.dll` | `10cceb229a78951c128e992759efd9910c53bee6ce0fae18e5c297a896bb0b44` | Protocol.Motorola.Sb9600 | SB9600 Virtual Protocol Driver Extension | R05.00.02.00 |
 | `mcomProRad.dll` | `0baf19bd43bb49b361b9f4615542b497e98cd907b23cfc771a62c2326344da2e` | Radio.Motorola.Waris | Waris Portable VirtualRadio (MOTdotCOMM) | R01.00.02 |
-| `mcomProRadMob.dll` | `9dc05d36a9e0793c6dd94b52fcd9abed988823434ee3c8baa6bf2e1b5f6e8ed1` | Radio.Motorola.Waris | Waris Mobile VirtualRadio (MOTdotCOMM) | R01.00.01 |
+| `mcomProRadMob.dll` | `9dc05d36a9e0793c6dd94b52fcd9abed988823434ee3c8baa6bf2e1b5f6e8ed1` | Radio.Motorola.WarisMobile | Waris Mobile VirtualRadio (MOTdotCOMM) | R01.00.01 |
 | `mcomProRadNew.dll` | `4fcb8b80b8717c60d022849f07a5e8391bd659c3019c2ab5263dbcf5a0f80002` | Radio.Motorola.Waris | Updated Portable VirtualRadio (MOTdotCOMM) | R01.00.02 |
-| `mcomProRadMobnew.dll` | `0b713db2e6ec379fff4a4f03a66dc97236694c2c067986d4ee36b3aa87881c02` | Radio.Motorola.Waris | Updated Mobile VirtualRadio (MOTdotCOMM) | R01.00.01 |
+| `mcomProRadMobnew.dll` | `0b713db2e6ec379fff4a4f03a66dc97236694c2c067986d4ee36b3aa87881c02` | Radio.Motorola.WarisMobile | Updated Mobile VirtualRadio (MOTdotCOMM) | R01.00.01 |
 | `mcomUnknown.dll` | `291ff025367a632a4a50f80527f036815629fc1ff5e0c6cca0a52fbc4d5aca90` | (unknown) | Unknown VirtualRadio (fallback handler) | R03.00.00.00 |
 
 ## Win64 Support

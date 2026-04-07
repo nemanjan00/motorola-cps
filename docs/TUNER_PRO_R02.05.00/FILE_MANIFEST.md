@@ -101,6 +101,14 @@ Long frame, opcode >= 0x0F:
 
 **Key:** Opcodes reversed from `fcn.0041c25b` and `fcn.0041cd57` call sites.
 
+> **NOTE: Tuner vs CPS naming differences.** The Tuner and CPS send the same opcode bytes
+> to the same radio firmware, but two independent teams named the operations differently:
+> - `0x1b`: CPS calls it `TUNE_PARAMS`, Tuner calls it `TestMode` (requesting tuning params IS entering test/alignment mode)
+> - `0x21`: CPS calls it `CHANNEL`, Tuner calls it `SoftpotRW` (softpots are channel-level RF parameters)
+> - `0x22`: CPS calls it `TESTMODE`, Tuner calls it `AutoTune` (auto-tune requires/triggers test mode)
+> - `0x28`: Tuner calls it `ChannelRequest` (extended channel steering during alignment; not registered in CPS ESBEP map but may still be supported by radio firmware)
+> The radio has ONE opcode map — these are naming differences, not protocol differences.
+
 #### Request Opcodes (sent by Tuner to Radio)
 
 | Opcode | Data Bytes | Message Class | Payload Format | Function |

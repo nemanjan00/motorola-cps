@@ -78,7 +78,7 @@ The Professional Radio CPS uses a **C++/MFC + ADK 5.1 framework** architecture w
 │  Rdb41.dll    Radio Database (Amulet)       │
 │  Rui41.dll    Radio UI components           │
 │  Rcg41.dll    Codeplug Generator (Ccg*)     │
-│  Rud41.dll    Radio Upload/Download         │
+│  Rud41.dll    DB-UI Exchange (tree/tables)   │
 │  UdcDr41.dll  UI↔DB↔CG Driver Exchange     │
 │  Fh41.dll     File Handler (encrypt/save)   │
 │  Prn41.dll    Print/Report generation       │
@@ -256,7 +256,7 @@ Registration signature: `RegisterOpcode(name, opcode_byte, sub_cmd, ioctl_type, 
 | `RPY_BAD_WR` | `0x85` | n/a | Response | Write failure |
 | `RPY_UNSUPPORTED` | `0x86` | n/a | Response | Unsupported opcode |
 
-**Request opcode range**: `0x10`-`0x17` (7 opcodes).
+**Request opcode range**: `0x10`-`0x17` (8 opcodes).
 **Response opcode range**: `0x80`-`0x86` (7 opcodes).
 
 #### SBEP Read Data Transaction
@@ -1025,11 +1025,11 @@ Multi-byte extraction (Rcg41.dll `GetBytes`): reads bytes MSB-first, concatenate
 ### Config Info Byte (First Byte of Codeplug)
 
 ```
-Byte 0 of codeplug image:
-  Bit 0: Vector size selector (0 = 2-byte vectors, 1 = 4-byte vectors)
-  Bit 1: Vector table format (0 = standard, 1 = extended)
-  Bit 2: Layout variant flag
-  Bits 4-7: Model/layout index (extracted as MSB=7, length=4)
+Byte 0 of codeplug image (from CcgCpConfigInfo::InitFromFirstByte):
+  Bit 0: configInfoLength (0 = 2-byte config info, 1 = 4-byte config info)
+  Bit 1: isFixedVectorBlk (inverted: 0 = fixed, 1 = variable)
+  Bit 2: isImageRWCs (per-entry RW checksums)
+  Bits 4-7: cpStdVersion layout version index (extracted as MSB=7, length=4)
 ```
 
 The vector size (2 or 4 bytes) determines how block addresses are stored in the Vector Block.

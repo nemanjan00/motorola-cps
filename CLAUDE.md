@@ -138,9 +138,9 @@ Version prefixes observed so far:
 - **SBEP** (primary): `Protocol.Motorola.Sbep` via `\\.\Commsbep` driver
   - Short frame: `[0xF0|N] [opcode] [data...] [checksum]` (N = opcode+data count, ≤14; threshold at data_len > 0x0D)
   - Long frame: `[0xFF] [opcode] [len_hi] [len_lo] [data...] [checksum]` (big-endian length = opcode+data count)
-  - 7 request opcodes (0x10-0x17) + 7 response opcodes (0x80-0x86), NAK=0x60
-  - Read: opcode 0x11, 3-byte big-endian address + 1-byte length; reply echoes address then data
-  - Write: opcode 0x17, 3-byte address + data; reply 0x84 (good) or 0x85 (bad)
+  - 8 request opcodes (0x10-0x17) + 7 response opcodes (0x80-0x86), NAK=0x60
+  - Read: opcode 0x11, 4 data bytes. CPS sends [len][addr_hi][addr_mid][addr_lo] (3-byte address); Tuner sends [addr_hi][addr_lo][len_hi][len_lo] (2-byte address)
+  - Write: opcode 0x17, address + data; reply 0x84 (good) or 0x85 (bad)
 - **ESBEP** (extended): `Protocol.Motorola.ESbep` — same wire format, additional opcodes
   - Superset of SBEP, adds opcodes 0x18-0x27 + responses 0x87-0x8E
   - Query sub-commands on opcode 0x23 (16 sub-types: 0x00=model through 0x0F=UUID)
@@ -220,7 +220,9 @@ Version prefixes observed so far:
 | Radio | Type | Bands | Signaling |
 |-------|------|-------|-----------|
 | GP320 | Portable | LB1-2, VHF, UHF1-2 | 5-Tone |
+| GP329/GP329+ | Portable | LB1-2, VHF, UHF1-2 | 5-Tone |
 | GP330 | Portable | LB1-2, VHF, UHF1-2 | 5-Tone |
+| GP339/GP339+ | Portable | LB1-2, VHF, UHF1-2 | 5-Tone |
 | GP340 | Portable | LB1-3, 300, 330, VHF, UHF1-2 | 5-Tone, MDC, DTMF |
 | GP344 | Portable | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
 | GP360 | Portable | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
@@ -228,8 +230,11 @@ Version prefixes observed so far:
 | GP380 | Portable | LB1-3, 300, 330, VHF, UHF1-2 | 5-Tone, MDC, DTMF, Quik-Call II |
 | GP388 | Portable | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
 | GM340 | Mobile | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
+| GM339/GM399 | Mobile | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
 | GM360 | Mobile | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
 | GM380 | Mobile | VHF, UHF1-2 | 5-Tone, MDC, DTMF, Quik-Call II |
+| PRO5250 | Portable | VHF, UHF1-2 | 5-Tone |
+| PRO7250 | Mobile | VHF, UHF1-2 | 5-Tone |
 
 ## Regional Variants
 
