@@ -141,19 +141,18 @@ const groups = computed(() => {
   margin: 16px 0 8px;
 }
 .input-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 480px;
 }
 .toggle-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--border);
-}
-@media (max-width: 640px) {
-  .input-grid, .toggle-grid { grid-template-columns: 1fr; }
+  max-width: 480px;
 }
 </style>
