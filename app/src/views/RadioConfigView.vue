@@ -142,15 +142,18 @@ const groups = computed(() => {
 }
 .input-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 4px 20px;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 32px;
 }
 .toggle-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 0 24px;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 32px;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--border);
+}
+@media (max-width: 640px) {
+  .input-grid, .toggle-grid { grid-template-columns: 1fr; }
 }
 </style>
