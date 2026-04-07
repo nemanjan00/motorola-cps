@@ -338,12 +338,23 @@ const sections = computed(() => {
 </script>
 
 <template>
-  <div v-if="cpStore.isLoaded" class="config-page">
-    <div v-for="s in sections" :key="s.blockName" class="config-section">
-      <div class="section-header">
-        <h3>{{ s.label }}</h3>
-        <span class="section-meta">{{ s.fieldCount }} fields</span>
-      </div>
+  <div v-if="cpStore.isLoaded" class="config-layout">
+    <!-- Section nav -->
+    <nav class="section-nav">
+      <a v-for="s in sections" :key="s.blockName"
+         :href="'#section-' + s.blockName"
+         class="section-nav-item">
+        {{ s.label }}
+      </a>
+    </nav>
+
+    <!-- Section content -->
+    <div class="config-page">
+      <div v-for="s in sections" :key="s.blockName" :id="'section-' + s.blockName" class="config-section">
+        <div class="section-header">
+          <h3>{{ s.label }}</h3>
+          <span class="section-meta">{{ s.fieldCount }} fields</span>
+        </div>
 
       <template v-for="ei in s.entryCount" :key="ei">
         <div v-if="s.entryCount > 1" class="entry-label">Entry {{ ei }}</div>
@@ -374,6 +385,7 @@ const sections = computed(() => {
           </template>
         </div>
       </template>
+      </div>
     </div>
   </div>
 
@@ -385,14 +397,47 @@ const sections = computed(() => {
 </template>
 
 <style scoped>
+.config-layout {
+  display: flex;
+  gap: 24px;
+}
+
+.section-nav {
+  position: sticky;
+  top: 0;
+  width: 180px;
+  min-width: 180px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.section-nav-item {
+  display: block;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-radius: 6px;
+  transition: all 0.1s;
+  text-decoration: none;
+}
+.section-nav-item:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
 .config-page {
+  flex: 1;
   display: grid;
   grid-template-columns: 1fr;
   gap: 12px;
-  max-width: 1600px;
+  min-width: 0;
 }
-@media (min-width: 1200px) { .config-page { grid-template-columns: 1fr 1fr; } }
-@media (min-width: 2200px) { .config-page { grid-template-columns: 1fr 1fr 1fr; } }
+@media (min-width: 1400px) { .config-page { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 2400px) { .config-page { grid-template-columns: 1fr 1fr 1fr; } }
+@media (max-width: 768px) { .section-nav { display: none; } }
 
 .config-section {
   background: var(--bg-secondary);

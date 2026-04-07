@@ -17,6 +17,7 @@ const label = computed(() => fd.value?.label || props.fieldName);
 const inputType = computed(() => fd.value?.inputType || 'string');
 const enumValues = computed(() => fd.value?.enumValues || []);
 const help = computed(() => fd.value?.help || null);
+const readOnly = computed(() => fd.value?.readOnly === true);
 
 const value = computed(() =>
   store.codeplug?.getField(props.blockName, props.fieldName, props.entryIndex) ?? ''
@@ -30,8 +31,8 @@ function onCheck(e) { set(e.target.checked ? '1' : '0'); }
 
 <template>
   <!-- Boolean: compact pill toggle -->
-  <label v-if="inputType === 'boolean'" class="toggle-pill" :class="{ on: isChecked(value) }">
-    <input type="checkbox" :checked="isChecked(value)" @change="onCheck">
+  <label v-if="inputType === 'boolean'" class="toggle-pill" :class="{ on: isChecked(value), readonly: readOnly }">
+    <input type="checkbox" :checked="isChecked(value)" @change="onCheck" :disabled="readOnly">
     <span class="toggle-label">{{ label }}</span>
     <button v-if="help" class="help-btn" @click.prevent.stop="showHelp = !showHelp" tabindex="-1">?</button>
   </label>
@@ -43,16 +44,16 @@ function onCheck(e) { set(e.target.checked ? '1' : '0'); }
       <button v-if="help" class="help-btn" @click.stop="showHelp = !showHelp" tabindex="-1">?</button>
     </div>
 
-    <select v-if="inputType === 'enum'" :value="value" @change="onInput">
+    <select v-if="inputType === 'enum'" :value="value" @change="onInput" :disabled="readOnly">
       <option v-if="value && !enumValues.includes(value)" :value="value">{{ value }}</option>
       <option v-for="opt in enumValues" :key="opt" :value="opt">{{ opt }}</option>
     </select>
 
-    <input v-else-if="inputType === 'frequency'" type="number" step="0.00025" :value="value" @change="onInput">
-    <input v-else-if="inputType === 'integer'" type="number" step="1" :value="value" @change="onInput">
-    <input v-else-if="inputType === 'float'" type="number" step="0.1" :value="value" @change="onInput">
-    <input v-else-if="inputType === 'password'" type="password" :value="value" @change="onInput">
-    <input v-else type="text" :value="value" @change="onInput">
+    <input v-else-if="inputType === 'frequency'" type="number" step="0.00025" :value="value" @change="onInput" :readonly="readOnly">
+    <input v-else-if="inputType === 'integer'" type="number" step="1" :value="value" @change="onInput" :readonly="readOnly">
+    <input v-else-if="inputType === 'float'" type="number" step="0.1" :value="value" @change="onInput" :readonly="readOnly">
+    <input v-else-if="inputType === 'password'" type="password" :value="value" @change="onInput" :readonly="readOnly">
+    <input v-else type="text" :value="value" @change="onInput" :readonly="readOnly">
 
     <!-- Help popover -->
     <div v-if="showHelp && help" class="help-popover" @click="showHelp = false">
@@ -83,7 +84,16 @@ function onCheck(e) { set(e.target.checked ? '1' : '0'); }
 }
 .toggle-pill:hover { color: var(--text-primary); }
 .toggle-pill.on { color: var(--text-primary); }
+.toggle-pill.readonly { opacity: 0.5; cursor: default; }
 .toggle-pill input[type="checkbox"] { display: block; }
+
+/* Read-only styling */
+.field-editor input[readonly],
+.field-editor select:disabled {
+  opacity: 0.6;
+  cursor: default;
+  background: var(--bg-tertiary);
+}
 
 /* ---- Labeled field ---- */
 .field-editor {
