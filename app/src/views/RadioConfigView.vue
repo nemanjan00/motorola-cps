@@ -87,12 +87,102 @@ function groupFields(blockName, fields) {
   }
 
   // MDC_BLOCK: group into IDs, PTT ID, Call Alert, DOS, Decode, Advanced
-  if (blockName === 'MDC_BLOCK') {
-    return groupMDC(defs);
-  }
+  if (blockName === 'MDC_BLOCK') return groupMDC(defs);
+
+  // RC_BLOCK: Power, Audio, Display, Scan, Security, etc.
+  if (blockName === 'RC_BLOCK') return groupRC(defs);
+
+  // DTMF_BLOCK: IDs, Timing, Alerts, Decode
+  if (blockName === 'DTMF_BLOCK') return groupByPattern(defs, [
+    ['Identification', ['PRIMARYID', 'GRPID']],
+    ['PTT ID', ['PTTID', 'PTTSID', 'PTTSH']],
+    ['Call Alert', ['CALLALERT', 'ALERTAUTO', 'AUTORES']],
+    ['Timing', ['PRETIME', 'RESETDUR', 'TXTONEDUR', 'TXTONEINT', 'FIXRET', 'ACKPRE']],
+    ['Decode', ['DECEN', 'LEDEN', 'DISP', 'ACKTYPE', 'ACKDIGIT']],
+  ]);
+
+  // QC_BLOCK: Tones, Format, Alerts, Timing
+  if (blockName === 'QC_BLOCK') return groupByPattern(defs, [
+    ['Tone Codes', ['INDIDTONE', 'LONGTONEDUR', 'THRESHOLD']],
+    ['Call Format', ['CALLFORMAT']],
+    ['Call Alert', ['CALLALERT', 'ALERTAUTO', 'AUTORES']],
+    ['PTT / Sidetone', ['PTT', 'SIDETONE']],
+    ['Timing', ['PRETIME', 'ACKPRE']],
+    ['Decode', ['DECEN', 'LEDEN']],
+  ]);
+
+  // PS_BLOCK: Access, Dialing, Timing
+  if (blockName === 'PS_BLOCK') return groupByPattern(defs, [
+    ['Access', ['ACCDEACC', 'ACCESSCODE', 'DEACCESSCODE', 'MUTEACC']],
+    ['Dialing', ['DIALTYPE', 'LASTNUMREDIAL', 'STRIP', 'PHNOVERRIDE']],
+    ['Revert', ['INTCONN', 'RVTPERS']],
+    ['Timing', ['PRETIME', 'PAUSEDUR', 'TXHANG', 'TXTONEDUR', 'TXTONEINT', 'DEACCBACK', 'TONESPAN']],
+    ['Sidetone', ['PTT', 'SIDETONE']],
+  ]);
+
+  // DR_BLOCK: Password, Display, Radio State
+  if (blockName === 'DR_BLOCK') return groupByPattern(defs, [
+    ['Password / Lock', ['RADLOCK', 'VALIDPSWD', 'PSWDENTRY']],
+    ['Display', ['DISALERT', 'LANGSEL', 'LASTBLIGHT', 'RTCDISP']],
+    ['Power Up', ['DESTPOWERUP', 'LASTCH', 'LASTZONE', 'SAVELAST']],
+    ['Scan', ['SCANST', 'ALLGRPSCAN']],
+  ]);
+
+  // EMDC_BLOCK
+  if (blockName === 'EMDC_BLOCK') return groupByPattern(defs, [
+    ['Mode', ['EMMODE', 'EMDEC']],
+    ['PTT ID', ['EMPTTID']],
+    ['Cycles', ['EMTXCYCLE']],
+    ['Remote Monitor', ['REMMON']],
+  ]);
 
   // Default: single group
   return [{ label: null, fields: defs }];
+}
+
+/** Group RC_BLOCK fields by CPS-style categories */
+function groupRC(defs) {
+  const groups = {
+    'Power': [], 'Audio': [], 'Display': [], 'Backlight': [],
+    'Scan': [], 'Security': [], 'Microphone': [], 'Option Board': [],
+    'Voice Storage': [], 'Emergency Mic': [], 'Memory Channels': [], 'Other': [],
+  };
+  for (const d of defs) {
+    const n = d.name;
+    if (n.includes('TXHIGHPWR') || n.includes('TXLOWPWR') || n.includes('AUTOPWR') || n.includes('PWRUPALERT') || n.includes('PWRUPLEDTEST') || n.includes('PWRUPTEST')) groups['Power'].push(d);
+    else if (n.includes('MIC') && !n.includes('EMMICGAIN')) groups['Microphone'].push(d);
+    else if (n.includes('EMMICGAIN')) groups['Emergency Mic'].push(d);
+    else if (n.includes('BLIGHT') || n.includes('AUTOBLIGHT')) groups['Backlight'].push(d);
+    else if (n.includes('DISP') || n.includes('DEFDISPLINE') || n.includes('BLINK') || n.includes('TIMED') || n.includes('SCROLL') || n.includes('ALTER')) groups['Display'].push(d);
+    else if (n.includes('SCAN') || n.includes('PRIOCHAN') || n.includes('SELCHAN') || n.includes('REVERT') || n.includes('HUBSUS') || n.includes('HUBDEF')) groups['Scan'].push(d);
+    else if (n.includes('PSWD') || n.includes('CLONE') || n.includes('HOTKEY') || n.includes('LOCK')) groups['Security'].push(d);
+    else if (n.includes('OPTBRD')) groups['Option Board'].push(d);
+    else if (n.includes('VOICE') || n.includes('VS') || n.includes('TOTALREC') || n.includes('MAXMSG')) groups['Voice Storage'].push(d);
+    else if (n.includes('HOMEREV')) groups['Memory Channels'].push(d);
+    else if (n.includes('ALERT') || n.includes('VOLUME') || n.includes('RADVOL') || n.includes('APF') || n.includes('AUX') || n.includes('WRAPAROUND') || n.includes('DATAPTT') || n.includes('EXTPTT') || n.includes('HEADSET') || n.includes('HOTMIC')) groups['Audio'].push(d);
+    else groups['Other'].push(d);
+  }
+  return Object.entries(groups).filter(([, f]) => f.length > 0).map(([label, fields]) => ({ label, fields }));
+}
+
+/** Generic sub-grouper: match field names against keyword patterns */
+function groupByPattern(defs, patterns) {
+  const groups = patterns.map(([label]) => ({ label, fields: [] }));
+  const remainder = { label: 'Other', fields: [] };
+  for (const d of defs) {
+    let placed = false;
+    for (let i = 0; i < patterns.length; i++) {
+      if (patterns[i][1].some(kw => d.name.includes(kw))) {
+        groups[i].fields.push(d);
+        placed = true;
+        break;
+      }
+    }
+    if (!placed) remainder.fields.push(d);
+  }
+  const result = groups.filter(g => g.fields.length > 0);
+  if (remainder.fields.length) result.push(remainder);
+  return result;
 }
 
 function groupByPin(defs, blockName) {
