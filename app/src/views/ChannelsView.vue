@@ -24,9 +24,9 @@ function removeSelected() {
 </script>
 
 <template>
-  <div v-if="codeplugStore.isLoaded" class="flex-col" style="height: 100%;">
+  <div v-if="codeplugStore.isLoaded" class="channels-page">
     <!-- Toolbar -->
-    <div class="flex items-center justify-between mb-2">
+    <div class="channels-toolbar">
       <div class="flex items-center gap-2">
         <button class="primary" @click="addChannel">Add Channel</button>
         <button
@@ -34,8 +34,8 @@ function removeSelected() {
           :disabled="selectedIndices.size === 0"
           @click="removeSelected"
         >Remove Selected</button>
-        <span class="badge accent">{{ channelCount }} channel{{ channelCount !== 1 ? 's' : '' }}</span>
       </div>
+      <span class="badge accent">{{ channelCount }} channel{{ channelCount !== 1 ? 's' : '' }}</span>
     </div>
 
     <!-- Validation warnings inline -->
@@ -54,3 +54,19 @@ function removeSelected() {
     <p>Open a .cps file or read from a radio to begin editing channels.</p>
   </div>
 </template>
+
+<style scoped>
+.channels-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.channels-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-shrink: 0;
+}
+</style>

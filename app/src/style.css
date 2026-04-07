@@ -50,14 +50,14 @@ input, select, textarea {
   color: var(--text-primary);
   background: var(--bg-primary);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 6px;
   padding: 6px 10px;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 input:focus, select:focus, textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow);
+  box-shadow: 0 0 0 2px var(--accent-glow);
 }
 input[type="number"] { width: 100px; }
 input[type="checkbox"] {
@@ -75,7 +75,7 @@ button {
   color: var(--text-primary);
   background: var(--bg-tertiary);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 6px;
   padding: 7px 16px;
   cursor: pointer;
   transition: all 0.15s;
@@ -126,7 +126,7 @@ td input:focus, td select:focus {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border);
   padding: 0 20px;
-  min-height: 52px;
+  min-height: 48px;
   flex-shrink: 0;
 }
 .topbar-brand {
@@ -153,7 +153,7 @@ td input:focus, td select:focus {
   font-size: 13px;
   font-weight: 500;
   color: var(--text-muted);
-  border-radius: var(--radius);
+  border-radius: 6px;
   transition: all 0.15s;
 }
 .topbar-nav a:hover { color: var(--text-primary); background: var(--bg-tertiary); }
@@ -176,7 +176,11 @@ td input:focus, td select:focus {
 
 /* ---- Main Content ---- */
 .main-content { flex: 1; overflow: auto; }
-.main-body { padding: 28px 32px; max-width: 1200px; margin: 0 auto; }
+.main-body {
+  padding: 24px 32px;
+  max-width: none;
+  margin: 0;
+}
 
 /* ---- Cards ---- */
 .card {

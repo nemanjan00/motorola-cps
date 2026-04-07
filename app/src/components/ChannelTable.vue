@@ -20,14 +20,14 @@ const columns = computed(() => {
     ];
   }
   return [
-    { label: 'Alias',     field: 'ALIAS',             type: 'text', width: '90px' },
-    { label: 'RX Freq',   field: 'CP_RXFREQ',         type: 'frequency', width: '120px' },
-    { label: 'TX Freq',   field: 'CP_TXFREQ',         type: 'frequency', width: '120px' },
-    { label: 'Power',     field: 'CP_TXPWRLEVSEL',    type: 'enum', width: '70px' },
-    { label: 'BW (kHz)',  field: 'CP_CHBWSEL',         type: 'enum', width: '70px' },
-    { label: 'TOT (s)',   field: 'CP_TOT',            type: 'number', width: '70px' },
-    { label: 'Squelch',   field: 'CP_SQSET',          type: 'enum', width: '80px' },
-    { label: 'TX SQ',     field: 'CP_TXSQCODESEL',    type: 'enum', width: '60px' },
+    { label: 'Alias',     field: 'ALIAS',             type: 'text', width: '120px' },
+    { label: 'RX Freq',   field: 'CP_RXFREQ',         type: 'frequency', width: '130px' },
+    { label: 'TX Freq',   field: 'CP_TXFREQ',         type: 'frequency', width: '130px' },
+    { label: 'Power',     field: 'CP_TXPWRLEVSEL',    type: 'enum', width: '90px' },
+    { label: 'BW (kHz)',  field: 'CP_CHBWSEL',         type: 'enum', width: '90px' },
+    { label: 'TOT (s)',   field: 'CP_TOT',            type: 'number', width: '80px' },
+    { label: 'Squelch',   field: 'CP_SQSET',          type: 'enum', width: '100px' },
+    { label: 'TX SQ',     field: 'CP_TXSQCODESEL',    type: 'enum', width: '80px' },
     { label: 'RX Only',   field: 'CP_RXONLY',          type: 'boolean' },
     { label: 'VOX',       field: 'CP_VOXEN',          type: 'boolean' },
     { label: 'T/A',       field: 'CP_TALKAROUNDEN',    type: 'boolean' },
@@ -71,7 +71,7 @@ function fmtFreq(val) {
         <tr>
           <th class="col-check"></th>
           <th class="col-num">#</th>
-          <th v-for="col in columns" :key="col.field" :style="col.width ? { width: col.width } : {}">
+          <th v-for="col in columns" :key="col.field" :style="col.width ? { minWidth: col.width } : {}">
             {{ col.label }}
           </th>
         </tr>
@@ -127,13 +127,34 @@ function fmtFreq(val) {
 </template>
 
 <style scoped>
-.ch-table-wrap { max-height: calc(100vh - 200px); overflow: auto; }
-.col-check { width: 30px; text-align: center; }
-.col-num { width: 36px; text-align: center; }
+.ch-table-wrap {
+  flex: 1;
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-secondary);
+}
+
+.ch-table-wrap table {
+  width: 100%;
+}
+
+.col-check { width: 36px; text-align: center; }
+.col-num { width: 40px; text-align: center; }
+
 tr.selected td { background: var(--bg-active) !important; }
+
 td input[type="text"],
-td .freq-input { width: 100%; font-family: var(--font-mono); font-size: 12px; }
-td input[type="number"] { width: 100%; font-family: var(--font-mono); font-size: 12px; }
+td .freq-input {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+td input[type="number"] {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
 td select { width: 100%; font-size: 12px; }
 td input[type="checkbox"] { width: auto; }
 .freq-input { text-align: right; }

@@ -71,7 +71,9 @@ async function openFile(e) {
 
   <div class="main-content">
     <div class="main-body">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <component :is="Component" />
+      </router-view>
     </div>
   </div>
 
