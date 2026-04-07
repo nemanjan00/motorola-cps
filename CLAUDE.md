@@ -1,8 +1,12 @@
-# Motorola Commercial Series CPS Reverse Engineering Project
+# Motorola CPS Reverse Engineering Project
 
 ## Goal
 
-Reverse engineer Motorola CPS (Customer Programming Software) for legacy Commercial Series radios to document protocols, file formats, and data structures for open-source reimplementation. These are abandonware radios that Motorola no longer supports.
+Reverse engineer Motorola CPS (Customer Programming Software) for legacy radio families to document protocols, file formats, and data structures for open-source reimplementation. These are abandonware radios that Motorola no longer supports.
+
+Covers two distinct radio families:
+- **Commercial Series** (CM/CP 040-380) — C++/MFC architecture, XML codeplug, ESBEP protocol
+- **Professional/Waris Series** (GP/GM 300) — VB6 + ADK 5.1 architecture, binary codeplug, SBEP/ESBEP/SB9600 protocols
 
 ## Project Structure
 
@@ -13,15 +17,25 @@ Reverse engineer Motorola CPS (Customer Programming Software) for legacy Commerc
   docs/                          ← git tracked (RE documentation only)
     REVERSING_GUIDE.md           ← process doc for new CPS versions
     MOTOROLA_PUBLIC_KNOWLEDGE.md ← community reference with crosscheck flags
-    CPS_EMEA_R05.15/
+    CPS_EMEA_R05.15/             ← Commercial Series CPS
       PROTOCOL_AND_STRUCTS.md    ← full ESBEP protocol, XML schema, field catalog
       DATA_PIPELINE.md           ← GUI↔binary↔EEPROM pipeline, byte maps, encoding
       EEPROM_ADDRESS_MAP.md      ← every block address, bootstrap sequence, pseudocode
       CPS_VERSIONS_AND_RADIOS.md ← version history, 211 part numbers
       FILE_MANIFEST.md           ← SHA-256 hashes for cross-version dedup
-  processed/                          ← gitignored (never committed)
-    CPS_EMEA_R05.15/
-      files/                     ← actual DLLs/EXEs
+    CPS_EMEA_GP300_R03.11.16/    ← Professional/GP300 Series CPS
+      FILE_MANIFEST.md           ← hashes, R03.09.03 vs R03.11.16 diff
+    CPS_EMEA_WARIS_R06.12.05/   ← Professional/Waris Series CPS (evolved GP300)
+      PROTOCOL_AND_ARCHITECTURE.md ← SBEP/ESBEP/SB9600, Ccg codeplug, encryption
+      FILE_MANIFEST.md           ← hashes, cross-version comparison
+    TUNER_PRO_R02.05.00/         ← Professional Tuner (RF alignment tool)
+      FILE_MANIFEST.md           ← overview, softpot tuning capabilities
+  processed/                     ← gitignored (never committed)
+    CPS_EMEA_R05.15/files/       ← Commercial Series binaries
+    CPS_EMEA_GP300_R03.09.03/files/  ← GP300 CPS R03.09.03
+    CPS_EMEA_GP300_R03.11.16/files/  ← GP300 CPS R03.11.16 (last version)
+    CPS_EMEA_WARIS_R06.12.05/files/  ← Waris CPS R06.12.05
+    TUNER_PRO_R02.05.00/files/       ← Professional Tuner
   triage/                        ← gitignored (drop new CPS versions here)
 ```
 
@@ -34,20 +48,22 @@ the repo clean legally — we document the protocol, we don't redistribute Motor
 ## Naming Convention
 
 ```
-CPS_{REGION}_{VERSION}
+CPS_{REGION}_{FAMILY}_{VERSION}   or   CPS_{REGION}_{VERSION}
+TUNER_{TYPE}_{VERSION}
 ```
 
 Used consistently in both `docs/` and `processed/`. Examples:
 
-- `CPS_EMEA_R05.15`
-- `CPS_NA_R05.16`
-- `CPS_NA_D05.33`
+- `CPS_EMEA_R05.15` — Commercial Series (family omitted for historical reasons)
+- `CPS_EMEA_GP300_R03.11.16` — Professional/GP300 Series
+- `CPS_EMEA_WARIS_R06.12.05` — Professional/Waris Series
+- `TUNER_PRO_R02.05.00` — Professional Tuner
 
 Region matters because EMEA and NA CPS can differ — different frequency ranges,
 different feature entitlements baked in, and potentially protocol differences.
 
 Version prefixes observed so far:
-- **R** = Release version (e.g., R05.15)
+- **R** = Release version (e.g., R05.15, R06.12.05)
 - **D** = Delta/patch update (e.g., D05.33)
 
 ## Workflow for New CPS Versions
@@ -71,7 +87,7 @@ Version prefixes observed so far:
 10. **Create `docs/CPS_{REGION}_{VERSION}/`** with RE docs (PROTOCOL, VERSIONS, MANIFEST)
 11. **Document deltas** against closest known version — no need to repeat unchanged info
 
-## Key Findings (Universal Across Versions)
+## Key Findings — Commercial Series (CM/CP)
 
 ### .cps File Format
 - **XOR obfuscation with key `0x95`** — decode: `byte ^ 0x95` for every byte = XML
@@ -106,13 +122,62 @@ Version prefixes observed so far:
 - XML/XSL report generation via Xalan-C / Xerces-C 1.6.0
 - Evolved from SB9600/SBEP protocol family (US Patent 5,551,068)
 
+## Key Findings — Professional/Waris Series (GP/GM 300)
+
+### .cpg File Format
+- **LCG stream cipher** — seeded from `time()`, 9-byte random padding header
+- LCG: `next = (state * 85 + 25) & 0xFF` (multiplier=0x55, increment=0x19)
+- Key derivation: `key = (padding[5] + padding[6] - padding[8]) & 0xFF`
+- Escape sequences for 0x1A/0x1B in output stream
+- Underlying data is **binary codeplug image** (NOT XML like Commercial Series)
+- Also supports **.srec** (Motorola S-Record) format
+- **MotHeader** (800 bytes / 0x320): signature(6B) + FileType(1B) + pad(5B) + GUID(16B) + ModelNo(20B) + SerialNo(20B) + checksum(1B) + copyright + QuickInfo(300B)
+- Decryption verified against 839+ sample .cpg files from GP300 and Waris CPS
+
+### Serial Protocols (three supported, driver-mediated via DeviceIoControl)
+- **SBEP** (primary): `Protocol.Motorola.Sbep` via `\\.\Commsbep` driver
+  - Short frame: `[0xF0|N] [opcode] [data...] [checksum]` (N = opcode+data count, ≤14)
+  - Long frame: `[0xFF] [opcode] [len_hi] [len_lo] [data...] [checksum]` (data >13 bytes)
+  - 7 request opcodes (0x10-0x17) + 7 response opcodes (0x80-0x86), NAK=0x60
+- **ESBEP** (extended): `Protocol.Motorola.ESbep` — 32 request + 13 response opcodes
+  - Superset of SBEP, adds query sub-commands on opcode 0x23 (16 sub-types), tuning (0x1B-0x27)
+- **SB9600** (legacy): `Protocol.Motorola.Sb9600` via `\\.\Commsb96` VxD driver
+  - 5 opcodes only: EPREQ(0x06), MEMWRITE(0x07), MEMACS(0x08), TSTMOD(0x40), MEMREAD(0x87)
+- Serial config: 9600/8/N/1, echo mode, checksum = `0xFF - sum(bytes)`
+
+### Codeplug Structure (Ccg Framework)
+- Binary format with RO (Read-Only) and RW (Read-Write) memory regions
+- **Config Info** at start: model index + version index + layout version
+- **Type Control Block**: bit array flagging which blocks are present
+- **Vector Block**: offsets to data blocks (2 or 4 bytes per vector)
+- **1D blocks** (simple entry array) and **2D blocks** (list of lists)
+- Field types: NumField, CharField, StrField — positioned by byte offset + MSB start + length-in-bits
+- Per-entry or per-block checksums: `0xFF - sum(bytes)`
+- Codeplug versions: 0.00 through 11.00 observed
+- Frequency encoding: 5 kHz step size, LVRIS Base reference system
+- 40+ pack/unpack transform functions in Rud41.dll
+- Amulet constraint framework (Carnegie Mellon) for radio parameter validation
+
+### Architecture
+- Win32 VB6 app + C++/MFC ADK 5.1 DLLs
+- DLL suffix `30` = GP300 era, `41` = Waris era
+- COM-based radio abstraction: `Radio.Motorola.Waris` (portable), `Radio.Motorola.WarisMobile` (mobile)
+- `RSS_LAUNCHER` provides unified radio auto-detection and RSS launching
+- Signaling: 5-Tone (Select 5), MDC1200, DTMF, Quik-Call II
+- Trunking: LS Trunking (Logic Trunked Radio)
+- Phone interconnect via DTMF
+
 ## Tools Available
 
-- `r2` (radare2 6.1.2) with Ghidra decompiler (`pdg` command)
-- Standard Unix tools (`xxd`, `hexdump`, `strings`, `diff`)
+- `objdump`, `strings`, `readelf`, `nm` — binary analysis
+- Python with `pefile` library — PE file parsing
+- `unshield` (built from source at `/tmp/unshield/build/src/unshield`) — InstallShield extraction
+- Standard Unix tools (`xxd`, `hexdump`, `diff`)
 - Python for scripting
 
 ## Supported Radios (known so far)
+
+### Commercial Series (CPS)
 
 | Radio | Type | Format | Since |
 |-------|------|--------|-------|
@@ -123,18 +188,58 @@ Version prefixes observed so far:
 | CM340/CM360 | Mobile | S5T | R04.00 |
 | CP340/CP360/CP380 | Portable | S5T | R04.00+ |
 
+### Professional/Waris Series (GP300/GM300 CPS)
+
+| Radio | Type | Bands | Signaling |
+|-------|------|-------|-----------|
+| GP320 | Portable | LB1-2, VHF, UHF1-2 | 5-Tone |
+| GP330 | Portable | LB1-2, VHF, UHF1-2 | 5-Tone |
+| GP340 | Portable | LB1-3, 300, 330, VHF, UHF1-2 | 5-Tone, MDC, DTMF |
+| GP344 | Portable | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
+| GP360 | Portable | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
+| GP366 | Portable | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
+| GP380 | Portable | LB1-3, 300, 330, VHF, UHF1-2 | 5-Tone, MDC, DTMF, Quik-Call II |
+| GP388 | Portable | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
+| GM340 | Mobile | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
+| GM360 | Mobile | VHF, UHF1-2 | 5-Tone, MDC, DTMF |
+| GM380 | Mobile | VHF, UHF1-2 | 5-Tone, MDC, DTMF, Quik-Call II |
+
 ## Regional Variants
 
 | Region | Status | Notes |
 |--------|--------|-------|
-| **EMEA** | Analyzed: R05.15 | Europe, Middle East, Africa |
-| **NA** | Not yet | North America — references CM200, CM300, CP150, CP200, CP200XLS, PR400 |
+| **EMEA** | Analyzed: R05.15 (Commercial), R03.11.16/R06.12.05 (Professional) | Europe, Middle East, Africa |
+| **NA** | Not yet | North America — Commercial: CM200, CM300, CP150, CP200, CP200XLS, PR400 |
 | **LAM** | Not yet | Latin America |
 | **APAC** | Not yet | Asia Pacific |
+| **Federal** | Not yet | US government (found in Waris CPS strings) |
+| **China MoR** | Not yet | China Ministry of Rail (found in Waris CPS strings) |
 | **Japan** | Not yet | ELT_Ninja / ELT_MOR codenames, ATIS/SDT signaling |
 
 ## Versions Analyzed
 
+### Commercial Series
+
 | Version | Region | Location | Date Analyzed |
 |---------|--------|----------|---------------|
 | R05.15 | EMEA | `docs/CPS_EMEA_R05.15/` | 2026-04-07 |
+
+### Professional/Waris Series
+
+| Version | Region | Location | Date Analyzed |
+|---------|--------|----------|---------------|
+| R03.09.03 | EMEA | `docs/CPS_EMEA_GP300_R03.11.16/` (hashes in manifest) | 2026-04-07 |
+| R03.11.16 | EMEA | `docs/CPS_EMEA_GP300_R03.11.16/` | 2026-04-07 |
+| R06.12.05 | EMEA | `docs/CPS_EMEA_WARIS_R06.12.05/` | 2026-04-07 |
+
+### Tools
+
+| Version | Location | Date Analyzed |
+|---------|----------|---------------|
+| Professional Tuner R02.05.00 | `docs/TUNER_PRO_R02.05.00/` | 2026-04-07 |
+
+### Rejected / No New Data
+
+| Item | Reason |
+|------|--------|
+| CM300 SERIES ARO HACK R05.15 | Identical binaries to CPS_EMEA_R05.15 (same SHA-256). "Hack" is repackaging only. |
