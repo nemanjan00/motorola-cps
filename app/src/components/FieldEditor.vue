@@ -36,7 +36,7 @@ function onInput(event) {
 }
 
 function onCheckbox(event) {
-  onChange(event.target.checked ? 'On' : 'Off');
+  onChange(event.target.checked ? '1' : '0');
 }
 </script>
 

@@ -8,8 +8,8 @@ const collapsed = ref(true);
 const results = computed(() => codeplugStore.validationResults);
 const hasIssues = computed(() => results.value.length > 0);
 
-const errors = computed(() => results.value.filter((r) => r.level === 'error'));
-const warnings = computed(() => results.value.filter((r) => r.level === 'warning'));
+const errors = computed(() => results.value.filter((r) => r.severity === 'error'));
+const warnings = computed(() => results.value.filter((r) => r.severity === 'warning'));
 
 function toggle() {
   collapsed.value = !collapsed.value;
@@ -35,11 +35,11 @@ function toggle() {
         v-for="(item, idx) in results"
         :key="idx"
         class="validation-item"
-        :class="item.level"
+        :class="item.severity"
       >
         <span
           class="validation-dot"
-          :style="{ background: item.level === 'error' ? 'var(--error)' : 'var(--warning)' }"
+          :style="{ background: item.severity === 'error' ? 'var(--error)' : 'var(--warning)' }"
         ></span>
         <span class="text-sm">
           <span v-if="item.block" class="text-muted">{{ item.block }}</span>
