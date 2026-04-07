@@ -1,7 +1,7 @@
 # Motorola Commercial Series CPS - Reverse Engineering Documentation
 
-> Reverse engineered from Motorola Commercial Series CPS (version D05.33, R05.05, copyright 2002-2010).
-> Covers radios: CM140, CM160, CM340, CM360, CP040, CP140, CP160, CP180.
+> Reverse engineered from Motorola Commercial Series CPS R05.15 (elpelmcpservices.dll R05.05, copyright 2002-2011).
+> Covers radios: CM140, CM160, CM340, CM360, CP040, CP140, CP160, CP180, CP340, CP360, CP380.
 
 ---
 
@@ -136,7 +136,7 @@ Two format variants exist, determined by radio model family:
 | Variant | Root Element | Radios | File Sizes |
 |---------|-------------|--------|------------|
 | **ELP_ELM** | `<ELP_ELM_CODEPLUG VERSION="1.0">` | CM140, CM160, CP040, CP140, CP160, CP180 | 27-50 KB |
-| **S5T** | `<S5T_CODEPLUG VERSION="1.0">` | CM340, CM360 | 78-101 KB |
+| **S5T** | `<S5T_CODEPLUG VERSION="1.0">` | CM340, CM360, CP340, CP360, CP380 | 78-101 KB |
 
 Both variants start with:
 ```xml
@@ -399,7 +399,7 @@ Maps block names to EEPROM byte offsets in the radio's memory. `VECT_QUANTITY` t
 
 ## 4. Codeplug XML Schema - S5T Variant
 
-Used by: CM340, CM360
+Used by: CM340, CM360, CP340, CP360, CP380
 
 ### Top-Level Structure
 

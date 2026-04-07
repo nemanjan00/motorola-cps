@@ -106,7 +106,7 @@ Version prefixes observed so far:
 - XML field values (strings) are packed into compact binary via bitmasks, enum lookup tables, atof/ftol
 - ELP_ELM block header: `[Flags 1B][EntrySize 1B][EntryQty 1B][Reserved 1B]` (4 bytes; 5 for list blocks)
 - S5T block header: `[ChecksumType 1B][EntrySize uint16 LE][EntryQty uint16 LE]` (5 bytes)
-- Frequency encoding: ELP_ELM = `ref_freq/1.5 + offset/0.25`; S5T = `VRIS_BASE*0.05 + increment*step`
+- Frequency encoding: ELP_ELM = ref field `atof(str)/1.5`, channel field `atof(str)/0.25`; S5T = `VRIS_BASE*0.05 + increment*step`
 - CP_BLOCK: 27 bytes per channel, 51 XML fields packed via bitmasks — fully mapped
 
 ### EEPROM Addressing
@@ -196,8 +196,9 @@ Version prefixes observed so far:
 
 ## Tools Available
 
+- `r2` (radare2 6.1.3, built from source at `/work/.local/bin/r2`) with `r2ghidra` decompiler (`pdg` command)
 - `objdump`, `strings`, `readelf`, `nm` — binary analysis
-- Python with `pefile` library — PE file parsing
+- Python with `pefile`, `capstone` libraries — PE file parsing, disassembly
 - `unshield` (built from source at `/tmp/unshield/build/src/unshield`) — InstallShield extraction
 - Standard Unix tools (`xxd`, `hexdump`, `diff`)
 - Python for scripting

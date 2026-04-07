@@ -487,7 +487,7 @@ block's offset + 5 + (entry_size × entry_quantity), with zero gaps across all 2
 | S5_DYNAMIC_RADIO_BLOCK | 2026 | 296 | 1 | 301 |
 
 S5_TYPE_CONTROL_BLOCK: 7 bytes (at TCB_VEC offset)
-S5_VECTOR_BLOCK: 64 bytes = 32 × 2-byte offsets (at VB_VEC offset)
+S5_VECTOR_BLOCK: 65 bytes = 1 count byte + 32 × 2-byte LE offsets (at VB_VEC offset)
 
 ### S5T EEPROM Layout
 
