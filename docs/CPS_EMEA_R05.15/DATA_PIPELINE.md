@@ -358,21 +358,29 @@ Used by: CM140, CM160, CP040, CP140, CP160, CP180
 
 ### Block Binary Structure
 
-**Single-entry blocks** (ENTRY_HEADER = 128 / 0x80): **4-byte header**
+**Single-entry blocks** (ENTRY_HEADER = 0x80): **4-byte header**
 ```
 +--------+--------+--------+--------+--------...--------+
-| TypeID | NEntry | ESz    | Rsvd   | Data (ESz bytes)  |
+| Flags  | ESz    | NEntry | Rsvd   | Data (ESz bytes)  |
 | 1 byte | 1 byte | 1 byte | 1 byte | per entry         |
 +--------+--------+--------+--------+--------...--------+
 ```
 
-**List blocks with alias** (ENTRY_HEADER = 192 / 0xC0): **5-byte header**
+**List blocks with alias** (ENTRY_HEADER = 0xC0): **5-byte header**
 ```
 +--------+--------+--------+--------+--------+--------...--------+
-| TypeID | NEntry | ESz    | Extra  | Rsvd   | Data (ESz bytes)  |
+| Flags  | ESz    | NEntry | Extra  | Rsvd   | Data (ESz bytes)  |
 | 1 byte | 1 byte | 1 byte | 1 byte | 1 byte | per entry         |
 +--------+--------+--------+--------+--------+--------...--------+
 ```
+
+Confirmed from disassembly at `0x6107a5DA`:
+- Byte 0: ENTRY_HEADER flags (0x80=standard, 0xC0=list+alias, 0x02=special list)
+- Byte 1: ENTRY_SIZE (bytes per entry)
+- Byte 2: ENTRY_QUANTITY (number of entries)
+- Byte 3: Reserved (zero from memset)
+
+Total binary size = `4 + (ENTRY_SIZE × ENTRY_QUANTITY)` (or 5 for 0xC0 blocks).
 
 Total binary size per block = `header_size + (ENTRY_QUANTITY × ENTRY_SIZE)`
 
@@ -429,9 +437,21 @@ Every S5T block has exactly **5 bytes overhead**:
 
 ```
 +--------+--------+--------+--------+--------+--------...--------+
-| Overhead (5 bytes, structure TBD) | Data (ESz × QTY bytes)     |
+| CkType | EntSz (16-bit LE)| EntQty (16-bit LE)| Data            |
+| 1 byte | 2 bytes          | 2 bytes           | ESz × QTY bytes |
 +--------+--------+--------+--------+--------+--------...--------+
 ```
+
+| Byte | Size | Content | XML Source |
+|------|------|---------|------------|
+| 0 | 1 | Checksum/layout type | S5_CHECKSUM_LAYOUT_HEADER (always 2) |
+| 1-2 | uint16 LE | Entry size in bytes | S5_ENTRY_SIZE_HEADER |
+| 3-4 | uint16 LE | Entry quantity (count) | S5_ENTRY_QUANTITY_HEADER |
+
+The remaining 3 XML ENTRY_INFO fields are metadata constants NOT stored in binary:
+- S5_DIMENSION_HERDER (always 0) — not serialized
+- S5_ENTRY_SIZE_UNIT_HEADER (always 0 = bytes) — not serialized
+- S5_ENTRY_SIZE_FIELD_LEN_HEADER (always 1) — not serialized
 
 **Proven by perfect block contiguity** — every block's offset equals the previous
 block's offset + 5 + (entry_size × entry_quantity), with zero gaps across all 24 blocks.
@@ -551,12 +571,43 @@ Total codeplug size: `S5_CFG_CP_SIZE` = 1211 bytes (CM340, 1 channel)
 | +8 | 0x85 | CP_RXSIGINDEX | Direct byte (signaling system index) |
 | +9 | 0x86 | CP_TXSIGINDEX | Direct byte (signaling system index) |
 
+### Byte +0xA
+
+| Bit | Mask | Field Index | XML Name | Encoding |
+|-----|------|-------------|----------|----------|
+| 7 | 0x80 | 0x89 | CP_AUXTRANSFILTBYPASS | Aux transmit filter bypass |
+| 6 | 0x40 | 0x88 | CP_MICHIGHPASSFREQCTRL | Mic high-pass frequency control |
+| 0-5 | 0x3F | 0x87 | CP_LONGPRESSDUR | Long press duration |
+
+### Byte +0xB
+
+| Offset | Field Index | XML Name | Encoding |
+|--------|-------------|----------|----------|
+| +0xB | 0x8A | CP_BLIGHTDUR | Backlight duration, direct byte |
+
 ### Bytes +0xC, +0xD (PL/DPL codes)
 
 | Offset | Field Index | XML Name | Encoding |
 |--------|-------------|----------|----------|
 | +0xC | 0x8B | CP_RXDECDATA | `atoi(value) / 250` (250-unit steps) |
 | +0xD | 0x8C | CP_TXENCDATA | Enum lookup via table at `0x61134a28` |
+
+### Byte +0xE
+
+| Bit | Mask | Field Index | XML Name | Encoding |
+|-----|------|-------------|----------|----------|
+| 7 | 0x80 | 0x90 | CP_WRAPAROUNDALERT | Wrap-around alert enable |
+| 6 | 0x40 | 0x8F | CP_ALERTBOOSTEN | Alert boost enable |
+| 5 | 0x20 | 0x8E | CP_APFEN | Audio Pass Filter enable |
+| 0-4 | 0x1F | 0x8D | CP_SCANHANGTIME | Scan hang time |
+
+### Byte +0xF
+
+| Bit | Mask | Field Index | XML Name | Encoding |
+|-----|------|-------------|----------|----------|
+| 2-3 | 0x0C | 0x93 | CP_HUBSUSSCAN | Hub/sustain scan mode |
+| 1 | 0x02 | 0x92 | CP_PRISCANALERTEN | Priority scan alert enable |
+| 0 | 0x01 | 0x91 | CP_SCANCHDISCALERTEN | Scan channel discovery alert |
 
 ### Bytes +0x10..+0x15 (DPL/TPL detail)
 
@@ -601,17 +652,47 @@ Where `reference_freq` comes from `CP_RXREFFREQ` / `RI_LVRISBASEFREQ`.
 | +0x1F | 0xA1 | CP_RXREFFREQ | `(byte)(atof(MHz) / 1.5)`. Deser: `byte * 1.5` → `"%2.1f"` |
 | +0x20 | 0xA2 | CP_TXREFFREQ | `(byte)(atof(MHz) / 1.5)`. Deser: `byte * 1.5` → `"%2.1f"` |
 
+### Byte +0x21
+
+| Bit | Mask | Field Index | XML Name | Encoding |
+|-----|------|-------------|----------|----------|
+| 7 | 0x80 | 0xA3 | CP_EMMICGAINPORT | Emergency mic gain (portable) — high bit |
+| 0-4 | 0x1F | 0xA3 | CP_EMMICGAINPORT | Emergency mic gain (portable) — value bits |
+
+(Same field split across high bit and lower 5 bits.)
+
 ### Byte +0x23 (TX deviation — nonlinear encoding)
 
 | Offset | Field Index | XML Name | Encoding |
 |--------|-------------|----------|----------|
 | +0x23 | 0xA4 | CP_TXDEV | `(byte)(atof(val) * sqrt(val / 25.0) + 0.5)` — nonlinear |
 
+### Bytes +0x25..+0x28
+
+| Offset | Field Index | XML Name | Encoding |
+|--------|-------------|----------|----------|
+| +0x25 | 0xA5 | CP_TXHIGHPWR | TX high power level |
+| +0x26 | 0xA6 | CP_HOMEREVZONE | Home revert zone |
+| +0x27 | 0xA7 | CP_HOMEREVCH | Home revert channel |
+| +0x27 | 0xA9 (mask 0x20) | CP_BUSYCHLKOUT | Busy channel lockout / TX admit, enum |
+| +0x28 | 0xA8 | CP_EMMICGAINMOB | Emergency mic gain (mobile) |
+
 ### Bytes +0x29..+0x30 (channel alias)
 
 | Offset | Field Index | XML Name | Encoding |
 |--------|-------------|----------|----------|
 | +0x29..+0x30 | 0xAE | ALIAS | 8-byte fixed string, `memcpy` from `fcn.61032031` |
+
+### Bytes +0x31..+0x38
+
+| Offset | Field Index | XML Name | Encoding |
+|--------|-------------|----------|----------|
+| +0x31..+0x34 | 0xAF-0xB2 | CP_DEFDISPLINE1..4 | Default display lines 1-4, enum lookup |
+| +0x35 | 0xB3 | CP_CALLSTACKSTEN | Call stacks enable |
+| +0x36 | 0xB4 | CP_ANSMCSTEN | Answer message enable |
+| +0x37 | 0xB5 (mask 0x04) | CP_VOXSTEN | VOX enable |
+| +0x37 | 0xB4 (mask 0x02) | CP_ANSMCSTEN_ALT | Answer mode (alt bit) |
+| +0x37 | 0xB3 (mask 0x01) | CP_CALLSTACKSTEN_ALT | Call stacks (alt bit) |
 
 ---
 

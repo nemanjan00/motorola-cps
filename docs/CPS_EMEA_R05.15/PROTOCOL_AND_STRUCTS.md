@@ -684,43 +684,119 @@ For large reads/writes exceeding `max_transfer_size`:
 - **Write chunks**: `max_transfer_size - 4` bytes per frame
 - Default `max_transfer_size` = 40 bytes (0x28)
 
-### Known Opcodes
+### Frame Header Encoding (fully reversed)
 
-| Opcode | Direction | Description |
-|--------|-----------|-------------|
-| `0x11` | Command | Read memory |
-| `0x17` | Command | Write memory |
-| `0x80` | Response | Read response |
-| `0x84` | Response | Write ACK (success) |
-| `0x85` | Response | Write NACK (failure) |
-| `0x05` | Response | ACK |
-| `0x06` | Response | NACK |
+```
+byte[0] = 0xF0 | payload_length
+```
 
-### ESBEP IoControl Commands
+The low nibble of byte[0] is the number of payload bytes (opcode + data).
+Total frame size = 1 (header) + payload_length + 1 (checksum).
 
-High-level radio management commands sent via `IoControl(handle, command_string, param)`:
+| byte[0] | Payload bytes | Total frame | Used by |
+|---------|--------------|-------------|---------|
+| `0xF1` | 1 | 3 | RESETRADIO, QUERYMAXTRANSFERSIZE |
+| `0xF2` | 2 | 4 | All QUERY commands (opcode + sub-cmd) |
+| `0xF3` | 3 | 5 | QUERYRADIOPASSWORDCHECK (+ password byte) |
+| `0xF5` | 5 | 7 | Read memory (opcode + addr + len + flags) |
+| `0xF7` | 7 | 9 | SETRADIOELECTRONICSERIALNUMBER |
+| `0xFC` | 12 | 14 | SETRADIOSERIALNUMBER |
+| `0xFE` | 14 | 16 | SETRADIOLASTPROGRAMMEDTIME |
 
-| Command | Direction | Description |
-|---------|-----------|-------------|
-| `QUERYRADIOMODELNUMBER` | Read | Get radio model string |
-| `QUERYRADIOSERIALNUMBER` | Read | Get serial number |
-| `SETRADIOSERIALNUMBER` | Write | Set serial number |
-| `QUERYRADIOELECTRONICSERIALNUMBER` | Read | Get ESN |
-| `SETRADIOELECTRONICSERIALNUMBER` | Write | Set ESN |
-| `QUERYRADIOSOFTWAREVERSION` | Read | Get firmware version |
-| `QUERYRADIOCODEPLUGVERSION` | Read | Get codeplug version |
-| `QUERYRADIOCODEPLUGSIZE` | Read | Get codeplug size in bytes |
-| `QUERYRADIOPASSWORDCHECK` | Read | Verify programming password |
-| `QUERYRADIOLASTPROGRAMMEDTIME` | Read | Get last programmed timestamp |
-| `SETRADIOLASTPROGRAMMEDTIME` | Write | Set last programmed timestamp |
-| `QUERYREGIONALIDENTIFIER` | Read | Get regional ID |
-| `QUERYRADIOUUID` | Read | Get radio UUID |
-| `RESETRADIO` | Write | Reboot the radio |
-| `QUERYRADIOLOWBATTERY` | Read | Check battery status |
-| `SETECHOFROMRADIO` | Write | Enable/disable echo mode |
-| `QUERYECHOFROMRADIO` | Read | Query echo mode |
-| `SETMAXIMUMTRANSFERSIZE` | Write | Set max frame payload size |
-| `QUERYMAXIMUMTRANSFERSIZE` | Read | Query max frame payload size |
+**Response frame opcode extraction:**
+- If `byte[0] & 0xF0 == 0xF0`: opcode = `byte[1]` (extended frame)
+- If `byte[0] & 0xF0 != 0xF0`: opcode = `byte[0] >> 4` (short frame, high nibble)
+
+**Data length extraction:**
+- If `byte[0] & 0x0F != 0x0F`: length = `byte[0] & 0x0F` (low nibble)
+- If low nibble == 0x0F: length = `ntohs(byte[2..3])` (extended length)
+
+### Complete Opcode Table
+
+#### Commands (PC → Radio)
+
+| Opcode | Function | Sub-Cmd | Description |
+|--------|----------|---------|-------------|
+| `0x10` | RESETRADIO | — | Reboot radio. Frame: `F1 10 FE` |
+| `0x11` | READ | — | Read memory. Frame: `F5 11 AddrH AddrL Len Flags Csum` |
+| `0x13` | QUERYMAXTRANSFER | — | Query max transfer size. Frame: `F1 13 FB` |
+| `0x17` | WRITE | — | Write memory. Frame: `F0\|len 17 Flags AddrH AddrL Data... Csum` |
+| `0x18` | SET data | 0x00 | Set serial number. Frame: `FC 18 00 [10 bytes] Csum` |
+| `0x18` | SET data | 0x01 | Set ESN. Frame: `F7 18 01 [5 bytes] Csum` |
+| `0x18` | SET data | 0x03 | Set last programmed time. Frame: `FE 18 03 [12 bytes] Csum` |
+| `0x23` | QUERY info | 0x00 | Query model number. Frame: `F2 23 00 EA` |
+| `0x23` | QUERY info | 0x01 | Query serial number. Frame: `F2 23 01 E9` |
+| `0x23` | QUERY info | 0x02 | Query ESN. Frame: `F2 23 02 E8` |
+| `0x23` | QUERY info | 0x03 | Query firmware version. Frame: `F2 23 03 E7` |
+| `0x23` | QUERY info | 0x04 | Query codeplug version. Frame: `F2 23 04 E6` |
+| `0x23` | QUERY info | 0x07 | Query codeplug size. Frame: `F2 23 07 E3` |
+| `0x23` | QUERY info | 0x08 | Query password check. Frame: `F3 23 08 00 E1` |
+| `0x23` | QUERY info | 0x09 | Query low battery. Frame: `F2 23 09 E1` |
+| `0x23` | QUERY info | 0x0A | Query last programmed time. Frame: `F2 23 0A E0` |
+| `0x23` | QUERY info | 0x0F | Query UUID. Frame: `F2 23 0F DB` |
+| `0x23` | QUERY info | 0x10 | Query regional ID. Frame: `F2 23 10 DA` |
+
+#### Responses (Radio → PC)
+
+| Opcode | Function | Description |
+|--------|----------|-------------|
+| `0x05` | ACK | General acknowledgment (success) |
+| `0x06` | NAK | Negative acknowledgment (error) |
+| `0x82` | MAX_TRANSFER_RESP | Max transfer size: `ntohs(byte[2..3])` = uint16 |
+| `0x84` | READ_OK | Read data response (success), payload follows |
+| `0x85` | READ_ERR | Read data response (error/NACK) |
+| `0x8B` | QUERY_RESP | Query info response, sub-cmd at byte[4] (extended) or byte[2] (short) |
+
+#### QUERY Response Sub-Commands (opcode 0x8B)
+
+| Sub-Cmd | Response Data | Size |
+|---------|--------------|------|
+| 0x00 | Model number string | 16 bytes |
+| 0x01 | Serial number | 10 bytes |
+| 0x02 | Electronic serial number (ESN) | 5 bytes |
+| 0x03 | Firmware version string | Variable, null-terminated |
+| 0x04 | Codeplug version string | Variable, null-terminated |
+| 0x07 | Codeplug size | Variable |
+| 0x08 | Password check result | 1 byte (0=fail, 1=pass) |
+| 0x09 | Battery status | Variable |
+| 0x0A | Last programmed timestamp | 12 bytes |
+| 0x0F | UUID | 32 bytes (hex-encoded nibble pairs) |
+| 0x10 | Regional identifier | Variable |
+
+#### All Valid Opcodes in Switch Table
+
+| Range | Used | Reserved/Unknown |
+|-------|------|-----------------|
+| 0x05-0x06 | ACK/NAK | — |
+| 0x10-0x1C | 0x10, 0x11, 0x13, 0x17, 0x18 | 0x12, 0x14-0x16, 0x19-0x1C |
+| 0x1F-0x27 | 0x23 | 0x1F-0x22, 0x24-0x27 |
+| 0x2D-0x39 | (none observed in CPS) | All — possibly other radio families |
+| 0x80-0x87 | 0x82, 0x84, 0x85 | 0x80, 0x81, 0x83, 0x86, 0x87 |
+| 0x89-0x90 | 0x8B | 0x89, 0x8A, 0x8C-0x90 (note: 0x88 absent/invalid) |
+
+#### IoControl Commands — Local Only (no wire traffic)
+
+| Command | Function |
+|---------|----------|
+| `SETECHOFROMRADIO` | Sets echo flag in DLL state |
+| `QUERYECHOFROMRADIO` | Reads echo flag from DLL state |
+| `SETMAXIMUMTRANSFERSIZE` | Sets max transfer size in DLL state (default 0x28 = 40) |
+
+### Key DLL Functions (esbepservices_dllpackage.dll)
+
+| Address | Function |
+|---------|----------|
+| `0x61102a70` | IoControl — main entry |
+| `0x61102fc0` | GetIoControlRequest — string-to-ID dispatcher (19 commands) |
+| `0x61104530` | Command switch — ID-to-handler |
+| `0x611043f0` | PutIoControlResponse — writes result to VARIANT |
+| `0x61101130` | Opcode validator — switch table for all known opcodes |
+| `0x611010e0` | Checksum builder — `0xFF - sum(preceding)` |
+| `0x61101090` | Checksum verifier |
+| `0x611076d0` | Read memory frame builder |
+| `0x61107ab0` | Write memory frame builder |
+| `0x61101360` | ACK/NAK reader |
+| `0x611013e0` | Response frame parser |
 
 ### Protocol State Machine
 
