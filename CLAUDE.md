@@ -15,15 +15,15 @@ Reverse engineer Motorola CPS (Customer Programming Software) for legacy Commerc
       PROTOCOL_AND_STRUCTS.md
       CPS_VERSIONS_AND_RADIOS.md
       FILE_MANIFEST.md           ← hashes only, no bins
-  bins/                          ← gitignored (never committed)
+  processed/                          ← gitignored (never committed)
     CPS_EMEA_R05.15/
       files/                     ← actual DLLs/EXEs
   triage/                        ← gitignored (drop new CPS versions here)
 ```
 
-### About bins/
+### About processed/
 
-`bins/` is **never committed to git**. When someone clones this repo they get only
+`processed/` is **never committed to git**. When someone clones this repo they get only
 `docs/` and need to supply their own CPS binaries to run further RE. This keeps
 the repo clean legally — we document the protocol, we don't redistribute Motorola software.
 
@@ -33,7 +33,7 @@ the repo clean legally — we document the protocol, we don't redistribute Motor
 CPS_{REGION}_{VERSION}
 ```
 
-Used consistently in both `docs/` and `bins/`. Examples:
+Used consistently in both `docs/` and `processed/`. Examples:
 
 - `CPS_EMEA_R05.15`
 - `CPS_NA_R05.16`
@@ -63,7 +63,7 @@ Version prefixes observed so far:
    - XML handler DLLs — schema changes
    - Protocol DLLs — only if protocol changed (rare)
 8. **Decode sample .cps files**: XOR every byte with `0x95`, diff XML against known versions
-9. **Move bins to `bins/CPS_{REGION}_{VERSION}/files/`**
+9. **Move bins to `processed/CPS_{REGION}_{VERSION}/files/`**
 10. **Create `docs/CPS_{REGION}_{VERSION}/`** with RE docs (PROTOCOL, VERSIONS, MANIFEST)
 11. **Document deltas** against closest known version — no need to repeat unchanged info
 

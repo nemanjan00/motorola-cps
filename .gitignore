@@ -1,5 +1,5 @@
 # CPS binaries - never committed
-bins/
+processed/
 triage/
 
 # Windows PE binaries that might end up at root
