@@ -39,7 +39,8 @@ const info = computed(() => {
     // RI_BLOCK fields
     const riBlock = cp.getBlock('RI_BLOCK') || cp.getBlock('S5_RADIO_INFO_BLOCK');
     if (riBlock?.entries?.[0]) {
-      const fields = riBlock.entries[0].fields || riBlock.entries[0];
+      const fields = riBlock.entries[0].fields;
+      if (!fields) return items;
       for (const [key, val] of Object.entries(fields)) {
         // Skip fields already covered
         if (key.includes('MODEL') || key.includes('SERIAL')) continue;
@@ -55,7 +56,8 @@ const info = computed(() => {
     // TI_BLOCK fields
     const tiBlock = cp.getBlock('TI_BLOCK') || cp.getBlock('S5_TONE_INFO_BLOCK');
     if (tiBlock?.entries?.[0]) {
-      const fields = tiBlock.entries[0].fields || tiBlock.entries[0];
+      const fields = tiBlock.entries[0].fields;
+      if (!fields) return items;
       for (const [key, val] of Object.entries(fields)) {
         if (val === undefined || val === '') continue;
         const label = key
@@ -76,9 +78,9 @@ const partNumberDecoded = computed(() => {
   if (!codeplugStore.codeplug) return null;
   const cp = codeplugStore.codeplug;
   const riBlock = cp.getBlock('RI_BLOCK') || cp.getBlock('S5_RADIO_INFO_BLOCK');
-  if (!riBlock?.entries?.[0]) return null;
-  const fields = riBlock.entries[0].fields || riBlock.entries[0];
-  const pn = fields.RI_PART_NUMBER || fields.RI_MODEL || fields.S5_RI_PART_NUMBER || fields.S5_RI_MODEL_NUMBER;
+  if (!riBlock?.entries?.[0]?.fields) return null;
+  const fields = riBlock.entries[0].fields;
+  const pn = fields.RI_MODELNUM || fields.S5_RI_MODELNUM;
   if (!pn) return null;
   try {
     return decodePartNumber(pn);
@@ -91,9 +93,9 @@ const lastProgrammed = computed(() => {
   if (codeplugStore.codeplug) {
     const cp = codeplugStore.codeplug;
     const riBlock = cp.getBlock('RI_BLOCK') || cp.getBlock('S5_RADIO_INFO_BLOCK');
-    if (riBlock?.entries?.[0]) {
-      const fields = riBlock.entries[0].fields || riBlock.entries[0];
-      return fields.RI_LASTPROGRAMMED || fields.S5_RI_LAST_PROGRAMMED || null;
+    if (riBlock?.entries?.[0]?.fields) {
+      const fields = riBlock.entries[0].fields;
+      return fields.RI_ORIGDATE || fields.S5_RI_PROG_DATE || null;
     }
   }
   return null;

@@ -35,6 +35,9 @@ const EXCLUDED_BLOCKS = new Set([
   'VECT_BLOCK',
   'TC_BLOCK',
   'RRW_BLOCK',
+  'S5_CFG_BLOCK',
+  'S5_TYPE_CONTROL_BLOCK',
+  'S5_VECTOR_BLOCK',
 ]);
 
 const configGroups = computed(() => {
