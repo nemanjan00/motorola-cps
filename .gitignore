@@ -14,3 +14,5 @@ triage/
 *.wav
 *.cps
 *.cpg
+app/node_modules/
+app/dist/
