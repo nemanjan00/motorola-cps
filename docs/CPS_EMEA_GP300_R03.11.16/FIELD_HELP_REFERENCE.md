@@ -1,0 +1,979 @@
+# Professional GP300/Waris Series — Field Help Reference
+
+> Field names and help topics extracted from GP300.HLP (CPS R03.11.16 EMEA)
+> Waris PRORADIO.HLP is Spanish-only in this build (not extracted)
+
+---
+
+
+## Per Channel (6 topics)
+
+- Per Channel Display
+- Per Channel Miscellaneous
+- Per Channel Output
+- Per Channel Output Control Line
+- Per Channel PL/DPL
+- Per Channel TX/RX
+
+## Per Personality (7 topics)
+
+- Per Personality Audio
+- Per Personality Misc
+- Per Personality PTT
+- Per Personality S5 Decode
+- Per Personality S5 Encode
+- Per Personality Squelch
+- Per Personality TX/RX
+
+## Per Radio (29 topics)
+
+- Per Radio Alerts 1
+- Per Radio Alerts 2
+- Per Radio Alerts 3
+- Per Radio Alerts Volume
+- Per Radio Auto Telegram
+- Per Radio Button Definitions
+- Per Radio Configuration Bytes
+- Per Radio Contact List
+- Per Radio Emergency 1
+- Per Radio Emergency 2
+- Per Radio Function Buttons
+- Per Radio GP I/O Lines
+- Per Radio Menu Item
+- Per Radio Miscellaeous Global
+- Per Radio Miscellaneous Battery Alerts
+- Per Radio Miscellaneous Display and Keypad
+- Per Radio Miscellaneous Global
+- Per Radio Miscellaneous Memory and Power Up Channels
+- Per Radio Miscellaneous Microphone
+- Per Radio Miscellaneous Prefix
+- Per Radio Miscellaneous Timers
+- Per Radio Miscellaneous Vox
+- Per Radio Mobile Buttons 1
+- Per Radio Mobile Buttons 2
+- Per Radio Portable Buttons
+- Per Radio RF RX Screen
+- Per Radio RF Screen
+- Per Radio RF TX Screen
+- Per Radio Signalling Definition
+
+## Signaling / Select 5 (14 topics)
+
+- Advanced User Select 5 Calls
+- Basic User Select 5 Calls
+- DTMF Signalling System
+- Select 5 / PL CPS Help
+- Select 5 Disconnect Telegram
+- Select 5 Sidetone
+- Select 5 Signalling System
+- Select 5 Signalling System Index
+- Select 5 Tone System Table
+- Select 5 Tone Sytem Table
+- Signalling Pre-emphasis/De-emphasis
+- Signalling System
+- User Defined Signalling Misc
+- User Defined Signalling Tones
+
+## DTMF (6 topics)
+
+- Advanced User DTMF Telegrams
+- Basic User DTMF Calls
+- DTMF Dialling Mode
+- DTMF Disconnect Telegram
+- DTMF System Index
+- Select-5 / DTMF
+
+## Emergency (17 topics)
+
+- Emergency Cycles Mode
+- Emergency Encode Telegram
+- Emergency Exit
+- Emergency Microphone Gain
+- Emergency Microphone Source
+- Emergency Revert Channel
+- Emergency Squelch
+- Emergency Switch Debounce Time
+- Emergency TX/RX Cycle Times
+- Emergency Tone during TX
+- Emergency Voice Message Frequency
+- Emergency Voice message
+- External Emergency
+- Incoming Emergency
+- Incoming Emergency Decode Alert
+- Number of Emergency Cycles
+- Secret Emergency Enable
+
+## Scan (11 topics)
+
+- Auto Acknowledge in Scan
+- Automatically Start Scan
+- Number of entries in the Scan list
+- Scan Options
+- Scan Priority Alert
+- Scan Start Alert
+- Scan Stop Alert
+- Scan Switches
+- Scan TX Mode
+- Start Scan RSSI Level
+- Stun/Unstun while in Scan
+
+## Button (10 topics)
+
+- Authorisation Request Button Function
+- Button Definitions Mobile 1
+- Button Definitions Portable
+- Button Definitions Smart Microphone
+- Button Programmable Features
+- Button/Keypad Error Alert
+- Disable Feature Alert - Button X
+- Enable Feature Alert - Button X
+- Mobile Button Functions
+- Portable Button Functions
+
+## Decoder/Encoder (57 topics)
+
+- Acknowledge Telegram
+- Advanced User Telegram Decode
+- Alias (Decode Status List)
+- Base Encode sequences
+- Basic User Telegram Decode
+- Decode DPL Code
+- Decode Output Control
+- Decode PL Code
+- Decode PL Frequency
+- Decode PL Type
+- Decode Status List
+- Decode Telegram 1 - 16
+- Decoder Definitions
+- Decoder Definitions Options 1
+- Decoder Definitions Options 2
+- Decoder Definitions Seq + Masks
+- Decoder LED
+- Decoder Maximum Tone Duration
+- Decoder Minimum Tone Duration
+- Decoder Output Control
+- Decoder Sequence 1-3
+- Decoder Single Tone Frequency 1-2
+- Decoder Single Tone Max Duration 1-2
+- Decoder Single Tone Min Duration 1-2
+- Decoder Type
+- Enable Power Off Auto Telegram
+- Enable Power On Auto Telegram
+- Encode DPL Code
+- Encode PL Code
+- Encode PL Frequency
+- Encode PL Type
+- Encode Status List
+- Encode Status List:Alias (Encode Status List)
+- Encoder Hold Time
+- Encoder Sequence 1-3
+- Encoder Sequence List
+- Encoder Sequences
+- Encoder Single Tone Duration 1-2
+- Encoder Single Tone Frequency 1-2
+- Encoder Telegrams
+- Encoder Tone Duration
+- Matching Encode Telegram
+- Minimum Keyup for Telegram Repeat
+- PTT Dekey Encode
+- PTT Keyup Encode
+- Periodic Telegram Repeat Time
+- Priority Call Decode Alert
+- Radio ID Telegram
+- Repeater Access and Radio ID Telegram
+- Simultaneous Decode of Status and Address digits
+- Status (Decode Status List)
+- Status (Encode Status List)
+- Telegram 1 First Tone Duration (ms)
+- Telegram Repeat
+- Telegram(Power Off)
+- Telegram(Power On)
+- o ID Telegram
+
+## General (306 topics)
+
+- *KCon`figurR(
+- +narro
+wW8>
+- .@WDPbC0bbC
+- .Cpro@ximity
+- /SMicr(oph(
+- 1UF6caGU3G47sGTCD3
+- 3DSRE3Qv3e&3ec
+- 3KACS5Tv'"*H
+- 3restartC`)
+- 565Hz66RP7707Q
+- 5;La@nguage
+- 8GPI`Ogram&
+- ;fl@oating&
+- ;im@minent%C1
+- ;offerin
+gE
+- =gRM@N4026A
+- ?CSpeciPfiesI
+- ACK 1 / Authorisation
+- ACK 1 / Ringing
+- Accessory Connector Mic. Enable
+- Accessory De-bounce Duration
+- Accessory Power Up Delay
+- Accessory package
+- Acknowledge
+- Acknowledge Delay
+- Acknowledge Expected Duration
+- Active Level
+- Address Feature General Lockout Digit Enable
+- Address Feature Position Lockout Digit
+- Address Feature Position for Group Lockout Digit
+- Address Feature Position for Position Lockout Digit
+- Address Prefix
+- Address Range
+- Address Selection Keypad Enable
+- Address Telgram (Contact List)
+- Address(Contact List)
+- Advanced User Status
+- Alert Tone Type
+- Alias (Contact List)
+- Alphanumeric Channel Alias
+- Application Help
+- Authorisation
+- Authorisation Request Monitor Time
+- Auto Ack. when Call is Answered
+- Auto Ack. when Call is Stacked
+- Auto Acknowledge
+- Auto Reset Mode
+- Auto Reset Start
+- Auto Reset Time
+- Auto-Reset Deauthorises
+- Backlight Mode
+- Base Station
+- Basic User Status Calls
+- Battery Gauge
+- Buffered Dial Duration
+- Buffered Dial Inter Digit Delay
+- Busy Channel Lockout
+- C/ #pasteI1
+- CAut@o-Acks1&*
+- CDependi$ng
+- CDisplay ed
+- CGenera(lly
+- CMic`rosof$
+- CPS Programming Setup
+- CPS set-up with standard RIB-box
+- CPS set-up without RIB-box
+- Call 1-4 Tick/#
+- Call Answer Time
+- Call Answer Timer
+- Call Cancel
+- Call Failed Alert
+- Call Forwarding Acknowledge
+- Call Reminder  LED
+- Call Reminder Alert
+- Call Reminder Alert Volume
+- Call Revert
+- Cancel Message Alert
+- Car Audio Mute
+- Carrier Detect
+- Carrier Squelch Only
+- Carrier Time Gone (s)
+- CcalcuPlate\
+- Cdete ction
+- Cdif@ficult
+- Change Radio Password
+- Change User Comment
+- Channel Busy LED
+- Channel Change Squelch Mode
+- Channel Free
+- Channel Free Alert
+- Channel Prefix
+- Channel Spacing
+- Channel Steering
+- Channel(Power Off)
+- Channel(Power On)
+- Chopeful(ly
+- Codeplug Version
+- Courier New
+- CoverwPrite
+- Cre-k eying
+- Create Help Reference
+- Creating a custom help file
+- CresulPtant
+- Cstru cture%4
+- Cterm`inate
+- Cumulative TX Timeout Reset Duration (s)
+- Customer Supplied Help Information
+- DU3S@uspendw
+- De-bounce Enable
+- Default Numeric Keypad Selection
+- Default Radio Display
+- Default Text Message
+- Designated Power Up Channel
+- Designated TX Channel
+- Direct Entry
+- Display Prefix
+- Display Voted Channel On PTT Enable
+- Display Voted Channel On Receive Enable
+- Early Unmute Enable
+- Enable Radio Lock
+- Engaged Alert
+- Escalating Alerts
+- Extended 1st Tone Duration
+- External Alarm
+- External Alarm Duration
+- External Alarm Option
+- Fast Vote RSSI Level
+- Feature Menu
+- Find Command (Edit Menu)
+- Find Dialog
+- Fist Microphone Disable
+- Fixed Alert Volume
+- Forced Monitor Alert
+- Forced Monitor Mode
+- Frequency Range
+- Gain Offset (External) (dB)
+- Gain Offset (internal) (dB)
+- General Purpose I/O Functions
+- General purpose input functions
+- General purpose output functions
+- Group Call Alert
+- Group Call Alert Volume
+- Group Seq.1-3
+- H3{$r8[Pro
+- Handset Audio
+- Hook Operation
+- Ignition Override
+- Ignition Sense
+- Include Current Channel
+- Incoming Call Cancel
+- Incoming Ringing Tone
+- Individual Call Alert
+- Individual Call Alert Volume
+- Inhibit High/Low Power Selection
+- Inhibit Option Board On/Off Selection
+- Inhibit Repeater Talkaround
+- Inhibit Whisper Mode On/Off Selection
+- Inhibit XPAND On/Off Selection
+- Inhibit channel Selection
+- Introduction
+- Invalid Channel Marking Enable
+- J)$+froze
+n+%
+- KAdditio nal
+- Kcont@iguous]!
+- Kespe@ciallyC
+- Keypad Acknowledge
+- Keypad Enable
+- Kmoni@toringE
+- Ksubtr`acted
+- Live Dial Hold Time
+- Live Dial Inter Digit Delay
+- Live Dial PreTime
+- Live Dial min/max Digit Duration
+- Lone Worker
+- Lone Worker Pre-Alert
+- Lone Worker Reminder Time
+- Lone Worker Response Time
+- Low Level Expansion
+- MS Sans Serif
+- Memory Allocation
+- Memory Channel
+- Message Deletion
+- Mic. Gain (Internal / External)
+- Missed Call List
+- Monitior 1 Squelch Mode
+- Monitor Alert
+- Multicall Address
+- Multicall Status
+- Multicall User Mode
+- Mute Audio PA
+- Noise Blanker
+- Nuisance Reset
+- Number of Sequences
+- On/Off Switch Enable
+- Open AUX RX Audio
+- Open RX Audio
+- Option Board
+- Option Board Index
+- Option Board Type
+- Outgoing Call Cancel
+- Outgoing Call Cancel, First Ack Expected, Called User Must Answer
+- Outgoing Call Cancel, First Ack Only Expected
+- Outgoing Ringing Tone
+- PL Override
+- PL/DPL Detect
+- PTT Keyup Mode
+- Pause Digit Duration
+- Personality
+- Power Level
+- Power On/Off and Volume Control
+- Power Up Alert
+- Print Progress Dialog
+- Priority Channel
+- Priority Time
+- Public Address Enable
+- RX Frequency
+- RX Low Battery
+- RX Low Battery Alert Volume
+- RX Reference Frequency
+- RX Squelch Mode
+- Radio Alerts
+- Radio Display Character Set
+- Radio Info Screen
+- Radio Lock Password
+- Radio Model Number
+- Radio On Message
+- Radio Power
+- Radio Serial Number
+- Radio Software Version
+- Record Tool Bar
+- Recording Incoming Call (manually)
+- Rekey Inhibit Duration
+- Remote Public Address Enable
+- Repeat Tone
+- Repeater Talkaround
+- Reset (Hang) Time
+- Reverse Burst / DPL TOC
+- Reverse Squelch
+- Revert Channel
+- Rotary Channel Select
+- Scroll bars
+- Sequence Time Out (ms)
+- Side Tone Variable Volume Offset
+- Silent Interrogate
+- Single Status List
+- Smart Microphone
+- Smart Microphone Picture
+- Smart PTT Periodic Time
+- Status Feature General Lockout Digit Enable
+- Status Feature Position Lockout Digit
+- Status Feature Position for Group Lockout Digit
+- Status Feature Position for Position Lockout Digit
+- Status Prefix
+- Status Range
+- Status Selection Keypad Enable
+- TX Admit Criteria
+- TX Frequency
+- TX Low / High Power
+- TX Low Battery LED
+- TX Reference Frequency
+- TX TOT Pre-Alert
+- TX Time-Out Timer Mode
+- Talkback Enable
+- Tone Support
+- Transmit Admit Criteria Not Applied in Auto R
+- Variable Alert Volume Offset
+- Variable Digit Entry
+- Variable Digits
+- View Status Bar Command
+- Voice & Data PTT
+- Voice Pre-emphasis/De-emphasis
+- Voice Storage
+- Voice Storage Full Alert
+- Voice Storage Recording Alert
+- Voice Storage Warning Alert
+- Vote Enable
+- Vox Feedback
+- Vox Hold Time
+- Vox Sensitivity
+- Whisper Mic.Gain (Internal / External)
+- alhi-fihxide
+- anandare auto-
+- arrierch@annelC
+- cpossibi0litiW
+- de-emphaTsi
+- ebeboxbu ttonB
+- erentdigtit
+- files: managing
+- h!93p@rivacy
+- i4;%E%Y4U%L
+- iscellan eousm
+- iscrimin0ator
+- lexibilidty
+- oIP67@issueI
+- plificatHion
+- power-up%"
+- preceden`ce
+- qRUAVu"T.)5fL
+- rRR03@.01.22
+- so-callc
+A@
+- st22.@2.1MHz
+- uccessfu&l8@*
+- ursoffOF(FOf
+- widthbaprBar
+- yAtWGD&ATT
+- } P)@
+a S7@
+
+---
+
+
+## Complete Alphabetical Index
+
+- *KCon`figurR(
+- +narro
+wW8>
+- .@WDPbC0bbC
+- .Cpro@ximity
+- /SMicr(oph(
+- 1UF6caGU3G47sGTCD3
+- 3DSRE3Qv3e&3ec
+- 3KACS5Tv'"*H
+- 3restartC`)
+- 565Hz66RP7707Q
+- 5;La@nguage
+- 8GPI`Ogram&
+- ;fl@oating&
+- ;im@minent%C1
+- ;offerin
+gE
+- =gRM@N4026A
+- ?CSpeciPfiesI
+- ACK 1 / Authorisation
+- ACK 1 / Ringing
+- Accessory Connector Mic. Enable
+- Accessory De-bounce Duration
+- Accessory Power Up Delay
+- Accessory package
+- Acknowledge
+- Acknowledge Delay
+- Acknowledge Expected Duration
+- Acknowledge Telegram
+- Active Level
+- Address Feature General Lockout Digit Enable
+- Address Feature Position Lockout Digit
+- Address Feature Position for Group Lockout Digit
+- Address Feature Position for Position Lockout Digit
+- Address Prefix
+- Address Range
+- Address Selection Keypad Enable
+- Address Telgram (Contact List)
+- Address(Contact List)
+- Advanced User DTMF Telegrams
+- Advanced User Select 5 Calls
+- Advanced User Status
+- Advanced User Telegram Decode
+- Alert Tone Type
+- Alias (Contact List)
+- Alias (Decode Status List)
+- Alphanumeric Channel Alias
+- Application Help
+- Authorisation
+- Authorisation Request Button Function
+- Authorisation Request Monitor Time
+- Auto Ack. when Call is Answered
+- Auto Ack. when Call is Stacked
+- Auto Acknowledge
+- Auto Acknowledge in Scan
+- Auto Reset Mode
+- Auto Reset Start
+- Auto Reset Time
+- Auto-Reset Deauthorises
+- Automatically Start Scan
+- Backlight Mode
+- Base Encode sequences
+- Base Station
+- Basic User DTMF Calls
+- Basic User Select 5 Calls
+- Basic User Status Calls
+- Basic User Telegram Decode
+- Battery Gauge
+- Buffered Dial Duration
+- Buffered Dial Inter Digit Delay
+- Busy Channel Lockout
+- Button Definitions Mobile 1
+- Button Definitions Portable
+- Button Definitions Smart Microphone
+- Button Programmable Features
+- Button/Keypad Error Alert
+- C/ #pasteI1
+- CAut@o-Acks1&*
+- CDependi$ng
+- CDisplay ed
+- CGenera(lly
+- CMic`rosof$
+- CPS Programming Setup
+- CPS set-up with standard RIB-box
+- CPS set-up without RIB-box
+- Call 1-4 Tick/#
+- Call Answer Time
+- Call Answer Timer
+- Call Cancel
+- Call Failed Alert
+- Call Forwarding Acknowledge
+- Call Reminder  LED
+- Call Reminder Alert
+- Call Reminder Alert Volume
+- Call Revert
+- Cancel Message Alert
+- Car Audio Mute
+- Carrier Detect
+- Carrier Squelch Only
+- Carrier Time Gone (s)
+- CcalcuPlate\
+- Cdete ction
+- Cdif@ficult
+- Change Radio Password
+- Change User Comment
+- Channel Busy LED
+- Channel Change Squelch Mode
+- Channel Free
+- Channel Free Alert
+- Channel Prefix
+- Channel Spacing
+- Channel Steering
+- Channel(Power Off)
+- Channel(Power On)
+- Chopeful(ly
+- Codeplug Version
+- Courier New
+- CoverwPrite
+- Cre-k eying
+- Create Help Reference
+- Creating a custom help file
+- CresulPtant
+- Cstru cture%4
+- Cterm`inate
+- Cumulative TX Timeout Reset Duration (s)
+- Customer Supplied Help Information
+- DTMF Dialling Mode
+- DTMF Disconnect Telegram
+- DTMF Signalling System
+- DTMF System Index
+- DU3S@uspendw
+- De-bounce Enable
+- Decode DPL Code
+- Decode Output Control
+- Decode PL Code
+- Decode PL Frequency
+- Decode PL Type
+- Decode Status List
+- Decode Telegram 1 - 16
+- Decoder Definitions
+- Decoder Definitions Options 1
+- Decoder Definitions Options 2
+- Decoder Definitions Seq + Masks
+- Decoder LED
+- Decoder Maximum Tone Duration
+- Decoder Minimum Tone Duration
+- Decoder Output Control
+- Decoder Sequence 1-3
+- Decoder Single Tone Frequency 1-2
+- Decoder Single Tone Max Duration 1-2
+- Decoder Single Tone Min Duration 1-2
+- Decoder Type
+- Default Numeric Keypad Selection
+- Default Radio Display
+- Default Text Message
+- Designated Power Up Channel
+- Designated TX Channel
+- Direct Entry
+- Disable Feature Alert - Button X
+- Display Prefix
+- Display Voted Channel On PTT Enable
+- Display Voted Channel On Receive Enable
+- Early Unmute Enable
+- Emergency Cycles Mode
+- Emergency Encode Telegram
+- Emergency Exit
+- Emergency Microphone Gain
+- Emergency Microphone Source
+- Emergency Revert Channel
+- Emergency Squelch
+- Emergency Switch Debounce Time
+- Emergency TX/RX Cycle Times
+- Emergency Tone during TX
+- Emergency Voice Message Frequency
+- Emergency Voice message
+- Enable Feature Alert - Button X
+- Enable Power Off Auto Telegram
+- Enable Power On Auto Telegram
+- Enable Radio Lock
+- Encode DPL Code
+- Encode PL Code
+- Encode PL Frequency
+- Encode PL Type
+- Encode Status List
+- Encode Status List:Alias (Encode Status List)
+- Encoder Hold Time
+- Encoder Sequence 1-3
+- Encoder Sequence List
+- Encoder Sequences
+- Encoder Single Tone Duration 1-2
+- Encoder Single Tone Frequency 1-2
+- Encoder Telegrams
+- Encoder Tone Duration
+- Engaged Alert
+- Escalating Alerts
+- Extended 1st Tone Duration
+- External Alarm
+- External Alarm Duration
+- External Alarm Option
+- External Emergency
+- Fast Vote RSSI Level
+- Feature Menu
+- Find Command (Edit Menu)
+- Find Dialog
+- Fist Microphone Disable
+- Fixed Alert Volume
+- Forced Monitor Alert
+- Forced Monitor Mode
+- Frequency Range
+- Gain Offset (External) (dB)
+- Gain Offset (internal) (dB)
+- General Purpose I/O Functions
+- General purpose input functions
+- General purpose output functions
+- Group Call Alert
+- Group Call Alert Volume
+- Group Seq.1-3
+- H3{$r8[Pro
+- Handset Audio
+- Hook Operation
+- Ignition Override
+- Ignition Sense
+- Include Current Channel
+- Incoming Call Cancel
+- Incoming Emergency
+- Incoming Emergency Decode Alert
+- Incoming Ringing Tone
+- Individual Call Alert
+- Individual Call Alert Volume
+- Inhibit High/Low Power Selection
+- Inhibit Option Board On/Off Selection
+- Inhibit Repeater Talkaround
+- Inhibit Whisper Mode On/Off Selection
+- Inhibit XPAND On/Off Selection
+- Inhibit channel Selection
+- Introduction
+- Invalid Channel Marking Enable
+- J)$+froze
+n+%
+- KAdditio nal
+- Kcont@iguous]!
+- Kespe@ciallyC
+- Keypad Acknowledge
+- Keypad Enable
+- Kmoni@toringE
+- Ksubtr`acted
+- Live Dial Hold Time
+- Live Dial Inter Digit Delay
+- Live Dial PreTime
+- Live Dial min/max Digit Duration
+- Lone Worker
+- Lone Worker Pre-Alert
+- Lone Worker Reminder Time
+- Lone Worker Response Time
+- Low Level Expansion
+- MS Sans Serif
+- Matching Encode Telegram
+- Memory Allocation
+- Memory Channel
+- Message Deletion
+- Mic. Gain (Internal / External)
+- Minimum Keyup for Telegram Repeat
+- Missed Call List
+- Mobile Button Functions
+- Monitior 1 Squelch Mode
+- Monitor Alert
+- Multicall Address
+- Multicall Status
+- Multicall User Mode
+- Mute Audio PA
+- Noise Blanker
+- Nuisance Reset
+- Number of Emergency Cycles
+- Number of Sequences
+- Number of entries in the Scan list
+- On/Off Switch Enable
+- Open AUX RX Audio
+- Open RX Audio
+- Option Board
+- Option Board Index
+- Option Board Type
+- Outgoing Call Cancel
+- Outgoing Call Cancel, First Ack Expected, Called User Must Answer
+- Outgoing Call Cancel, First Ack Only Expected
+- Outgoing Ringing Tone
+- PL Override
+- PL/DPL Detect
+- PTT Dekey Encode
+- PTT Keyup Encode
+- PTT Keyup Mode
+- Pause Digit Duration
+- Per Channel Display
+- Per Channel Miscellaneous
+- Per Channel Output
+- Per Channel Output Control Line
+- Per Channel PL/DPL
+- Per Channel TX/RX
+- Per Personality Audio
+- Per Personality Misc
+- Per Personality PTT
+- Per Personality S5 Decode
+- Per Personality S5 Encode
+- Per Personality Squelch
+- Per Personality TX/RX
+- Per Radio Alerts 1
+- Per Radio Alerts 2
+- Per Radio Alerts 3
+- Per Radio Alerts Volume
+- Per Radio Auto Telegram
+- Per Radio Button Definitions
+- Per Radio Configuration Bytes
+- Per Radio Contact List
+- Per Radio Emergency 1
+- Per Radio Emergency 2
+- Per Radio Function Buttons
+- Per Radio GP I/O Lines
+- Per Radio Menu Item
+- Per Radio Miscellaeous Global
+- Per Radio Miscellaneous Battery Alerts
+- Per Radio Miscellaneous Display and Keypad
+- Per Radio Miscellaneous Global
+- Per Radio Miscellaneous Memory and Power Up Channels
+- Per Radio Miscellaneous Microphone
+- Per Radio Miscellaneous Prefix
+- Per Radio Miscellaneous Timers
+- Per Radio Miscellaneous Vox
+- Per Radio Mobile Buttons 1
+- Per Radio Mobile Buttons 2
+- Per Radio Portable Buttons
+- Per Radio RF RX Screen
+- Per Radio RF Screen
+- Per Radio RF TX Screen
+- Per Radio Signalling Definition
+- Periodic Telegram Repeat Time
+- Personality
+- Portable Button Functions
+- Power Level
+- Power On/Off and Volume Control
+- Power Up Alert
+- Print Progress Dialog
+- Priority Call Decode Alert
+- Priority Channel
+- Priority Time
+- Public Address Enable
+- RX Frequency
+- RX Low Battery
+- RX Low Battery Alert Volume
+- RX Reference Frequency
+- RX Squelch Mode
+- Radio Alerts
+- Radio Display Character Set
+- Radio ID Telegram
+- Radio Info Screen
+- Radio Lock Password
+- Radio Model Number
+- Radio On Message
+- Radio Power
+- Radio Serial Number
+- Radio Software Version
+- Record Tool Bar
+- Recording Incoming Call (manually)
+- Rekey Inhibit Duration
+- Remote Public Address Enable
+- Repeat Tone
+- Repeater Access and Radio ID Telegram
+- Repeater Talkaround
+- Reset (Hang) Time
+- Reverse Burst / DPL TOC
+- Reverse Squelch
+- Revert Channel
+- Rotary Channel Select
+- Scan Options
+- Scan Priority Alert
+- Scan Start Alert
+- Scan Stop Alert
+- Scan Switches
+- Scan TX Mode
+- Scroll bars
+- Secret Emergency Enable
+- Select 5 / PL CPS Help
+- Select 5 Disconnect Telegram
+- Select 5 Sidetone
+- Select 5 Signalling System
+- Select 5 Signalling System Index
+- Select 5 Tone System Table
+- Select 5 Tone Sytem Table
+- Select-5 / DTMF
+- Sequence Time Out (ms)
+- Side Tone Variable Volume Offset
+- Signalling Pre-emphasis/De-emphasis
+- Signalling System
+- Silent Interrogate
+- Simultaneous Decode of Status and Address digits
+- Single Status List
+- Smart Microphone
+- Smart Microphone Picture
+- Smart PTT Periodic Time
+- Start Scan RSSI Level
+- Status (Decode Status List)
+- Status (Encode Status List)
+- Status Feature General Lockout Digit Enable
+- Status Feature Position Lockout Digit
+- Status Feature Position for Group Lockout Digit
+- Status Feature Position for Position Lockout Digit
+- Status Prefix
+- Status Range
+- Status Selection Keypad Enable
+- Stun/Unstun while in Scan
+- TX Admit Criteria
+- TX Frequency
+- TX Low / High Power
+- TX Low Battery LED
+- TX Reference Frequency
+- TX TOT Pre-Alert
+- TX Time-Out Timer Mode
+- Talkback Enable
+- Telegram 1 First Tone Duration (ms)
+- Telegram Repeat
+- Telegram(Power Off)
+- Telegram(Power On)
+- Tone Support
+- Transmit Admit Criteria Not Applied in Auto R
+- User Defined Signalling Misc
+- User Defined Signalling Tones
+- Variable Alert Volume Offset
+- Variable Digit Entry
+- Variable Digits
+- View Status Bar Command
+- Voice & Data PTT
+- Voice Pre-emphasis/De-emphasis
+- Voice Storage
+- Voice Storage Full Alert
+- Voice Storage Recording Alert
+- Voice Storage Warning Alert
+- Vote Enable
+- Vox Feedback
+- Vox Hold Time
+- Vox Sensitivity
+- Whisper Mic.Gain (Internal / External)
+- alhi-fihxide
+- anandare auto-
+- arrierch@annelC
+- cpossibi0litiW
+- de-emphaTsi
+- ebeboxbu ttonB
+- erentdigtit
+- files: managing
+- h!93p@rivacy
+- i4;%E%Y4U%L
+- iscellan eousm
+- iscrimin0ator
+- lexibilidty
+- o ID Telegram
+- oIP67@issueI
+- plificatHion
+- power-up%"
+- preceden`ce
+- qRUAVu"T.)5fL
+- rRR03@.01.22
+- so-callc
+A@
+- st22.@2.1MHz
+- uccessfu&l8@*
+- ursoffOF(FOf
+- widthbaprBar
+- yAtWGD&ATT
+- } P)@
+a S7@

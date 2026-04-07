@@ -1,0 +1,1527 @@
+# Implementation Status
+
+> Auto-generated tracker for the motorola-cps JS library.
+> `[x]` = implemented, `[ ]` = not yet
+---
+
+## Features
+
+### File I/O
+- [x] .cps decode (XOR 0x95)
+- [x] .cps encode
+- [x] XML to Codeplug (ELP_ELM)
+- [x] XML to Codeplug (S5T)
+- [x] Codeplug to XML
+
+### Binary Codecs
+- [x] Block header parse/build (both formats)
+- [x] CP_BLOCK decode (binary to fields)
+- [x] CP_BLOCK encode (fields to binary)
+- [x] Generic block passthrough
+- [ ] RC_BLOCK field-level codec
+- [ ] DR_BLOCK field-level codec
+- [ ] MDC_BLOCK field-level codec
+- [ ] QC_BLOCK field-level codec
+- [ ] DTMF_BLOCK field-level codec
+- [ ] SC_BLOCK field-level codec
+- [ ] EM_BLOCK field-level codec
+- [ ] CB_BLOCK field-level codec
+- [ ] AC_BLOCK field-level codec
+- [ ] AUXC_BLOCK field-level codec
+- [ ] PS_BLOCK field-level codec
+- [ ] MENU_BLOCK field-level codec
+- [ ] All S5T block field-level codecs
+
+### ESBEP Protocol
+- [x] Frame construction and checksum
+- [x] Query commands
+- [x] Read memory (chunked)
+- [x] Write memory (chunked)
+- [x] Echo mode
+- [x] WebSerial transport
+- [x] Node serialport transport
+- [x] Radio identification
+- [x] Codeplug read (ELP_ELM)
+- [x] Codeplug read (S5T)
+- [ ] Codeplug write (ELP_ELM)
+- [ ] Codeplug write (S5T)
+- [ ] Password handling
+- [ ] Timestamp update
+
+### Metadata
+- [x] 598 ELP_ELM field definitions
+- [x] 770 S5T field definitions
+- [x] 1684 string table entries
+- [x] 781 help pages
+- [x] 42 CTCSS tones, 104 DPL codes
+- [x] Model identification
+- [ ] Correct field-to-label mapping
+---
+
+## ELP_ELM Fields
+
+### AC_BLOCK (0/34 binary)
+- [ ] `AC_ACCCONPACKID` enum
+- [ ] `AC_ACCPWRUPDELAY` integer
+- [ ] `AC_ACRXAUDTYPE` enum
+- [ ] `AC_ALARMREARM` boolean
+- [ ] `AC_DATAPTTAUDSRC` boolean
+- [ ] `AC_DATAPTTOVERRIDEVOICE` boolean
+- [ ] `AC_DEBDUR` integer
+- [ ] `AC_EXTALARMDELAY` boolean
+- [ ] `AC_EXTALARMDUR` boolean
+- [ ] `AC_HANDSETEN` boolean
+- [ ] `AC_IGNSENSEEN` enum
+- [ ] `AC_INOUTPINBYTE` integer
+- [ ] `AC_PERMEXTALARM` boolean
+- [ ] `AC_PIN12ACTLEV` enum
+- [ ] `AC_PIN12DEBEN` boolean
+- [ ] `AC_PIN12FUNCSEL` enum
+- [ ] `AC_PIN14ACTLEV` enum
+- [ ] `AC_PIN14DEBEN` boolean
+- [ ] `AC_PIN14FUNCSEL` enum
+- [ ] `AC_PIN3ACTLEV` enum
+- [ ] `AC_PIN3DEBEN` boolean
+- [ ] `AC_PIN3FUNCSEL` enum
+- [ ] `AC_PIN4ACTLEV` enum
+- [ ] `AC_PIN4DEBEN` boolean
+- [ ] `AC_PIN4FUNCSEL` enum
+- [ ] `AC_PIN6ACTLEV` enum
+- [ ] `AC_PIN6DEBEN` boolean
+- [ ] `AC_PIN6FUNCSEL` enum
+- [ ] `AC_PIN8ACTLEV` enum
+- [ ] `AC_PIN8DEBEN` boolean
+- [ ] `AC_PIN8FUNCSEL` enum
+- [ ] `AC_PIN9ACTLEV` enum
+- [ ] `AC_PIN9DEBEN` boolean
+- [ ] `AC_PIN9FUNCSEL` enum
+
+### AUXC_BLOCK (0/10 binary)
+- [ ] `AUX_AC1ACTID` integer
+- [ ] `AUX_AC1INACTID` integer
+- [ ] `AUX_AC1MOMDUR` integer
+- [ ] `AUX_AC1OFFDISPMSG` enum
+- [ ] `AUX_AC1ONDISPMSG` enum
+- [ ] `AUX_AC2ACTID` integer
+- [ ] `AUX_AC2INACTID` integer
+- [ ] `AUX_AC2MOMDUR` integer
+- [ ] `AUX_AC2OFFDISPMSG` enum
+- [ ] `AUX_AC2ONDISPMSG` enum
+
+### CALL_BLOCK (0/2 binary)
+- [ ] `CL_SIGNALINGINDEX` boolean
+- [ ] `CL_SIGNALINGTYPE` enum
+
+### CB_BLOCK (0/45 binary)
+- [ ] `CBM_IRREM1SHORTPRESS` enum
+- [ ] `CBM_IRREM2SHORTPRESS` enum
+- [ ] `CBM_IRREM3SHORTPRESS` enum
+- [ ] `CBM_IRREM4SHORTPRESS` enum
+- [ ] `CBM_IRREM5SHORTPRESS` enum
+- [ ] `CBM_IRREM6SHORTPRESS` enum
+- [ ] `CBM_IRREM7SHORTPRESS` enum
+- [ ] `CBM_IRREM8SHORTPRESS` enum
+- [ ] `CBM_MICALONGPRESS` enum
+- [ ] `CBM_MICASHORTPRESS` enum
+- [ ] `CBM_MICBLONGPRESS` enum
+- [ ] `CBM_MICBSHORTPRESS` enum
+- [ ] `CBM_MICCLONGPRESS` enum
+- [ ] `CBM_MICCSHORTPRESS` enum
+- [ ] `CBM_MK1F1LONGPRESS` enum
+- [ ] `CBM_MK1F1SHORTPRESS` enum
+- [ ] `CBM_MK2F2LONGPRESS` enum
+- [ ] `CBM_MK2F2SHORTPRESS` enum
+- [ ] `CBM_MK3F3LONGPRESS` enum
+- [ ] `CBM_MK3F3SHORTPRESS` enum
+- [ ] `CBM_MK4LONGPRESS` enum
+- [ ] `CBM_MK4SHORTPRESS` enum
+- [ ] `CBM_P1LONGPRESS` enum
+- [ ] `CBM_P1SHORTPRESS` enum
+- [ ] `CBM_P2LONGPRESS` enum
+- [ ] `CBM_P2SHORTPRESS` enum
+- [ ] `CBM_P3LONGPRESS` enum
+- [ ] `CBM_P3SHORTPRESS` enum
+- [ ] `CBM_P4LONGPRESS` enum
+- [ ] `CBM_P4SHORTPRESS` enum
+- [ ] `CBP_FRONT1LONGPRESS` enum
+- [ ] `CBP_FRONT1SHORTPRESS` enum
+- [ ] `CBP_FRONT2LONGPRESS` enum
+- [ ] `CBP_FRONT2SHORTPRESS` enum
+- [ ] `CBP_FRONT3LONGPRESS` enum
+- [ ] `CBP_FRONT3SHORTPRESS` enum
+- [ ] `CBP_ROTFUNC` enum
+- [ ] `CBP_SIDE1LONGPRESS` enum
+- [ ] `CBP_SIDE1SHORTPRESS` enum
+- [ ] `CBP_SIDE2LONGPRESS` enum
+- [ ] `CBP_SIDE2SHORTPRESS` enum
+- [ ] `CBP_SIDE3LONGPRESS` enum
+- [ ] `CBP_SIDE3SHORTPRESS` enum
+- [ ] `CBP_TOPLONGPRESS` enum
+- [ ] `CBP_TOPSHORTPRESS` enum
+
+### CP_BLOCK (34/50 binary)
+- [x] `CP_AUTOSCANEN` boolean
+- [x] `CP_BUSYCHLKOUT` enum
+- [ ] `CP_CARRIERTIMERDUR` string
+- [x] `CP_CHBWSEL` float
+- [ ] `CP_COMPANDINGST` enum
+- [ ] `CP_COMPTYPE` enum
+- [x] `CP_DATAREVERTPERINDEX` boolean
+- [ ] `CP_DATAREVERTPERTYPE` enum
+- [ ] `CP_EDITMODEEN` boolean
+- [ ] `CP_EDITMODETXOFFSEL` enum
+- [x] `CP_EMPSEL` enum
+- [ ] `CP_EXPTYPE` enum
+- [ ] `CP_NOISEBLANKEN` boolean
+- [ ] `CP_NONSTDREVBURST` boolean
+- [x] `CP_OPTBRDCONFIGINDEX` integer
+- [x] `CP_OPTBRDFEATEN` boolean
+- [x] `CP_PHSYSINDEX` integer
+- [x] `CP_PLREQFORDATA` boolean
+- [ ] `CP_REPACCID` boolean
+- [ ] `CP_RESETDURINHDUR` boolean
+- [ ] `CP_REVBURSTTOCEN` boolean
+- [x] `CP_RXDECDATA` boolean
+- [x] `CP_RXDPLINVERT` boolean
+- [x] `CP_RXFREQ` frequency
+- [x] `CP_RXONLY` boolean
+- [x] `CP_RXREFFREQ` enum
+- [x] `CP_RXSIGINDEX` integer
+- [x] `CP_RXSIGTYPE` enum
+- [x] `CP_RXSQCODESEL` enum
+- [x] `CP_SCANLISTINDEX` boolean
+- [x] `CP_SIGSQ` enum
+- [x] `CP_SQSET` enum
+- [x] `CP_TALKAROUNDEN` boolean
+- [ ] `CP_TALKAROUNDST` enum
+- [ ] `CP_TOCEN` boolean
+- [x] `CP_TOT` integer
+- [x] `CP_TOTTYPE` enum
+- [ ] `CP_TXADMITCRITERIA` enum
+- [x] `CP_TXDEV` float
+- [x] `CP_TXDPLINVERT` boolean
+- [x] `CP_TXENCDATA` boolean
+- [x] `CP_TXFREQ` frequency
+- [ ] `CP_TXONLY` boolean
+- [x] `CP_TXPWRLEVSEL` enum
+- [x] `CP_TXREFFREQ` enum
+- [x] `CP_TXSIGINDEX` integer
+- [x] `CP_TXSIGTYPE` enum
+- [x] `CP_TXSQCODESEL` enum
+- [x] `CP_UNMUTETYPE` enum
+- [x] `CP_VOXEN` boolean
+
+### DR_BLOCK (0/25 binary)
+- [ ] `DR_ALERTFIXVOLEN` boolean
+- [ ] `DR_ALLGRPSCANST` enum
+- [ ] `DR_DESTPOWERUPCH` boolean
+- [ ] `DR_DISALERTSEL` enum
+- [ ] `DR_ESCALERTEN` boolean
+- [ ] `DR_EXTALARMST` boolean
+- [ ] `DR_KEYALERTEN` boolean
+- [ ] `DR_LANGSEL` enum
+- [ ] `DR_LASTBLIGHTSEL` enum
+- [ ] `DR_LASTCH` boolean
+- [ ] `DR_LASTZONE` boolean
+- [ ] `DR_OPTBRDFEATST` boolean
+- [ ] `DR_PSWDENTRYATTEMPT` boolean
+- [ ] `DR_RADINHLTRGRP` boolean
+- [ ] `DR_RADINHPERSINDEX` boolean
+- [ ] `DR_RADINHPERSTYPE` enum
+- [ ] `DR_RADINHST` boolean
+- [ ] `DR_RADLOCKEN` boolean
+- [ ] `DR_RADLOCKPSWD` integer
+- [ ] `DR_RTCDISPFORMAT` enum
+- [ ] `DR_RTCDISPONOFF` boolean
+- [ ] `DR_SAVELASTSTACK` boolean
+- [ ] `DR_SCANST` boolean
+- [ ] `DR_STPERMMONST` boolean
+- [ ] `DR_VALIDPSWD` boolean
+
+### DTMFC_BLOCK (0/7 binary)
+- [ ] `DTMFC_ACKEXPECTEDEN` boolean
+- [ ] `DTMFC_CALLID` integer
+- [ ] `DTMFC_DTMFSYSINDEX` boolean
+- [ ] `DTMFC_RVTGRPINDEX` boolean
+- [ ] `DTMFC_RVTPERSINDEX` integer
+- [ ] `DTMFC_RVTPERSTYPE` enum
+- [ ] `DTMFC_STRIPPLDPLEN` boolean
+
+### DTMF_BLOCK (0/20 binary)
+- [ ] `DTMF_ACKDIGIT` boolean
+- [ ] `DTMF_ACKPRETIME` string
+- [ ] `DTMF_ACKTYPE` enum
+- [ ] `DTMF_ALERTAUTORESEN` boolean
+- [ ] `DTMF_AUTORESTIMERTYPE` string
+- [ ] `DTMF_CALLALERTLEDEN` boolean
+- [ ] `DTMF_CALLALERTTYPE` enum
+- [ ] `DTMF_DISPDECIDEN` boolean
+- [ ] `DTMF_FIXRETWAITTIME` string
+- [ ] `DTMF_GRPID` integer
+- [ ] `DTMF_PRETIME` string
+- [ ] `DTMF_PRIMARYID` integer
+- [ ] `DTMF_PTTIDTYPE` enum
+- [ ] `DTMF_PTTSHSIDETONEEN` boolean
+- [ ] `DTMF_PTTSIDETONEEN` boolean
+- [ ] `DTMF_RESETDUR` float
+- [ ] `DTMF_SELCALDECEN` boolean
+- [ ] `DTMF_SELCALLEDEN` boolean
+- [ ] `DTMF_TXTONEDUR` integer
+- [ ] `DTMF_TXTONEINTERVAL` integer
+
+### EMDC_BLOCK (0/8 binary)
+- [ ] `EMDC_EMDECMAXQUEUESZ` enum
+- [ ] `EMDC_EMMODE` enum
+- [ ] `EMDC_EMPTTID` integer
+- [ ] `EMDC_EMPTTIDEN` boolean
+- [ ] `EMDC_EMREMMONENCEN` boolean
+- [ ] `EMDC_EMTXCYCLES` boolean
+- [ ] `EMDC_EMTXCYCLESDELAY` boolean
+- [ ] `EMDC_REMMONENCEN` boolean
+
+### EM_BLOCK (0/4 binary)
+- [ ] `EM_LFREQCHINCR` integer
+- [ ] `EM_PASSWORD` string
+- [ ] `EM_TXOFSTFREQ` frequency
+- [ ] `EM_UFREQCHINCR` integer
+
+### MDCC_BLOCK (0/13 binary)
+- [ ] `MDCC_ACKEXPECTEDEN` boolean
+- [ ] `MDCC_CALLFORMAT` enum
+- [ ] `MDCC_MDCCALLID` integer
+- [ ] `MDCC_MDCSYSINDEX` boolean
+- [ ] `MDCC_NAMETONETAG` string
+- [ ] `MDCC_REMMONENCTYPE` enum
+- [ ] `MDCC_REMMONGLBMTPLR` boolean
+- [ ] `MDCC_REMMONRXMTPLR` boolean
+- [ ] `MDCC_REMMONTXMTPLR` boolean
+- [ ] `MDCC_RVTGRPINDEX` boolean
+- [ ] `MDCC_RVTPERSINDEX` integer
+- [ ] `MDCC_RVTPERSTYPE` enum
+- [ ] `MDCC_STRIPPLDPLEN` boolean
+
+### MDC_BLOCK (1/47 binary)
+- [x] `ALIAS` string
+- [ ] `MDC_1200PLLLKDOSDETWIN` integer
+- [ ] `MDC_1200PLLLKDOSTHRES` integer
+- [ ] `MDC_1800PLLLKDOSDETWIN` integer
+- [ ] `MDC_1800PLLLKDOSTHRES` integer
+- [ ] `MDC_ACKPRETIME` string
+- [ ] `MDC_ALERTAUTORESEN` boolean
+- [ ] `MDC_AUTORESTIMERTYPE` string
+- [ ] `MDC_CALLALERTLEDEN` boolean
+- [ ] `MDC_CALLALERTTYPE` enum
+- [ ] `MDC_DISPDECIDEN` boolean
+- [ ] `MDC_DOSAUTOMUTEDUR` integer
+- [ ] `MDC_DOSCOASTDUR` integer
+- [ ] `MDC_DOSCRITYPE` enum
+- [ ] `MDC_EMDECEN` boolean
+- [ ] `MDC_EMREMMONEN` boolean
+- [ ] `MDC_EMREMMONTIMEBASE` string
+- [ ] `MDC_FIXRETWAITTIME` string
+- [ ] `MDC_GRPID` integer
+- [ ] `MDC_INTSEQDEL` integer
+- [ ] `MDC_INTSEQPREBITSYNC` boolean
+- [ ] `MDC_MSGALERTAUTORESEN` boolean
+- [ ] `MDC_MSGDECEN` boolean
+- [ ] `MDC_OUTMSGLEDEN` boolean
+- [ ] `MDC_PLTRANSEN` boolean
+- [ ] `MDC_PREBITSYNC` boolean
+- [ ] `MDC_PRETIME` string
+- [ ] `MDC_PRIMARYID` integer
+- [ ] `MDC_PTTIDOVERRIDESIGSQ` boolean
+- [ ] `MDC_PTTIDTYPE` enum
+- [ ] `MDC_PTTSHSIDETONEEN` boolean
+- [ ] `MDC_PTTSIDETONEEN` boolean
+- [ ] `MDC_RADCHKDECEN` boolean
+- [ ] `MDC_REMMONDECTYPE` enum
+- [ ] `MDC_REMMONTIMEBASE` string
+- [ ] `MDC_REPACCPRE` integer
+- [ ] `MDC_REPACCPREBITSYNC` boolean
+- [ ] `MDC_REPACCTYPE` enum
+- [ ] `MDC_REQTOTALK` boolean
+- [ ] `MDC_RETWAITDURCONST` integer
+- [ ] `MDC_RTTACCREQWAITTIMER` string
+- [ ] `MDC_RTTAUTORESTIMER` string
+- [ ] `MDC_SELCALDECEN` boolean
+- [ ] `MDC_SELCALLEDEN` boolean
+- [ ] `MDC_STNOACKAUTORES` boolean
+- [ ] `MDC_STPOLLEN` boolean
+- [ ] `MDC_VIDEN` boolean
+
+### MDF_BLOCK (0/33 binary)
+- [ ] `MDF_AOBA` boolean
+- [ ] `MDF_ATIS` boolean
+- [ ] `MDF_CATYPE` enum
+- [ ] `MDF_CAWVTYPE` enum
+- [ ] `MDF_CHANBW12POINT5ONLYEN` boolean
+- [ ] `MDF_CHARSIZE` enum
+- [ ] `MDF_CNV` boolean
+- [ ] `MDF_DATAOPERTRIDENT` boolean
+- [ ] `MDF_DISPTYPE` enum
+- [ ] `MDF_DTMF` boolean
+- [ ] `MDF_EDITMODE` boolean
+- [ ] `MDF_EMTYPE` enum
+- [ ] `MDF_ERGOTYPE` enum
+- [ ] `MDF_LANGSET` enum
+- [ ] `MDF_LTR` boolean
+- [ ] `MDF_MAXCNV` integer
+- [ ] `MDF_MAXLTR` boolean
+- [ ] `MDF_MAXLTRGROUP` boolean
+- [ ] `MDF_MAXZONE` integer
+- [ ] `MDF_MDCCNV` boolean
+- [ ] `MDF_MDCLTR` boolean
+- [ ] `MDF_MODELTYPE` enum
+- [ ] `MDF_ONETOUCH` boolean
+- [ ] `MDF_PTTIDTYPE` enum
+- [ ] `MDF_QCII` boolean
+- [ ] `MDF_RADCHKTYPE` enum
+- [ ] `MDF_RADTYPE` enum
+- [ ] `MDF_REMMONTYPE` enum
+- [ ] `MDF_REPACCTYPE` enum
+- [ ] `MDF_SCANPRITYPE` enum
+- [ ] `MDF_SDT` boolean
+- [ ] `MDF_SELCALTYPE` enum
+- [ ] `MDF_SELRADINHTYPE` boolean
+
+### MENU_BLOCK (0/53 binary)
+- [ ] `MN_AGSCANTOPLEVMOPT` boolean
+- [ ] `MN_ALERTVOLLEVSUBMOPT` boolean
+- [ ] `MN_ANSMODESUBMOPT` boolean
+- [ ] `MN_AUDTONESTOPLEVMOPT` boolean
+- [ ] `MN_CALLALERTSUBMOPT` boolean
+- [ ] `MN_CALLSTACKSUBMOPT` boolean
+- [ ] `MN_CALLTONETAGSUBMOPT` boolean
+- [ ] `MN_CLOCKSUBMOPT` boolean
+- [ ] `MN_COMPANDINGSUBMOPT` boolean
+- [ ] `MN_DIRCHTOPLEVMOPT` boolean
+- [ ] `MN_EDITBWSUBMOPT` boolean
+- [ ] `MN_EDITCUSTOMPLSUBMOPT` boolean
+- [ ] `MN_EDITFREQSUBMOPT` boolean
+- [ ] `MN_EDITMODETOPLEVMOPT` boolean
+- [ ] `MN_EDITPWRLEVSUBMOPT` boolean
+- [ ] `MN_EDITSQSUBMOPT` boolean
+- [ ] `MN_ESCALERTSUBMOPT` boolean
+- [ ] `MN_KEYPADTONESSUBMOPT` boolean
+- [ ] `MN_LANGMODESUBMOPT` boolean
+- [ ] `MN_LIGHTDISSUBMOPT` boolean
+- [ ] `MN_MDCMSGTOPLEVMOPT` boolean
+- [ ] `MN_MDCSTSTOPLEVMOPT` boolean
+- [ ] `MN_MSGTONETAGSUBMOPT` boolean
+- [ ] `MN_NAMETONETAGSUBMOPT` string
+- [ ] `MN_OPTBOARDSUBMOPT` boolean
+- [ ] `MN_PGMLSTSTOPLEVMOPT` boolean
+- [ ] `MN_PHNLSTSUBMOPT` boolean
+- [ ] `MN_PHNTOPLEVMOPT` boolean
+- [ ] `MN_RADCALLLSTSUBMOPT` boolean
+- [ ] `MN_RADCALLTOPLEVMOPT` boolean
+- [ ] `MN_RADCHKSUBMOPT` boolean
+- [ ] `MN_RADLOCKSUBMOPT` boolean
+- [ ] `MN_RECALLINSUBMOPT` boolean
+- [ ] `MN_RECOUTMSGSUBMOPT` boolean
+- [ ] `MN_RECVOICEMEMOSUBMOPT` boolean
+- [ ] `MN_REMALARMSUBMOPT` boolean
+- [ ] `MN_REMMONSUBMOPT` boolean
+- [ ] `MN_RPTRTATOPLEVMOPT` boolean
+- [ ] `MN_SCANLSTSUBMOPT` boolean
+- [ ] `MN_SELCALSUBMOPT` boolean
+- [ ] `MN_SELPWRLEVSUBMOPT` boolean
+- [ ] `MN_SLANSMODESUBMOPT` boolean
+- [ ] `MN_SQUELCHSUBMOPT` boolean
+- [ ] `MN_SWVERSUBMOPT` boolean
+- [ ] `MN_SYSSCANTOPLEVMOPT` boolean
+- [ ] `MN_TONEDISASUBMOPT` boolean
+- [ ] `MN_UTILSTOPLEVMOPT` boolean
+- [ ] `MN_VOICESTORDELSUBMOPT` boolean
+- [ ] `MN_VOICESTORPLAYSUBMOPT` boolean
+- [ ] `MN_VOICESTORRECSUBMOPT` boolean
+- [ ] `MN_VOICESTORTOPLEVMOPT` boolean
+- [ ] `MN_WHENAVAILSUBMOPT` boolean
+- [ ] `MN_ZONETOPLEVMOPT` boolean
+
+### OT_BLOCK (0/2 binary)
+- [ ] `OT_ONETOUCHFUN` enum
+- [ ] `OT_ONETOUCHIND` boolean
+
+### PN_BLOCK (0/1 binary)
+- [ ] `PHN_NUM` string
+
+### PS_BLOCK (0/21 binary)
+- [ ] `PS_ACCDEACCTYPE` enum
+- [ ] `PS_ACCESSCODE` string
+- [ ] `PS_DEACCBACKPORCHDELAY` float
+- [ ] `PS_DEACCESSCODE` string
+- [ ] `PS_DIALTYPE` enum
+- [ ] `PS_INTCONNRVTGRPINDEX` boolean
+- [ ] `PS_INTCONNRVTPERSINDEX` integer
+- [ ] `PS_INTCONNRVTPERSTYPE` enum
+- [ ] `PS_LASTNUMREDIAL` boolean
+- [ ] `PS_MUTEACCDEACCEN` boolean
+- [ ] `PS_PAUSEDUR` integer
+- [ ] `PS_PHNOVERRIDEBCLEN` boolean
+- [ ] `PS_PLREQEN` boolean
+- [ ] `PS_PRETIME` string
+- [ ] `PS_PTTSHSIDETONEEN` boolean
+- [ ] `PS_PTTSIDETONEEN` boolean
+- [ ] `PS_STRIPPLPHNMODE` boolean
+- [ ] `PS_TONESPAN` enum
+- [ ] `PS_TXHANGTIME` string
+- [ ] `PS_TXTONEDUR` integer
+- [ ] `PS_TXTONEINTERVAL` integer
+
+### QCC_BLOCK (0/8 binary)
+- [ ] `QCC_CALLFORMAT` enum
+- [ ] `QCC_FREQA` frequency
+- [ ] `QCC_FREQB` frequency
+- [ ] `QCC_QCSYSINDEX` boolean
+- [ ] `QCC_RVTGRPINDEX` boolean
+- [ ] `QCC_RVTPERSINDEX` integer
+- [ ] `QCC_RVTPERSTYPE` enum
+- [ ] `QCC_STRIPPLDPLEN` boolean
+
+### QC_BLOCK (0/18 binary)
+- [ ] `QC_ACKPRETIME` string
+- [ ] `QC_ACKTYPE` enum
+- [ ] `QC_ALERTAUTORESEN` boolean
+- [ ] `QC_AUTORESTIMERTYPE` string
+- [ ] `QC_CALLALERTLEDEN` boolean
+- [ ] `QC_CALLALERTTYPE` enum
+- [ ] `QC_CALLFORMAT` enum
+- [ ] `QC_INDIDTONEA` float
+- [ ] `QC_INDIDTONEB` float
+- [ ] `QC_INDIDTONEC` float
+- [ ] `QC_INDIDTONED` float
+- [ ] `QC_LONGTONEDUR` integer
+- [ ] `QC_PRETIME` string
+- [ ] `QC_PTTSHSIDETONEEN` boolean
+- [ ] `QC_PTTSIDETONEEN` boolean
+- [ ] `QC_SELCALDECEN` boolean
+- [ ] `QC_SELCALLEDEN` boolean
+- [ ] `QC_THRESHOLD` integer
+
+### RC_BLOCK (0/81 binary)
+- [ ] `RC_ACCMICGAIN` float
+- [ ] `RC_ALERTBOOSTEN` boolean
+- [ ] `RC_ALERTVOLOFFSET` integer
+- [ ] `RC_ALTERDISPTIMER` string
+- [ ] `RC_ANSMCSTEN` boolean
+- [ ] `RC_APFBOOSTVAL` integer
+- [ ] `RC_APFEN` boolean
+- [ ] `RC_APFTHRES` integer
+- [ ] `RC_AUTOBLIGHTEN` boolean
+- [ ] `RC_AUTOPWREN` boolean
+- [ ] `RC_AUXTRANSFILTBYPASS` enum
+- [ ] `RC_BLIGHTDUR` integer
+- [ ] `RC_BLIGHTEN` boolean
+- [ ] `RC_BLINKDISPRATE` integer
+- [ ] `RC_BUSYLEDEN` boolean
+- [ ] `RC_CALLSTACKSTEN` boolean
+- [ ] `RC_CLONEEN` boolean
+- [ ] `RC_CPSPSWD` string
+- [ ] `RC_CPSPSWDEN` boolean
+- [ ] `RC_DATAPTTAUDSRC` enum
+- [ ] `RC_DEFDISPLINE1` enum
+- [ ] `RC_DEFDISPLINE2` enum
+- [ ] `RC_DEFDISPLINE3` enum
+- [ ] `RC_DEFDISPLINE4` enum
+- [ ] `RC_DISPSCROLLRATE` integer
+- [ ] `RC_EDITMODETODUR` integer
+- [ ] `RC_EMMICGAINMOB` float
+- [ ] `RC_EMMICGAINPORT` float
+- [ ] `RC_EXTPTTAUDSRC` enum
+- [ ] `RC_FPAENTRYEN` boolean
+- [ ] `RC_FPARFTESTEN` boolean
+- [ ] `RC_HEADSETEN` boolean
+- [ ] `RC_HOMEREVPERINDEX1` boolean
+- [ ] `RC_HOMEREVPERINDEX2` boolean
+- [ ] `RC_HOMEREVPERTYPE1` enum
+- [ ] `RC_HOMEREVPERTYPE2` enum
+- [ ] `RC_HOTKEYEN` boolean
+- [ ] `RC_HOTMICSRC` enum
+- [ ] `RC_HUBDEFPL` boolean
+- [ ] `RC_HUBSUSSCAN` enum
+- [ ] `RC_INFCTRL` boolean
+- [ ] `RC_KEYPADCONFIG` enum
+- [ ] `RC_LONGPRESSDUR` integer
+- [ ] `RC_MAXMSGLEN` integer
+- [ ] `RC_MENUTOT` integer
+- [ ] `RC_MICAGCEN` boolean
+- [ ] `RC_MICGAIN` float
+- [ ] `RC_MICHIGHPASSFREQCTRL` enum
+- [ ] `RC_MICROCONFIG` enum
+- [ ] `RC_MONTYPE` enum
+- [ ] `RC_OPTBRDCONFIGEN` boolean
+- [ ] `RC_OPTBRDTYPE` enum
+- [ ] `RC_PRIOCHANLOCK` boolean
+- [ ] `RC_PRISCANALERTEN` boolean
+- [ ] `RC_PWRUPALERTTYPE` enum
+- [ ] `RC_PWRUPLEDTESTEN` boolean
+- [ ] `RC_PWRUPTESTMODE` boolean
+- [ ] `RC_RADVOLMIN` integer
+- [ ] `RC_RADVOLOVERDRIVE` integer
+- [ ] `RC_RECALLLASTSEL` boolean
+- [ ] `RC_REVERTSCAN` boolean
+- [ ] `RC_RXLOWBATALERTINT` integer
+- [ ] `RC_SCANCHDISCALERTEN` boolean
+- [ ] `RC_SCANHANGTIME` string
+- [ ] `RC_SELCHANLOCK` boolean
+- [ ] `RC_SIMPMANDNTIMER` string
+- [ ] `RC_STOPSTALLOW` boolean
+- [ ] `RC_STPERMMONALERTEN` boolean
+- [ ] `RC_TIMEDDISPDUR` string
+- [ ] `RC_TOTALRECTIME` string
+- [ ] `RC_TXHIGHPWR` float
+- [ ] `RC_TXINHQUICKKEYEN` boolean
+- [ ] `RC_TXLOWBATALERTEN` boolean
+- [ ] `RC_TXLOWBATLEDEN` boolean
+- [ ] `RC_TXLOWPWR` float
+- [ ] `RC_VOXMICGAIN` float
+- [ ] `RC_VOXSTEN` boolean
+- [ ] `RC_VSDEBTIMER` string
+- [ ] `RC_VSINACTTIMER` string
+- [ ] `RC_WAITSTALLOW` boolean
+- [ ] `RC_WRAPAROUNDALERT` boolean
+
+### RI_BLOCK (0/16 binary)
+- [ ] `RI_BANDMAXFREQ` frequency
+- [ ] `RI_BANDMINFREQ` frequency
+- [ ] `RI_BANDSEL` enum
+- [ ] `RI_CPPARTNUM` enum
+- [ ] `RI_LVRISBASEFREQ` frequency
+- [ ] `RI_MAXTXPWR` float
+- [ ] `RI_MINTXPWR` float
+- [ ] `RI_MODELNUM` string
+- [ ] `RI_ORIGCPVER` string
+- [ ] `RI_ORIGDATE` string
+- [ ] `RI_ORIGPROGSRC` string
+- [ ] `RI_ORIGTIME` string
+- [ ] `RI_PROGCPSIZE` integer
+- [ ] `RI_REGID` enum
+- [ ] `RI_SERIALNUM` string
+- [ ] `RI_TANAPANUM` enum
+
+### RRW_BLOCK (0/4 binary)
+- [ ] `RGN_HEADER` integer
+- [ ] `RRW_RGNSIZE` integer
+- [ ] `RRW_TYPECTRLBLKVECT` integer
+- [ ] `RRW_VECTBLKVECT` integer
+
+### SC_BLOCK (0/31 binary)
+- [ ] `SC_AUTORESETTIMER` string
+- [ ] `SC_BASAUTOSELCALEN` boolean
+- [ ] `SC_CALLALERTENCEN` boolean
+- [ ] `SC_CALLALERTTONETAG` enum
+- [ ] `SC_CALLSTACKEN` boolean
+- [ ] `SC_CALLSTACKICONEN` boolean
+- [ ] `SC_EMACKALERTEN` boolean
+- [ ] `SC_EMALERTEN` boolean
+- [ ] `SC_EMLEDEN` boolean
+- [ ] `SC_EMLONGPRESSDUR` integer
+- [ ] `SC_EMREVPERSGRPINDEX` boolean
+- [ ] `SC_EMREVPERSINDEX` integer
+- [ ] `SC_EMREVPERSTYPE` enum
+- [ ] `SC_EMSIDETONEEN` boolean
+- [ ] `SC_EMSTREVALERTEN` boolean
+- [ ] `SC_EMSTREVEN` boolean
+- [ ] `SC_EMTYPE` enum
+- [ ] `SC_IMPEMALARMRET` integer
+- [ ] `SC_LTDPATTIMER` string
+- [ ] `SC_MSGENCEN` boolean
+- [ ] `SC_OPENMICDUR` integer
+- [ ] `SC_OUTMSGTONETAGTYPE` enum
+- [ ] `SC_POLEMALARMRET` integer
+- [ ] `SC_RADCALLTOT` integer
+- [ ] `SC_RADCHKENCEN` boolean
+- [ ] `SC_SELCALENCEN` boolean
+- [ ] `SC_SELCALTONETAG` enum
+- [ ] `SC_SILEMDISPEN` boolean
+- [ ] `SC_STENCEN` boolean
+- [ ] `SC_STONPWRUPEN` boolean
+- [ ] `SC_TRANSHOLDTIME` string
+
+### TC_BLOCK (0/49 binary)
+- [ ] `AC_BLOCK` integer
+- [ ] `AUXC_BLOCK` integer
+- [ ] `BLOCK_SIZE` integer
+- [ ] `CALL_BLOCK` integer
+- [ ] `CB_BLOCK` integer
+- [ ] `CHD_BLOCK` boolean
+- [ ] `CP_BLOCK` integer
+- [ ] `CPA_BLOCK` integer
+- [ ] `CS_BLOCK` boolean
+- [ ] `DR_BLOCK` integer
+- [ ] `DTMF_BLOCK` integer
+- [ ] `DTMFA_BLOCK` integer
+- [ ] `DTMFC_BLOCK` integer
+- [ ] `DVS_BLOCK` boolean
+- [ ] `EM_BLOCK` integer
+- [ ] `EMDC_BLOCK` integer
+- [ ] `LG_BLOCK` boolean
+- [ ] `LGA_BLOCK` boolean
+- [ ] `LRA_BLOCK` integer
+- [ ] `LRF_BLOCK` boolean
+- [ ] `LS_BLOCK` boolean
+- [ ] `LSA_BLOCK` boolean
+- [ ] `LUID_BLOCK` boolean
+- [ ] `LUIDA_BLOCK` boolean
+- [ ] `MDC_BLOCK` integer
+- [ ] `MDCA_BLOCK` integer
+- [ ] `MDCC_BLOCK` integer
+- [ ] `MDCM_BLOCK` boolean
+- [ ] `MDCST_BLOCK` boolean
+- [ ] `MDF_BLOCK` integer
+- [ ] `MENU_BLOCK` integer
+- [ ] `OBC_BLOCK` integer
+- [ ] `OT_BLOCK` integer
+- [ ] `PA_BLOCK` integer
+- [ ] `PN_BLOCK` integer
+- [ ] `PNA_BLOCK` integer
+- [ ] `PS_BLOCK` integer
+- [ ] `PSA_BLOCK` integer
+- [ ] `QC_BLOCK` integer
+- [ ] `QCA_BLOCK` integer
+- [ ] `QCC_BLOCK` integer
+- [ ] `RC_BLOCK` integer
+- [ ] `RI_BLOCK` integer
+- [ ] `SC_BLOCK` integer
+- [ ] `SLA_BLOCK` integer
+- [ ] `SLI_BLOCK` integer
+- [ ] `SM_BLOCK` integer
+- [ ] `TI_BLOCK` integer
+- [ ] `ZA_BLOCK` boolean
+
+### TI_BLOCK (0/5 binary)
+- [ ] `TI_FIRMVER` enum
+- [ ] `TI_LATCPVER` string
+- [ ] `TI_LATDATE` string
+- [ ] `TI_LATPROGSRC` string
+- [ ] `TI_LATTIME` string
+
+### VECT_BLOCK (0/1 binary)
+- [ ] `VECT_QUANTITY` integer
+
+## S5T Fields
+
+### S5_ALERT_BLOCK (0/120 binary)
+- [ ] `S5_A_BUTTON_KEYPAD_ERR_ALERT_EN` boolean
+- [ ] `S5_A_BUTTON_KEYPAD_ERR_ALERT_VOL` enum
+- [ ] `S5_A_CALL_FAILED_ALERT_EN` boolean
+- [ ] `S5_A_CALL_FAILED_ALERT_VOL` enum
+- [ ] `S5_A_CALL_REMINDER_ALERT_VOL` enum
+- [ ] `S5_A_CANCEL_MSG_ALERT_EN` boolean
+- [ ] `S5_A_CANCEL_MSG_ALERT_VOL` enum
+- [ ] `S5_A_CH_FREE_ALERT_EN` boolean
+- [ ] `S5_A_CH_FREE_ALERT_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_F1_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_F1_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_F2_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_F2_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_F3_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_F3_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_P1_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_P1_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_P2_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_P2_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_P3_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_P3_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_P4_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON_P4_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON1_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON1_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON2_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON2_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON3_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON3_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON4_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_BUTTON4_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_SIDE_BUTTON2_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_SIDE_BUTTON3_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_SIDE_BUTTON3_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_ALERT_TOP_BUTTON_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_ALERT_TOP_BUTTON_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_SIDE_BUTTON1_ALERT` boolean
+- [ ] `S5_A_DIS_FEATURE_SIDE_BUTTON1_VOL` enum
+- [ ] `S5_A_DIS_FEATURE_SIDE_BUTTON2_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_F1_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_F1_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_F2_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_F2_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_F3_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_F3_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_P1_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_P1_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_P2_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_P2_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_P3_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_P3_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_P4_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON_P4_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON1_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON1_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON2_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON2_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON3_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON3_VOL` enum
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON4_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_ALERT_BUTTON4_VOL` enum
+- [ ] `S5_A_EN_FEATURE_SIDE_BUTTON1_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_SIDE_BUTTON1_VOL` enum
+- [ ] `S5_A_EN_FEATURE_SIDE_BUTTON2_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_SIDE_BUTTON2_VOL` enum
+- [ ] `S5_A_EN_FEATURE_SIDE_BUTTON3_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_SIDE_BUTTON3_VOL` enum
+- [ ] `S5_A_EN_FEATURE_TOP_BUTTON_ALERT` boolean
+- [ ] `S5_A_EN_FEATURE_TOP_BUTTON_VOL` enum
+- [ ] `S5_A_ENGAGED_ALERT_EN` boolean
+- [ ] `S5_A_ENGAGED_ALERT_VOL` enum
+- [ ] `S5_A_FORCED_MONITOR_ALERT_EN` boolean
+- [ ] `S5_A_FORCED_MONITOR_ALERT_VOL` enum
+- [ ] `S5_A_GROUP_CALL_ALERT_VOL` enum
+- [ ] `S5_A_INCOMING_EMER_DECODE_ALERT_EN` boolean
+- [ ] `S5_A_INCOMING_EMER_DECODE_ALERT_VOL` enum
+- [ ] `S5_A_INCOMING_RINGING_TONE_EN` boolean
+- [ ] `S5_A_INCOMING_RINGING_TONE_VOL` enum
+- [ ] `S5_A_INDIVIDUAL_CALL_ALERT_VOL` enum
+- [ ] `S5_A_KEYPAD_ACK_ALERT` boolean
+- [ ] `S5_A_KEYPAD_ACK_VOL` enum
+- [ ] `S5_A_LONE_WORKER_PREALERT_EN` boolean
+- [ ] `S5_A_LONE_WORKER_PREALERT_VOL` enum
+- [ ] `S5_A_MONITOR_ALERT_EN` boolean
+- [ ] `S5_A_MONITOR_ALERT_VOL` enum
+- [ ] `S5_A_OUTGOING_RINGING_TONE_EN` boolean
+- [ ] `S5_A_OUTGOING_RINGING_TONE_VOL` enum
+- [ ] `S5_A_POWER_UP_ALERT_EN` boolean
+- [ ] `S5_A_POWER_UP_ALERT_VOL` enum
+- [ ] `S5_A_PRIORITY_CALL_DECODE_ALERT_EN` boolean
+- [ ] `S5_A_PRIORITY_CALL_DECODE_ALERT_VOL` enum
+- [ ] `S5_A_RESERVED1` boolean
+- [ ] `S5_A_RESERVED2` enum
+- [ ] `S5_A_RESERVED3` boolean
+- [ ] `S5_A_RESERVED4` enum
+- [ ] `S5_A_RX_LOW_BATT_ALERT_VOL` enum
+- [ ] `S5_A_SCAN_PRIORITY_ALERT_EN` boolean
+- [ ] `S5_A_SCAN_PRIORITY_ALERT_VOL` enum
+- [ ] `S5_A_SCAN_START_ALERT_EN` boolean
+- [ ] `S5_A_SCAN_START_ALERT_VOL` enum
+- [ ] `S5_A_SCAN_STOP_ALERT_EN` boolean
+- [ ] `S5_A_SCAN_STOP_ALERT_VOL` enum
+- [ ] `S5_A_SPARE1` boolean
+- [ ] `S5_A_SPARE10` enum
+- [ ] `S5_A_SPARE2` boolean
+- [ ] `S5_A_SPARE3` boolean
+- [ ] `S5_A_SPARE4` boolean
+- [ ] `S5_A_SPARE5` boolean
+- [ ] `S5_A_SPARE6` enum
+- [ ] `S5_A_SPARE7` boolean
+- [ ] `S5_A_SPARE8` enum
+- [ ] `S5_A_SPARE9` boolean
+- [ ] `S5_A_TX_TOT_PREALERT_EN` boolean
+- [ ] `S5_A_TX_TOT_PREALERT_VOL` enum
+- [ ] `S5_A_VOICE_STROAGE_FULL_ALERT_EN` boolean
+- [ ] `S5_A_VOICE_STROAGE_FULL_ALERT_VOL` enum
+- [ ] `S5_A_VOICE_STROAGE_REC_ALERT_EN` boolean
+- [ ] `S5_A_VOICE_STROAGE_REC_ALERT_VOL` enum
+- [ ] `S5_A_VOICE_STROAGE_WARNING_ALERT_EN` boolean
+- [ ] `S5_A_VOICE_STROAGE_WARNING_ALERT_VOL` enum
+
+### S5_ALPHANUM_CH_ALIAS_BLOCK (0/1 binary)
+- [ ] `S5_ACA_ALPHANUM_CH_ALIAS` string
+
+### S5_AUTO_ACK_LIST_BLOCK (0/7 binary)
+- [ ] `S5_AAL_ACK_DELAY` boolean
+- [ ] `S5_AAL_ACK_TG_IDX` boolean
+- [ ] `S5_AAL_CH_FREE` boolean
+- [ ] `S5_AAL_REVERT_CH` boolean
+- [ ] `S5_AAL_REVERT_CH_EN` boolean
+- [ ] `S5_AAL_SIDETONES_EN` boolean
+- [ ] `S5_AAL_TX_LED_EN` boolean
+
+### S5_BUTTON_DEFINITION_BLOCK (0/24 binary)
+- [ ] `S5_BD_ACC_FUNC_BUTTON_F1` enum
+- [ ] `S5_BD_ACC_FUNC_BUTTON_F2` enum
+- [ ] `S5_BD_ACC_FUNC_BUTTON_F3` enum
+- [ ] `S5_BD_BUTTON_P1` enum
+- [ ] `S5_BD_BUTTON_P2` enum
+- [ ] `S5_BD_BUTTON_P3` enum
+- [ ] `S5_BD_BUTTON_P4` enum
+- [ ] `S5_BD_BUTTON1` enum
+- [ ] `S5_BD_BUTTON2` enum
+- [ ] `S5_BD_BUTTON3` enum
+- [ ] `S5_BD_BUTTON4` enum
+- [ ] `S5_BD_RESERVED1` integer
+- [ ] `S5_BD_RESERVED2` integer
+- [ ] `S5_BD_RESERVED3` integer
+- [ ] `S5_BD_RESERVED4` integer
+- [ ] `S5_BD_RESERVED5` enum
+- [ ] `S5_BD_RESERVED6` enum
+- [ ] `S5_BD_RESERVED7` enum
+- [ ] `S5_BD_RESERVED8` enum
+- [ ] `S5_BD_RESERVED9` enum
+- [ ] `S5_BD_SIDE_BUTTON1` enum
+- [ ] `S5_BD_SIDE_BUTTON2` enum
+- [ ] `S5_BD_SIDE_BUTTON3` enum
+- [ ] `S5_BD_TOP_BUTTON` enum
+
+### S5_CFG_BLOCK (0/9 binary)
+- [ ] `S5_CFG_CP_LAYOUT_STD_VER` boolean
+- [ ] `S5_CFG_CP_SIZE` integer
+- [ ] `S5_CFG_REGION_CHECKSUM_EN` boolean
+- [ ] `S5_CFG_SPARE1` boolean
+- [ ] `S5_CFG_SPARE2` boolean
+- [ ] `S5_CFG_TCB_VEC` integer
+- [ ] `S5_CFG_VB_VEC` integer
+- [ ] `S5_CFG_VEC_BLK_TYPE_CFG` boolean
+- [ ] `S5_CFG_VEC_SIZE_CFG` boolean
+
+### S5_CHANNEL_LIST_BLOCK (0/27 binary)
+- [ ] `S5_CLB_ALPHANUM_CH_ALIAS_EN` string
+- [ ] `S5_CLB_ALPHANUM_CH_ALIAS_IDX` string
+- [ ] `S5_CLB_AUTO_SCAN_EN` boolean
+- [ ] `S5_CLB_BASE_STATION_EN` boolean
+- [ ] `S5_CLB_CH_BANDWIDTH` float
+- [ ] `S5_CLB_CH_POWER_LEVEL` enum
+- [ ] `S5_CLB_FIRST_MIC_DISABLE` boolean
+- [ ] `S5_CLB_INHIBIT_CH_SEL` boolean
+- [ ] `S5_CLB_INHIBIT_LEVEL_LOW_HIGH_POWER_SEL` boolean
+- [ ] `S5_CLB_INHIBIT_REPEATER_TALKAROUND_EN_DIS_SEL` boolean
+- [ ] `S5_CLB_NOISE_BLANKER_EN` boolean
+- [ ] `S5_CLB_PER_CH_OUTPUT_EN` boolean
+- [ ] `S5_CLB_PERSONALITY_IDX` integer
+- [ ] `S5_CLB_REVERSE_BURST_TOC_EN` boolean
+- [ ] `S5_CLB_RX_FREQ_INCREMENT` integer
+- [ ] `S5_CLB_RX_FREQ_STEP_SIZE` frequency
+- [ ] `S5_CLB_RX_PL_DPL_CODE` enum
+- [ ] `S5_CLB_RX_PL_DPL_MODE` enum
+- [ ] `S5_CLB_RX_REFERENCE_FREQ` enum
+- [ ] `S5_CLB_SCAN_EN` boolean
+- [ ] `S5_CLB_SCAN_LIST_IDX` boolean
+- [ ] `S5_CLB_TALKAROUND` boolean
+- [ ] `S5_CLB_TX_FREQ_INCREMENT` integer
+- [ ] `S5_CLB_TX_FREQ_STEP_SIZE` frequency
+- [ ] `S5_CLB_TX_PL_DPL_CODE` enum
+- [ ] `S5_CLB_TX_PL_DPL_MODE` enum
+- [ ] `S5_CLB_TX_REFERENCE_FREQ` enum
+
+### S5_CONTACT_LIST_BLOCK (0/7 binary)
+- [ ] `S5_CL_ADDR_ALIAS` string
+- [ ] `S5_CL_ADDR_CH` boolean
+- [ ] `S5_CL_ADDR_DIGITS` enum
+- [ ] `S5_CL_CH_EN` boolean
+- [ ] `S5_CL_TG_IDX` boolean
+- [ ] `S5_CL_TONE_TAGGING` enum
+- [ ] `S5_CL_TONE_TAGGING_EN` boolean
+
+### S5_DECODER_STATUS_LIST_BLOCK (0/2 binary)
+- [ ] `S5_DSL_STATUS_ALIAS` string
+- [ ] `S5_DSL_STATUS_DIGITS` enum
+
+### S5_DTMF_SIG_SYS_LIST_BLOCK (0/9 binary)
+- [ ] `S5_DSSL_BUFFERED_DIAL_PRETIME` string
+- [ ] `S5_DSSL_ENCODE_SEQ_DIGIT_DURATION` integer
+- [ ] `S5_DSSL_ENCODE_SEQ_INTERDIGIT_DELAY` integer
+- [ ] `S5_DSSL_LIVE_DIAL_HOLD_TIME` string
+- [ ] `S5_DSSL_LIVE_DIAL_INTERDIGIT_DELAY` integer
+- [ ] `S5_DSSL_LIVE_DIAL_MAX_DURATION` integer
+- [ ] `S5_DSSL_LIVE_DIAL_MIN_DURATION` integer
+- [ ] `S5_DSSL_LIVE_DIAL_PRETIME` string
+- [ ] `S5_DSSL_PAUSE_DIGIT_DURATION` integer
+
+### S5_DYNAMIC_RADIO_BLOCK (0/83 binary)
+- [ ] `S5_DR_ADDR_DIGITS_MODE` boolean
+- [ ] `S5_DR_ADDR_DIGITS1` enum
+- [ ] `S5_DR_ADDR_DIGITS10` enum
+- [ ] `S5_DR_ADDR_DIGITS2` enum
+- [ ] `S5_DR_ADDR_DIGITS3` enum
+- [ ] `S5_DR_ADDR_DIGITS4` enum
+- [ ] `S5_DR_ADDR_DIGITS5` enum
+- [ ] `S5_DR_ADDR_DIGITS6` enum
+- [ ] `S5_DR_ADDR_DIGITS7` enum
+- [ ] `S5_DR_ADDR_DIGITS8` enum
+- [ ] `S5_DR_ADDR_DIGITS9` enum
+- [ ] `S5_DR_ALERT_MODE_STATUS` boolean
+- [ ] `S5_DR_BACKLIGHT_STATUS` integer
+- [ ] `S5_DR_BLOCK_STATUS` boolean
+- [ ] `S5_DR_BRIGHTNESS_LEVEL` integer
+- [ ] `S5_DR_CALL_TONES_STATUS` boolean
+- [ ] `S5_DR_CH_IDX1` integer
+- [ ] `S5_DR_CH_IDX10` integer
+- [ ] `S5_DR_CH_IDX2` integer
+- [ ] `S5_DR_CH_IDX3` integer
+- [ ] `S5_DR_CH_IDX4` integer
+- [ ] `S5_DR_CH_IDX5` integer
+- [ ] `S5_DR_CH_IDX6` integer
+- [ ] `S5_DR_CH_IDX7` integer
+- [ ] `S5_DR_CH_IDX8` integer
+- [ ] `S5_DR_CH_IDX9` integer
+- [ ] `S5_DR_CLOCK_STATUS` boolean
+- [ ] `S5_DR_COMPANDING_STATUS` boolean
+- [ ] `S5_DR_ESCALATING_ALERTS_STATUS` boolean
+- [ ] `S5_DR_KEYFEEDBACK_TONES_STATUS` boolean
+- [ ] `S5_DR_KEYPAD_STATUS` boolean
+- [ ] `S5_DR_KEYPAD_TONES_STATUS` boolean
+- [ ] `S5_DR_LAST_USED_ADDR_DIGITS` enum
+- [ ] `S5_DR_LAST_USED_ADDR_TG` integer
+- [ ] `S5_DR_LAST_USED_CH` boolean
+- [ ] `S5_DR_LAST_USED_CLOCK_FORMAT` boolean
+- [ ] `S5_DR_LAST_USED_ENCODER_STATUS_DIGITS` enum
+- [ ] `S5_DR_LAST_USED_LONE_WORKER_REMINDER_DURATION` boolean
+- [ ] `S5_DR_LAST_USED_LONE_WORKER_RESPONSE_TIME` string
+- [ ] `S5_DR_LAST_VOTED_CH` boolean
+- [ ] `S5_DR_LONE_WORKER_STATUS` boolean
+- [ ] `S5_DR_MEM_CH1_CH_IDX` boolean
+- [ ] `S5_DR_MEM_CH2_CH_IDX` boolean
+- [ ] `S5_DR_MISSED_CALL_ICON_STATUS` boolean
+- [ ] `S5_DR_MSG_ADDR_TABLE` integer
+- [ ] `S5_DR_RESERVED1` boolean
+- [ ] `S5_DR_RESERVED2` boolean
+- [ ] `S5_DR_STATUS_DIGITS_MODE` boolean
+- [ ] `S5_DR_STATUS_DIGITS10` enum
+- [ ] `S5_DR_STATUS_DIGITS2` enum
+- [ ] `S5_DR_STATUS_DIGITS3` enum
+- [ ] `S5_DR_STATUS_DIGITS4` enum
+- [ ] `S5_DR_STATUS_DIGITS5` enum
+- [ ] `S5_DR_STATUS_DIGITS6` enum
+- [ ] `S5_DR_STATUS_DIGITS7` enum
+- [ ] `S5_DR_STATUS_DIGITS8` enum
+- [ ] `S5_DR_STATUS_DIGITS9` enum
+- [ ] `S5_DR_STUNNED_STATE` boolean
+- [ ] `S5_DR_TALKAROUND_STATUS` boolean
+- [ ] `S5_DR_TATUS_DIGITS1` enum
+- [ ] `S5_DR_TG_NO1` integer
+- [ ] `S5_DR_TG_NO10` integer
+- [ ] `S5_DR_TG_NO2` integer
+- [ ] `S5_DR_TG_NO3` integer
+- [ ] `S5_DR_TG_NO4` integer
+- [ ] `S5_DR_TG_NO5` integer
+- [ ] `S5_DR_TG_NO6` integer
+- [ ] `S5_DR_TG_NO7` integer
+- [ ] `S5_DR_TG_NO8` integer
+- [ ] `S5_DR_TG_NO9` integer
+- [ ] `S5_DR_UNEXPECTED_POWER_LOSS` boolean
+- [ ] `S5_DR_VOICE_MSG_IDX1` integer
+- [ ] `S5_DR_VOICE_MSG_IDX10` integer
+- [ ] `S5_DR_VOICE_MSG_IDX2` integer
+- [ ] `S5_DR_VOICE_MSG_IDX3` integer
+- [ ] `S5_DR_VOICE_MSG_IDX4` integer
+- [ ] `S5_DR_VOICE_MSG_IDX5` integer
+- [ ] `S5_DR_VOICE_MSG_IDX6` integer
+- [ ] `S5_DR_VOICE_MSG_IDX7` integer
+- [ ] `S5_DR_VOICE_MSG_IDX8` integer
+- [ ] `S5_DR_VOICE_MSG_IDX9` integer
+- [ ] `S5_DR_VOICE_STORAGE_MODE` boolean
+- [ ] `S5_DR_WHISPER_MODE_STATUS` boolean
+
+### S5_EMERGENCY_BLOCK (0/20 binary)
+- [ ] `S5_EM_EMER_CH_REVERT_EN` boolean
+- [ ] `S5_EM_EMER_CYCLES_MODE` enum
+- [ ] `S5_EM_EMER_ENCODE_TG_EN` boolean
+- [ ] `S5_EM_EMER_ENCODE_TG_IDX` boolean
+- [ ] `S5_EM_EMER_EXTERNAL_MIC_GAIN_OFFSET` float
+- [ ] `S5_EM_EMER_INTERNAL_MIC_GAIN_OFFSET` float
+- [ ] `S5_EM_EMER_MIC_GAIN_EN` boolean
+- [ ] `S5_EM_EMER_MIC_SOURCE` enum
+- [ ] `S5_EM_EMER_MIN_VOL` integer
+- [ ] `S5_EM_EMER_REVERT_CH` boolean
+- [ ] `S5_EM_EMER_RX_CYCLE_TIME` string
+- [ ] `S5_EM_EMER_SQUELCH` enum
+- [ ] `S5_EM_EMER_SWITCH_DEBOUNCE_TIME` string
+- [ ] `S5_EM_EMER_TONE_DURING_TX` boolean
+- [ ] `S5_EM_EMER_TX_CYCLE_TIME` string
+- [ ] `S5_EM_EMER_VOICE_MSG_FREQ` enum
+- [ ] `S5_EM_NUM_OF_EMER_CYCLES` boolean
+- [ ] `S5_EM_ONOFF_SWITCH_EN` boolean
+- [ ] `S5_EM_RESERVED1` boolean
+- [ ] `S5_EM_SECRET_EMER_EN` boolean
+
+### S5_ENCODER_SEQ_LIST_BLOCK (0/5 binary)
+- [ ] `S5_ESLB_ENCODER_SEQ` enum
+- [ ] `S5_ESLB_FIRST_TONE_DURATION` boolean
+- [ ] `S5_ESLB_PRETIME` string
+- [ ] `S5_ESLB_SIG_SYS` boolean
+- [ ] `S5_ESLB_SIG_SYS_TYPE` boolean
+
+### S5_ENCODER_STATUS_LIST_BLOCK (0/2 binary)
+- [ ] `S5_ESL_STATUS_ALIAS` string
+- [ ] `S5_ESL_STATUS_DIGITS` enum
+
+### S5_GENERAL_IO_BLOCK (0/31 binary)
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN12_ACTIVE_LEVEL` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN12_DEBOUNCE_EN` boolean
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN12_DIRECTION` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN12_FUNC` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN14_ACTIVE_LEVEL` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN14_DEBOUNCE_EN` boolean
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN14_DIRECTION` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN14_FUNC` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN3_ACTIVE_LEVEL` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN3_DEBOUNCE_EN` boolean
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN3_DIRECTION` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN3_FUNC` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN4_ACTIVE_LEVEL` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN4_DEBOUNCE_EN` boolean
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN4_DIRECTION` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN4_FUNC` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN6_ACTIVE_LEVEL` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN6_DEBOUNCE_EN` boolean
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN6_DIRECTION` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN6_FUNC` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN8_ACTIVE_LEVEL` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN8_DEBOUNCE_EN` boolean
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN8_DIRECTION` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN8_FUNC` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN9_ACTIVE_LEVEL` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN9_DEBOUNCE_EN` boolean
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN9_DIRECTION` enum
+- [ ] `S5_GIO_ACC_CONNECTOR_PIN9_FUNC` enum
+- [ ] `S5_GIO_ACC_DEBOUNCE_DURATION` integer
+- [ ] `S5_GIO_ACC_PACKAGE` enum
+- [ ] `S5_GIO_ACC_POWER_UP_DELAY` integer
+
+### S5_MULTICALL_CFG_BLOCK (0/32 binary)
+- [ ] `S5_MC_ADDR_FEATURE_GENERAL_LOCKOUT_DIGIT` boolean
+- [ ] `S5_MC_ADDR_FEATURE_GENERAL_LOCKOUT_DIGIT_EN` boolean
+- [ ] `S5_MC_ADDR_FEATURE_POS_FOR_GROUP_LOCKOUT_DIGIT` boolean
+- [ ] `S5_MC_ADDR_FEATURE_POS_FOR_POS_LOCKOUT_DIGIT` boolean
+- [ ] `S5_MC_ADDR_FEATURE_POS_LOCKOUT_DIGIT` boolean
+- [ ] `S5_MC_ADDR_FEATURE_POS_LOCKOUT_DIGIT_EN` boolean
+- [ ] `S5_MC_ADDR_RANGE1_EN` boolean
+- [ ] `S5_MC_ADDR_RANGE1_MAX` integer
+- [ ] `S5_MC_ADDR_RANGE1_MIN` integer
+- [ ] `S5_MC_ADDR_RANGE2_EN` boolean
+- [ ] `S5_MC_ADDR_RANGE2_MAX` integer
+- [ ] `S5_MC_ADDR_RANGE2_MIN` integer
+- [ ] `S5_MC_ADDR_RANGE3_EN` boolean
+- [ ] `S5_MC_ADDR_RANGE3_MAX` integer
+- [ ] `S5_MC_ADDR_RANGE3_MIN` integer
+- [ ] `S5_MC_ADDR_SEL_KEYPAD_EN` boolean
+- [ ] `S5_MC_STATUS_FEATURE_GENERAL_LOCKOUT_DIGIT` boolean
+- [ ] `S5_MC_STATUS_FEATURE_GENERAL_LOCKOUT_DIGIT_EN` boolean
+- [ ] `S5_MC_STATUS_FEATURE_POS_FOR_GROUP_LOCKOUT_DIGIT` boolean
+- [ ] `S5_MC_STATUS_FEATURE_POS_FOR_POS_LOCKOUT_DIGIT` boolean
+- [ ] `S5_MC_STATUS_FEATURE_POS_LOCKOUT_DIGIT` boolean
+- [ ] `S5_MC_STATUS_FEATURE_POS_LOCKOUT_DIGIT_EN` boolean
+- [ ] `S5_MC_STATUS_RANGE1_EN` boolean
+- [ ] `S5_MC_STATUS_RANGE1_MAX` integer
+- [ ] `S5_MC_STATUS_RANGE1_MIN` integer
+- [ ] `S5_MC_STATUS_RANGE2_EN` boolean
+- [ ] `S5_MC_STATUS_RANGE2_MAX` integer
+- [ ] `S5_MC_STATUS_RANGE2_MIN` integer
+- [ ] `S5_MC_STATUS_RANGE3_EN` boolean
+- [ ] `S5_MC_STATUS_RANGE3_MAX` integer
+- [ ] `S5_MC_STATUS_RANGE3_MIN` integer
+- [ ] `S5_MC_STATUS_SEL_KEYPAD_EN` boolean
+
+### S5_OPTION_BOARD_BLOCK (0/1 binary)
+- [ ] `S5_OB_DATA_BYTE` integer
+
+### S5_PERSONALITY_LIST_BLOCK (0/65 binary)
+- [ ] `S5_PL_AUTHORISATION_EN` boolean
+- [ ] `S5_PL_AUTHORISATION_REQEST_EN` boolean
+- [ ] `S5_PL_AUTO_RESET_MODE` enum
+- [ ] `S5_PL_AUTORESET_DEAUTHORISES` boolean
+- [ ] `S5_PL_BUSY_CH_LOCKOUT` boolean
+- [ ] `S5_PL_CALL1_TG_IDX` boolean
+- [ ] `S5_PL_CALL1_TG_MODE` enum
+- [ ] `S5_PL_CALL2_TG_IDX` boolean
+- [ ] `S5_PL_CALL2_TG_MODE` enum
+- [ ] `S5_PL_CALL3_TG_IDX` boolean
+- [ ] `S5_PL_CALL3_TG_MODE` enum
+- [ ] `S5_PL_CALL4_TG_IDX` boolean
+- [ ] `S5_PL_CALL4_TG_MODE` enum
+- [ ] `S5_PL_CH_CHANGE_SQUELCH_MODE` enum
+- [ ] `S5_PL_COMPANDING_EN` boolean
+- [ ] `S5_PL_DECODER1_EN` boolean
+- [ ] `S5_PL_DECODER10_EN` boolean
+- [ ] `S5_PL_DECODER11_EN` boolean
+- [ ] `S5_PL_DECODER12_EN` boolean
+- [ ] `S5_PL_DECODER13_EN` boolean
+- [ ] `S5_PL_DECODER14_EN` boolean
+- [ ] `S5_PL_DECODER15_EN` boolean
+- [ ] `S5_PL_DECODER16_EN` boolean
+- [ ] `S5_PL_DECODER2_EN` boolean
+- [ ] `S5_PL_DECODER3_EN` boolean
+- [ ] `S5_PL_DECODER4_EN` boolean
+- [ ] `S5_PL_DECODER5_EN` boolean
+- [ ] `S5_PL_DECODER6_EN` boolean
+- [ ] `S5_PL_DECODER7_EN` boolean
+- [ ] `S5_PL_DECODER8_EN` boolean
+- [ ] `S5_PL_DECODER9_EN` boolean
+- [ ] `S5_PL_DTMF_DISCONNECT_TG_EN` boolean
+- [ ] `S5_PL_DTMF_DISCONNECT_TG_IDX` boolean
+- [ ] `S5_PL_ENCODER_HOLD_TIME` string
+- [ ] `S5_PL_FORCED_MONITOR_MODE` enum
+- [ ] `S5_PL_INHIBIT_COMPANDING_EN_DIS_SEL` boolean
+- [ ] `S5_PL_INHIBIT_OPTION_BOARD_EN_DIS_SEL` boolean
+- [ ] `S5_PL_INHIBIT_WHISPER_EN_DIS_SEL` boolean
+- [ ] `S5_PL_LONE_WORKER_EN` boolean
+- [ ] `S5_PL_LOW_LEVEL_EXPANSION_EN` boolean
+- [ ] `S5_PL_MENUSEL_SHARPBUTTON_TG_IDX` boolean
+- [ ] `S5_PL_MENUSEL_SHARPBUTTON_TG_MODE` enum
+- [ ] `S5_PL_MIC_AGC_EN` boolean
+- [ ] `S5_PL_MIC_AGC_LOW_HIGH_SEL` enum
+- [ ] `S5_PL_MONITOR1_SQUELCH_MODE` enum
+- [ ] `S5_PL_OPTION_BOARD_EN` boolean
+- [ ] `S5_PL_OPTION_BOARD_IDX` boolean
+- [ ] `S5_PL_PL_OVERRIDE` enum
+- [ ] `S5_PL_PTT_DEKEY_ENCODE_TG_EN` boolean
+- [ ] `S5_PL_PTT_DEKEY_ENCODE_TG_IDX` boolean
+- [ ] `S5_PL_PTT_KEYUP_ENCODE_TG_IDX` boolean
+- [ ] `S5_PL_PTT_KEYUP_ENCODE_TG_MODE` enum
+- [ ] `S5_PL_PTT_KEYUP_MODE` enum
+- [ ] `S5_PL_REVERSE_SQUELCH_EN` boolean
+- [ ] `S5_PL_RX_SQUELCH_MODE` enum
+- [ ] `S5_PL_SEL5_DISCONNECT_TG_EN` boolean
+- [ ] `S5_PL_SEL5_DISCONNECT_TG_IDX` boolean
+- [ ] `S5_PL_SEL5_SIDETONE_EN` boolean
+- [ ] `S5_PL_SIG_PRE_DE_EMPHASIS` boolean
+- [ ] `S5_PL_TRANSMIT_ADMIT_CRITERIA` enum
+- [ ] `S5_PL_TRANSMIT_ADMIT_CRITERIA_NOT_APPLIED_IN_AUTO_RESET` boolean
+- [ ] `S5_PL_TX_TIMEOUT_TIMER_MODE` string
+- [ ] `S5_PL_VOICE_PRE_DE_EMPHASIS` boolean
+- [ ] `S5_PL_VOX_EN` boolean
+- [ ] `S5_PL_WHISPER_EN` boolean
+
+### S5_RADIO_INFO_BLOCK (0/21 binary)
+- [ ] `S5_RI_CP_PART_NO` enum
+- [ ] `S5_RI_ELEC_SERIAL_NO_MANU_CODE` boolean
+- [ ] `S5_RI_ELEC_SERIAL_NO_SERIAL_NO_HIGH` boolean
+- [ ] `S5_RI_ELEC_SERIAL_NUM_CHECK_BITS` boolean
+- [ ] `S5_RI_ELEC_SERIAL_NUM_MODEL_TYPE` boolean
+- [ ] `S5_RI_ELEC_SERIAL_NUM_SERIAL_NO_LOW` boolean
+- [ ] `S5_RI_FIRMWARE_VER` enum
+- [ ] `S5_RI_LOWER_FREQ_INCREMENT` integer
+- [ ] `S5_RI_MAJOR_CP_VER` integer
+- [ ] `S5_RI_MAX_RF_POWER` float
+- [ ] `S5_RI_MIN_RF_POWER` float
+- [ ] `S5_RI_MINOR_CP_VER` integer
+- [ ] `S5_RI_MODELNUM` string
+- [ ] `S5_RI_PROG_DATE` string
+- [ ] `S5_RI_PROG_SOURCE` enum
+- [ ] `S5_RI_PROG_TIME` string
+- [ ] `S5_RI_REGIONAL_IDENTIFIER` enum
+- [ ] `S5_RI_RSS_PWD` boolean
+- [ ] `S5_RI_SERIAL_NO` integer
+- [ ] `S5_RI_UPPER_FREQ_INCREMENT` integer
+- [ ] `S5_RI_VRIS_BASE_FREQ` integer
+
+### S5_RADIO_OPTION_BLOCK (0/133 binary)
+- [ ] `S5_RO_ACC_CONNECTOR_MIC_EN` boolean
+- [ ] `S5_RO_ACK_EXPECTED_DURATION` integer
+- [ ] `S5_RO_AUTHORISATION_REQUEST_BUTTON_FUNC` enum
+- [ ] `S5_RO_AUTO_RESET_TIME` string
+- [ ] `S5_RO_AUTORISATION_REQUEST_MONITOR_TIME` string
+- [ ] `S5_RO_BACKLIGHT_MODE` enum
+- [ ] `S5_RO_BACKLIGHT_TIMEOUT_TIME` string
+- [ ] `S5_RO_BUSY_LED_EN` boolean
+- [ ] `S5_RO_CALL_ANSWER_TIME` string
+- [ ] `S5_RO_CALL_REVERT_EN` boolean
+- [ ] `S5_RO_CARRIER_GONE_TIME` string
+- [ ] `S5_RO_CFG_BYTE1` integer
+- [ ] `S5_RO_CFG_BYTE2` integer
+- [ ] `S5_RO_CFG_BYTE3` integer
+- [ ] `S5_RO_CFG_BYTE4` integer
+- [ ] `S5_RO_CFG_BYTE5` integer
+- [ ] `S5_RO_CH_HIGH_POWER_LEVEL` float
+- [ ] `S5_RO_CH_LOW_POWER_LEVEL` float
+- [ ] `S5_RO_CHARACTER_TYPE` enum
+- [ ] `S5_RO_CUMULATIVE_TX_TIMEOUT_RESET_DURATION` string
+- [ ] `S5_RO_DEFAULT_NUM_KEYPAD_SEL` enum
+- [ ] `S5_RO_DEFAULT_RADIO_DISP` enum
+- [ ] `S5_RO_DEFAULT_TXT_MSG` enum
+- [ ] `S5_RO_DEKEY_LOW_BATT_ALERT_EN` boolean
+- [ ] `S5_RO_DISP_PREFIX_EN` boolean
+- [ ] `S5_RO_DISP_PREFIX_FOR_ADDR` enum
+- [ ] `S5_RO_DISP_PREFIX_FOR_CH` enum
+- [ ] `S5_RO_DISP_PREFIX_FOR_ID` enum
+- [ ] `S5_RO_DISP_PREFIX_FOR_STATUS` enum
+- [ ] `S5_RO_ESCALATING_ALERT_VOL_INCREMENT` integer
+- [ ] `S5_RO_ESCALATING_ALERTS_EN` boolean
+- [ ] `S5_RO_ESCALATING_ALERTS_MAX_VOL` integer
+- [ ] `S5_RO_EXTERNAL_ALARM_DURATION` integer
+- [ ] `S5_RO_EXTERNAL_ALARM_OPTION` enum
+- [ ] `S5_RO_EXTERNAL_MIC_GAIN` float
+- [ ] `S5_RO_FAST_VOTE_RSSI_LEVEL` integer
+- [ ] `S5_RO_FEATURE_TIMEOUT_TIME` string
+- [ ] `S5_RO_FEATURE_TIMEOUT_TIMER_EN` string
+- [ ] `S5_RO_FIXED_ALERT_VOL` integer
+- [ ] `S5_RO_HANDSET_AUDIO` boolean
+- [ ] `S5_RO_HOOK_TYPE` enum
+- [ ] `S5_RO_IGNITION_OVERRIDE` enum
+- [ ] `S5_RO_IGNITION_SENSE_EN` boolean
+- [ ] `S5_RO_INCOMING_RINGING_TONE` enum
+- [ ] `S5_RO_INTERNAL_MIC_GAIN` float
+- [ ] `S5_RO_KEYPAD_EN` boolean
+- [ ] `S5_RO_LANGUAGE_SEL` enum
+- [ ] `S5_RO_LONE_WORKER_REMINDER_DURATION` integer
+- [ ] `S5_RO_LONE_WORKER_RESPONSE_TIME` string
+- [ ] `S5_RO_MEM_CH1_CH_IDX` boolean
+- [ ] `S5_RO_MEM_CH2_CH_IDX` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_ANSWERPHONE` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_AUDIO_SETTINGS` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_BACKLIGHT` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_BRIGHTNESS` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_CALL_FORWARD` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_CALL_TONES` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_CHANNEL` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_COMPANDING` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_CONTACT_LIST` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_DTMF_KEYPAD` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_EMERGENCY_VOICE_MSG` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_EXTERNAL_ALARM` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_KEYPAD` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_LONE_WORKER` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_MISSED_CALLS` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_OPTION_BOARD` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_OWN_ID` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_POWER_LEVEL` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_RADIO_INFO` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_RECORDER` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_SCAN` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_SIDE_BUTTONS` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_STATUS_LIST` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_TALKAROUND` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_USER_ABSENT` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_UTILITIES` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_VOICE_STORAGE` boolean
+- [ ] `S5_RO_MENU_ENTRY_EN_WHISPER` boolean
+- [ ] `S5_RO_MENU_TIMEOUT_TIMER` string
+- [ ] `S5_RO_MIN_KEYUP_FOR_TG_REPEAT` boolean
+- [ ] `S5_RO_MISSED_CALL_LIST_EN` boolean
+- [ ] `S5_RO_MISSED_CALL_LIST_MODE` enum
+- [ ] `S5_RO_MSG_SLOT_SIZE` enum
+- [ ] `S5_RO_MULTICALL_USER_MODE` enum
+- [ ] `S5_RO_OPTION_BOARD` enum
+- [ ] `S5_RO_OUTGOING_RINGING_TONE` enum
+- [ ] `S5_RO_PERIODIC_TG_REPEAT_TIME` string
+- [ ] `S5_RO_POWER_OFF_ENCODE_TG_IDX` boolean
+- [ ] `S5_RO_POWER_OFF_TG_EN` boolean
+- [ ] `S5_RO_POWER_ON_CH` boolean
+- [ ] `S5_RO_POWER_ON_CH_EN` boolean
+- [ ] `S5_RO_POWER_ON_ENCODE_TG_IDX` boolean
+- [ ] `S5_RO_POWER_ON_TG_EN` boolean
+- [ ] `S5_RO_RADIO_ID` integer
+- [ ] `S5_RO_RADIO_MIN_VOL` integer
+- [ ] `S5_RO_RADIO_ON_MSG` enum
+- [ ] `S5_RO_RADIO_ON_MSG_EN` boolean
+- [ ] `S5_RO_REKEY_INHIBIT_DURATION` boolean
+- [ ] `S5_RO_RESERVED1` boolean
+- [ ] `S5_RO_RESERVED2` boolean
+- [ ] `S5_RO_RESERVED3` boolean
+- [ ] `S5_RO_RX_AUDIO_OUT` enum
+- [ ] `S5_RO_RX_LOW_BATT_ALERT_EN` boolean
+- [ ] `S5_RO_RX_LOW_BATT_ALERT_PERIOD` integer
+- [ ] `S5_RO_SEQ_TIMEOUT_TIME` string
+- [ ] `S5_RO_SIDE_TONE_VARIABLE_VOL` integer
+- [ ] `S5_RO_SINGLE_STATUS_LIST_EN` boolean
+- [ ] `S5_RO_SPARE1` boolean
+- [ ] `S5_RO_SPARE5` string
+- [ ] `S5_RO_SPARE6` integer
+- [ ] `S5_RO_START_SCAN_RSSI_LEVEL` integer
+- [ ] `S5_RO_TEST_MODE_DISABLE` boolean
+- [ ] `S5_RO_TG_REPEAT_COUNTER` boolean
+- [ ] `S5_RO_TX_LED_EN` boolean
+- [ ] `S5_RO_TX_LOW_BATT_LED_EN` boolean
+- [ ] `S5_RO_TX_TIMEOUT_TIME` string
+- [ ] `S5_RO_UPDOWN_BUTTON_DEFAULT` enum
+- [ ] `S5_RO_USER_ABSENT_EN` boolean
+- [ ] `S5_RO_USER_EDITABLE_CONTACT_LIST_EN` boolean
+- [ ] `S5_RO_USER_EDITABLE_SCAN_LIST_EN` boolean
+- [ ] `S5_RO_USER_PROG_MEM_CH1_EN` boolean
+- [ ] `S5_RO_USER_PROG_MEM_CH2_EN` boolean
+- [ ] `S5_RO_VARIABLE_ALERT_VOL` boolean
+- [ ] `S5_RO_VOICE_STORAGE_EN` boolean
+- [ ] `S5_RO_VOICE_STORAGE_LONG_PRESS_DURATION` integer
+- [ ] `S5_RO_VOICE_STORAGE_MODE` enum
+- [ ] `S5_RO_VOICE_STORAGE_WARNING_DURATION` integer
+- [ ] `S5_RO_VOX_FEEDBACK_EN` boolean
+- [ ] `S5_RO_VOX_HANG_TIME` string
+- [ ] `S5_RO_VOX_SENSITIVITY` integer
+- [ ] `S5_RO_WHISPER_MODE_EXTERNAL_MIC_GAIN` float
+- [ ] `S5_RO_WHISPER_MODE_INTERNAL_MIC_GAIN` float
+
+### S5_SCAN_LIST_BLOCK (0/33 binary)
+- [ ] `S5_SL_AUTO_ACK_IN_SCAN_EN` boolean
+- [ ] `S5_SL_CARRIER_SQUELCH_SCAN` boolean
+- [ ] `S5_SL_DESIGNATED_TX_CH_IDX` boolean
+- [ ] `S5_SL_DISP_VOTED_CH_ON_PTT_EN` boolean
+- [ ] `S5_SL_EARLY_UNMUTE_EN` boolean
+- [ ] `S5_SL_INCLUDE_CURRENT_CH` boolean
+- [ ] `S5_SL_INVALID_CH_MARKING_EN` boolean
+- [ ] `S5_SL_NUISANCE_RESET` boolean
+- [ ] `S5_SL_PRIORITY_CH_EN` boolean
+- [ ] `S5_SL_PRIORITY_CH_IDX` boolean
+- [ ] `S5_SL_PRIORITY_CH_TIMER` string
+- [ ] `S5_SL_RESET_TIMER` string
+- [ ] `S5_SL_SCAN_CH1_IDX` boolean
+- [ ] `S5_SL_SCAN_CH10_IDX` integer
+- [ ] `S5_SL_SCAN_CH11_IDX` integer
+- [ ] `S5_SL_SCAN_CH12_IDX` integer
+- [ ] `S5_SL_SCAN_CH13_IDX` integer
+- [ ] `S5_SL_SCAN_CH14_IDX` integer
+- [ ] `S5_SL_SCAN_CH15_IDX` integer
+- [ ] `S5_SL_SCAN_CH16_IDX` integer
+- [ ] `S5_SL_SCAN_CH2_IDX` integer
+- [ ] `S5_SL_SCAN_CH3_IDX` integer
+- [ ] `S5_SL_SCAN_CH4_IDX` integer
+- [ ] `S5_SL_SCAN_CH5_IDX` integer
+- [ ] `S5_SL_SCAN_CH6_IDX` integer
+- [ ] `S5_SL_SCAN_CH7_IDX` integer
+- [ ] `S5_SL_SCAN_CH8_IDX` integer
+- [ ] `S5_SL_SCAN_CH9_IDX` integer
+- [ ] `S5_SL_SCAN_LED_EN` boolean
+- [ ] `S5_SL_SCAN_TX_MODE` enum
+- [ ] `S5_SL_SWEEP_TIMER` string
+- [ ] `S5_SL_TALKBACK_EN` boolean
+- [ ] `S5_SL_VOTE_EN` boolean
+
+### S5_SEL5_DECODER_LIST_BLOCK (0/35 binary)
+- [ ] `S5_S5DL_AUTO_ACK_EN` boolean
+- [ ] `S5_S5DL_AUTO_ACK_IDX` boolean
+- [ ] `S5_S5DL_AUTO_ACK_WHEN_CALL_IS_ANSWERED_EN` boolean
+- [ ] `S5_S5DL_AUTO_ACK_WHEN_CALL_IS_ANSWERED_IDX` boolean
+- [ ] `S5_S5DL_AUTO_ACK_WHEN_CALL_IS_STACKED_EN` boolean
+- [ ] `S5_S5DL_AUTO_ACK_WHEN_CALL_IS_STACKED_IDX` boolean
+- [ ] `S5_S5DL_AUTO_RESET_START` boolean
+- [ ] `S5_S5DL_CALL_ANSWER_TIMER_EN` string
+- [ ] `S5_S5DL_CALL_BACK_EN` boolean
+- [ ] `S5_S5DL_CALL_FORWARD_ACK_EN` boolean
+- [ ] `S5_S5DL_CALL_FORWARD_ACK_IDX` boolean
+- [ ] `S5_S5DL_CALL_REMINDER_ALERT_EN` boolean
+- [ ] `S5_S5DL_CALL_REMINDER_LED_EN` boolean
+- [ ] `S5_S5DL_DECODE_TXT_EN` boolean
+- [ ] `S5_S5DL_DECODE_TYPE` enum
+- [ ] `S5_S5DL_DECODER_ALERT_TONE_TYPE` enum
+- [ ] `S5_S5DL_DECODER_GROUP_SEQ1` integer
+- [ ] `S5_S5DL_DECODER_GROUP_SEQ2` integer
+- [ ] `S5_S5DL_DECODER_GROUP_SEQ3` integer
+- [ ] `S5_S5DL_DECODER_LED_EN` boolean
+- [ ] `S5_S5DL_DECODER_SEQ1` enum
+- [ ] `S5_S5DL_DECODER_SEQ2` enum
+- [ ] `S5_S5DL_DECODER_SEQ3` enum
+- [ ] `S5_S5DL_DECODER_TG_FIRST_TONE_DURATION` boolean
+- [ ] `S5_S5DL_EXTERNAL_ALARM_EN` boolean
+- [ ] `S5_S5DL_GROUP_CALL_ALERT_EN` boolean
+- [ ] `S5_S5DL_GROUP_TYPE` enum
+- [ ] `S5_S5DL_INDIVIDUAL_CALL_ALERT_EN` boolean
+- [ ] `S5_S5DL_MATCHING_ENCODE_TG_IDX` boolean
+- [ ] `S5_S5DL_NUM_OF_SEQ` boolean
+- [ ] `S5_S5DL_OUTPUT_CONTROL_LINE` enum
+- [ ] `S5_S5DL_REMOTE_CLOSE_ON_WRONG_SEQ_EN` boolean
+- [ ] `S5_S5DL_RESERVED1` boolean
+- [ ] `S5_S5DL_RESERVED2` boolean
+- [ ] `S5_S5DL_SIG_SYS_IDX` boolean
+
+### S5_SEL5_DTMF_ENCODER_TG_LIST_BLOCK (0/8 binary)
+- [ ] `S5_S5DETL_ACK_EXPECTED_MODE` enum
+- [ ] `S5_S5DETL_DTMF_DIALLING_MODE` enum
+- [ ] `S5_S5DETL_DTMF_SIG_SYS_IDX` boolean
+- [ ] `S5_S5DETL_ENCODER_SEQ1_IDX` boolean
+- [ ] `S5_S5DETL_ENCODER_SEQ2_IDX` boolean
+- [ ] `S5_S5DETL_ENCODER_SEQ3_IDX` boolean
+- [ ] `S5_S5DETL_NUM_OF_SEQUENCES` boolean
+- [ ] `S5_S5DETL_TG_REPEAT_EN` boolean
+
+### S5_SEL5_SIG_SYS_LIST_BLOCK (0/17 binary)
+- [ ] `S5_S5SSL_DECODER_SINGLE_TONE1_EN` boolean
+- [ ] `S5_S5SSL_DECODER_SINGLE_TONE1_FREQ` integer
+- [ ] `S5_S5SSL_DECODER_SINGLE_TONE1_MAX_DURATION` integer
+- [ ] `S5_S5SSL_DECODER_SINGLE_TONE1_MIN_DURATION` integer
+- [ ] `S5_S5SSL_DECODER_SINGLE_TONE2_EN` boolean
+- [ ] `S5_S5SSL_DECODER_SINGLE_TONE2_FREQ` integer
+- [ ] `S5_S5SSL_DECODER_SINGLE_TONE2_MAX_DURATION` integer
+- [ ] `S5_S5SSL_DECODER_SINGLE_TONE2_MIN_DURATION` integer
+- [ ] `S5_S5SSL_ENCODER_SINGLE_TONE1_DURATION` integer
+- [ ] `S5_S5SSL_ENCODER_SINGLE_TONE1_EN` boolean
+- [ ] `S5_S5SSL_ENCODER_SINGLE_TONE1_FREQ` integer
+- [ ] `S5_S5SSL_ENCODER_SINGLE_TONE2_DURATION` integer
+- [ ] `S5_S5SSL_ENCODER_SINGLE_TONE2_EN` boolean
+- [ ] `S5_S5SSL_ENCODER_SINGLE_TONE2_FREQ` integer
+- [ ] `S5_S5SSL_GROUP_TONE` enum
+- [ ] `S5_S5SSL_REPEAT_TONE` enum
+- [ ] `S5_S5SSL_SIG_SYS_IDX` enum
+
+### S5_TYPE_CONTROL_BLOCK (0/25 binary)
+- [ ] `S5_ALERT_BLOCK` boolean
+- [ ] `S5_ALPHANUM_CH_ALIAS_BLOCK` string
+- [ ] `S5_AUTO_ACK_LIST_BLOCK` boolean
+- [ ] `S5_BUTTON_DEFINITION_BLOCK` boolean
+- [ ] `S5_CHANNEL_LIST_BLOCK` boolean
+- [ ] `S5_CONTACT_LIST_BLOCK` boolean
+- [ ] `S5_DECODER_STATUS_LIST_BLOCK` boolean
+- [ ] `S5_DTMF_SIG_SYS_LIST_BLOCK` boolean
+- [ ] `S5_DYNAMIC_RADIO_BLOCK` boolean
+- [ ] `S5_EMERGENCY_BLOCK` boolean
+- [ ] `S5_ENCODER_SEQ_LIST_BLOCK` boolean
+- [ ] `S5_ENCODER_STATUS_LIST_BLOCK` boolean
+- [ ] `S5_GENERAL_IO_BLOCK` boolean
+- [ ] `S5_MULTICALL_CFG_BLOCK` boolean
+- [ ] `S5_OPTION_BOARD_BLOCK` boolean
+- [ ] `S5_PERSONALITY_LIST_BLOCK` boolean
+- [ ] `S5_RADIO_INFO_BLOCK` boolean
+- [ ] `S5_RADIO_OPTION_BLOCK` boolean
+- [ ] `S5_SCAN_LIST_BLOCK` boolean
+- [ ] `S5_SEL5_DECODER_LIST_BLOCK` boolean
+- [ ] `S5_SEL5_DTMF_ENCODER_TG_LIST_BLOCK` boolean
+- [ ] `S5_SEL5_SIG_SYS_LIST_BLOCK` boolean
+- [ ] `S5_TC_SIZE_OF_TCB` integer
+- [ ] `S5_USER_COMMENT_BLOCK` string
+- [ ] `S5_USER_DEF_SIG_LIST_BLOCK` boolean
+
+### S5_USER_COMMENT_BLOCK (0/1 binary)
+- [ ] `S5_UC_CHARACTER` boolean
+
+### S5_USER_DEF_SIG_LIST_BLOCK (0/19 binary)
+- [ ] `S5_UDSL_MAX_TIME` string
+- [ ] `S5_UDSL_MIN_TIME` string
+- [ ] `S5_UDSL_TONE_DURATION` integer
+- [ ] `S5_UDSL_TONE1_FREQ` integer
+- [ ] `S5_UDSL_TONE10_FREQ` integer
+- [ ] `S5_UDSL_TONE11_FREQ` integer
+- [ ] `S5_UDSL_TONE12_FREQ` integer
+- [ ] `S5_UDSL_TONE13_FREQ` integer
+- [ ] `S5_UDSL_TONE14_FREQ` integer
+- [ ] `S5_UDSL_TONE15_FREQ` integer
+- [ ] `S5_UDSL_TONE16_FREQ` integer
+- [ ] `S5_UDSL_TONE2_FREQ` integer
+- [ ] `S5_UDSL_TONE3_FREQ` integer
+- [ ] `S5_UDSL_TONE4_FREQ` integer
+- [ ] `S5_UDSL_TONE5_FREQ` integer
+- [ ] `S5_UDSL_TONE6_FREQ` integer
+- [ ] `S5_UDSL_TONE7_FREQ` integer
+- [ ] `S5_UDSL_TONE8_FREQ` integer
+- [ ] `S5_UDSL_TONE9_FREQ` integer
+
+### S5_VECTOR_BLOCK (0/33 binary)
+- [ ] `S5_V_ALERT_VEC` integer
+- [ ] `S5_V_ALPHANUM_CH_ALIAS_VEC` string
+- [ ] `S5_V_AUTO_ACK_LIST_VEC` integer
+- [ ] `S5_V_BUTTON_DEFINITION_VEC` integer
+- [ ] `S5_V_CH_LIST_VEC` integer
+- [ ] `S5_V_CONTACT_LIST_VEC` integer
+- [ ] `S5_V_DECODER_STATUS_LIST_VEC` integer
+- [ ] `S5_V_DTMF_SIG_SYS_LIST_VEC` integer
+- [ ] `S5_V_DYNAMIC_RADIO_VEC` integer
+- [ ] `S5_V_EMERGENCY_VEC` integer
+- [ ] `S5_V_ENCODER_SEQ_LIST_VEC` integer
+- [ ] `S5_V_ENCODER_STATUS_LIST_VEC` integer
+- [ ] `S5_V_GENERAL_IO_VEC` integer
+- [ ] `S5_V_MULTICALL_CFG_VEC` integer
+- [ ] `S5_V_NUM_OF_VECTORS` integer
+- [ ] `S5_V_OPTION_BOARD_VEC` integer
+- [ ] `S5_V_PERSONALITY_LIST_VEC` integer
+- [ ] `S5_V_RADIO_INFO_VEC` integer
+- [ ] `S5_V_RADIO_OPTION_VEC` integer
+- [ ] `S5_V_SCAN_LIST_VEC` integer
+- [ ] `S5_V_SEL5_DECODER_LIST_VEC` integer
+- [ ] `S5_V_SEL5_DTMF_ENCODER_TG_LIST_VEC` integer
+- [ ] `S5_V_SEL5_SIG_SYS_LIST_VEC` integer
+- [ ] `S5_V_SPARE_VEC1` boolean
+- [ ] `S5_V_SPARE_VEC2` boolean
+- [ ] `S5_V_SPARE_VEC3` boolean
+- [ ] `S5_V_SPARE_VEC4` boolean
+- [ ] `S5_V_SPARE_VEC5` boolean
+- [ ] `S5_V_SPARE_VEC6` boolean
+- [ ] `S5_V_SPARE1` boolean
+- [ ] `S5_V_SPARE2` boolean
+- [ ] `S5_V_USER_COMMENT_BLOCK_VEC` string
+- [ ] `S5_V_USER_DEFINABLE_SIG_LIST_VEC` integer

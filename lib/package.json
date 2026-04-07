@@ -1,0 +1,17 @@
+{
+  "name": "motorola-cps",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Motorola Commercial Series radio programming library",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./codeplug": "./codeplug/index.js",
+    "./protocol": "./protocol/index.js",
+    "./binary": "./binary/index.js",
+    "./data": "./data/index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
