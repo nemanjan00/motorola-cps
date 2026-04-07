@@ -97,33 +97,30 @@ function onCheckbox(event) {
 .field-editor {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
+  padding: 8px 0;
 }
-
 .field-label {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
+  color: var(--text-muted);
   letter-spacing: 0.3px;
 }
-
 .field-check {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   font-size: 13px;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  transition: background 0.1s;
 }
-
-.field-check input {
-  margin: 0;
-}
-
+.field-check:hover { background: var(--bg-tertiary); }
+.field-check input { margin: 0; }
 .field-editor input,
-.field-editor select {
-  width: 100%;
-}
+.field-editor select { width: 100%; }
 </style>
