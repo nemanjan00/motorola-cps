@@ -146,9 +146,9 @@ const groups = computed(() => {
   gap: 4px 20px;
 }
 .toggle-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0 24px;
   margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid var(--border);

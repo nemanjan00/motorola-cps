@@ -69,30 +69,21 @@ function onCheck(e) { set(e.target.checked ? '1' : '0'); }
 </template>
 
 <style scoped>
-/* ---- Boolean pill ---- */
+/* ---- Boolean: normal checkbox row ---- */
 .toggle-pill {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 10px;
+  padding: 7px 0;
+  font-size: 13px;
   cursor: pointer;
-  background: var(--bg-tertiary);
-  border: 1px solid var(--border);
-  color: var(--text-muted);
-  transition: all 0.15s;
-  white-space: nowrap;
+  color: var(--text-secondary);
   user-select: none;
+  transition: color 0.1s;
 }
-.toggle-pill:hover { border-color: var(--border-light); color: var(--text-secondary); }
-.toggle-pill.on {
-  background: var(--accent-glow);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.toggle-pill input { display: none; }
+.toggle-pill:hover { color: var(--text-primary); }
+.toggle-pill.on { color: var(--text-primary); }
+.toggle-pill input[type="checkbox"] { display: block; }
 
 /* ---- Labeled field ---- */
 .field-editor {
