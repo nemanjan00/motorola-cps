@@ -64,12 +64,12 @@ The "Professional" or "Waris" series is a separate radio family from the Commerc
 
 ### Overview
 
-Unlike the Commercial Series CPS (C++/MFC monolith with COM DLLs), the Professional Radio CPS uses a **VB6 + ADK framework** architecture with COM-based protocol and radio abstraction layers.
+The Professional Radio CPS uses a **C++/MFC + ADK 5.1 framework** architecture with COM-based protocol and radio abstraction layers. ProRadio.exe is a native C++/MFC application (imports MFC42.DLL, standard C++ entry point), **not** VB6 as initially assumed. The GP300 CPS (gp300.exe) was VB6; the Waris evolution rewrote the main app in C++/MFC while keeping the same ADK 5.1 DLL framework.
 
 ```
 ┌─────────────────────────────────────────────┐
-│           ProRadio.exe (VB6 GUI)            │
-│  Forms, MDI interface, VB6 event handlers   │
+│         ProRadio.exe (C++/MFC GUI)          │
+│  MDI interface, MFC document/view, Amulet   │
 └────────────┬────────────────────────────────┘
              │ COM interfaces
 ┌────────────┴────────────────────────────────┐
@@ -135,101 +135,342 @@ A "Motorola Shortcut Bar" (`RSS_LAUNCHER.HLP`) provides a unified launcher for a
 
 ## Communication Protocols
 
-The Waris radios support **three** serial protocols (vs one for Commercial Series):
+The Waris radios support **three** serial protocols (vs one for Commercial Series).
 
-### 1. SBEP (Serial Bus Extension Protocol) — Primary
+**Serial configuration**: 9600/8/N/1, no flow control, echo mode (radio echoes each byte back before responding).
+
+**Baud rates observed** (from CWinSerial::Write branch conditions): 9600 (0x2580), 19200 (0x4B00), 38400 (0x9600). Echo-mode write is used at these standard baud rates; non-echo bulk write at other rates.
+
+### 1. SBEP (Serial Bus Extension Protocol) -- Primary
 
 **COM Server**: `Protocol.Motorola.Sbep` (`VComSbep.dll`)
+**Driver**: `\\.\Commsbep` (Win32) or `\\.\Vcomsbep.vxd` (Win9x VxD)
 
-SBEP is the primary protocol for Waris portables and mobiles. It's the "middle" protocol between SB9600 (simple) and ESBEP (extended).
+#### SBEP Wire Format (from Commpatch.dll decompilation)
 
-**SBEP Opcodes** (from string analysis):
+Two frame types, determined by payload size:
 
-| Opcode | Type | Description |
-|--------|------|-------------|
-| `RESET` | Request | Reset radio |
-| `REQ_CHECKSUM` | Request | Request codeplug checksum |
-| `RPY_CHECKSUM` | Reply | Checksum response |
-| `REQ_CONFIG` | Request | Request configuration |
-| `RPY_CONFIG` | Reply | Configuration response |
-| `REQ_STATUS` | Request | Request status |
-| `RPY_STATUS` | Reply | Status response |
-| `REQ_RD_DATA` | Request | Read data block |
-| `RPY_RD_DATA` | Reply | Data read response |
-| `REQ_WR_DATA` | Request | Write data block |
-| `RPY_GOOD_WR` | Reply | Write success |
-| `RPY_BAD_WR` | Reply | Write failure |
-| `REQ_ERASE_FLASH` | Request | Erase flash memory |
-| `REQ_ZERO_FLASH` | Request | Zero flash memory |
-| `RPY_UNSUPPORTED` | Reply | Operation not supported |
+**Short Frame** (data count 1-13 bytes, i.e. opcode + 0..12 data bytes):
+```
+Byte 0:    [0xF0 | N]     Header byte. N = (data_len + 1) & 0x0F.
+                           Low nibble 0x01..0x0E. High nibble always 0xF.
+Byte 1:    [opcode]        Command/response opcode
+Byte 2..N: [data...]       Payload bytes (0 to 12)
+Byte N+1:  [checksum]      0xFF - sum(bytes 0..N)
+```
+Total frame length = N + 2 bytes (header + N payload bytes + checksum).
 
-### 2. ESBEP (Extended SBEP) — Full-featured
+**Long Frame** (data count > 13 bytes, low nibble == 0x0F):
+```
+Byte 0:    [0xFF]          Header byte (0xF0 | 0x0F). Signals long frame.
+Byte 1:    [opcode]        Command/response opcode
+Byte 2:    [len_hi]        Data length high byte (big-endian)
+Byte 3:    [len_lo]        Data length low byte. Length = opcode+data count.
+Byte 4..N: [data...]       Payload bytes
+Byte N+1:  [checksum]      0xFF - sum(bytes 0..N)
+```
+Total frame length = length_field + 4 bytes (0xFF + opcode + len_hi + len_lo + data + checksum).
+
+**Frame building pseudocode** (from `fcn.100067c0` in Commpatch.dll):
+```c
+void BuildFrame(SbepMessage *msg, uint8_t opcode, uint8_t *data, uint8_t data_len, int force_long) {
+    msg->opcode = opcode;
+    msg->data_len = data_len;
+
+    // Auto-select long frame if data_len > 13 (0x0D)
+    if (force_long == 0 && data_len > 0x0D)
+        force_long = 2;  // long frame mode
+
+    if (force_long <= 1) {
+        // SHORT FRAME
+        msg->buf[0] = 0xF0 | ((data_len + 1) & 0x0F);  // header
+        msg->buf[1] = opcode;                             // opcode at offset 1
+        memcpy(&msg->buf[2], data, data_len);             // data at offset 2
+        msg->header_size = 2;
+        msg->total_len = data_len + 3;                    // header + opcode + data + checksum
+    } else {
+        // LONG FRAME
+        msg->buf[0] = 0xFF;                               // long frame marker
+        msg->buf[1] = opcode;                              // opcode at offset 1
+        msg->buf[2] = 0;                                   // len_hi (big-endian)
+        msg->buf[3] = (data_len + 1) & 0xFF;              // len_lo
+        memcpy(&msg->buf[4], data, data_len);              // data at offset 4
+        msg->header_size = 4;
+        msg->total_len = data_len + 5;                     // 0xFF + opcode + len_hi + len_lo + data + checksum
+    }
+    msg->checksum = Checksum(msg->buf, msg->total_len);
+    msg->buf[msg->total_len - 1] = msg->checksum;
+}
+```
+
+**Checksum algorithm** (from `fcn.10006a70`):
+```c
+uint8_t Checksum(uint8_t *buf, uint16_t total_len) {
+    uint8_t sum = 0;
+    for (int i = 0; i < total_len - 1; i++)
+        sum += buf[i];
+    return 0xFF - sum;
+}
+```
+
+**Checksum verification** (from `fcn.10006950`):
+```c
+bool VerifyChecksum(uint8_t *frame) {
+    uint16_t len;
+    if ((frame[0] & 0x0F) == 0x0F)
+        len = ((frame[2] << 8) | frame[3]) + 4;  // long frame total
+    else
+        len = (frame[0] & 0x0F) + 2;              // short frame total
+    uint8_t expected = Checksum(frame, len);
+    return frame[len - 1] == expected;
+}
+```
+
+**NAK byte**: `0x60` (from `fcn.10006520`: compares received byte against 0x60).
+
+**Good Write Reply**: `0x84` (RPY_GOOD_WR, from `fcn.100063f0`).
+
+**Good Read Reply**: `0x80` (RPY_RD_DATA, from `fcn.100055d0`).
+
+**Update Serial Number Reply**: `0x87` (RPY_WR_SERNUM, from `fcn.10005960`).
+
+#### SBEP Opcode Map (from VComSbep.dll `fcn.10006ab0` decompilation)
+
+Registration signature: `RegisterOpcode(name, opcode_byte, sub_cmd, ioctl_type, handler_fn)`
+
+| Opcode | Byte | Sub-cmd | Type | Description |
+|--------|------|---------|------|-------------|
+| `RESET` | `0x10` | n/a | Request | Reset radio to normal mode |
+| `REQ_RD_DATA` | `0x11` | n/a | Request | Read data from address |
+| `REQ_CHECKSUM` | `0x12` | n/a | Request | Request codeplug checksum |
+| `REQ_CONFIG` | `0x13` | n/a | Request | Request configuration |
+| `REQ_STATUS` | `0x14` | n/a | Request | Request radio status |
+| `REQ_ERASE_FLASH` | `0x15` | n/a | Request | Erase flash memory |
+| `REQ_ZERO_FLASH` | `0x16` | n/a | Request | Zero flash memory |
+| `REQ_WR_DATA` | `0x17` | n/a | Request | Write data to address |
+| `RPY_RD_DATA` | `0x80` | n/a | Response | Read data response |
+| `RPY_CHECKSUM` | `0x81` | n/a | Response | Checksum response |
+| `RPY_CONFIG` | `0x82` | n/a | Response | Configuration response |
+| `RPY_STATUS` | `0x83` | n/a | Response | Status response |
+| `RPY_GOOD_WR` | `0x84` | n/a | Response | Write success |
+| `RPY_BAD_WR` | `0x85` | n/a | Response | Write failure |
+| `RPY_UNSUPPORTED` | `0x86` | n/a | Response | Unsupported opcode |
+
+**Request opcode range**: `0x10`-`0x17` (7 opcodes).
+**Response opcode range**: `0x80`-`0x86` (7 opcodes).
+
+#### SBEP Read Data Transaction
+
+From `fcn.100055d0` (CSbepBroker::ReadData):
+```
+Request frame payload: [opcode=0x11] [addr_hi] [addr_mid] [addr_lo] [length]
+  - 3-byte address (big-endian, 24-bit)
+  - 1-byte length (max transfer size)
+
+Response frame: [opcode=0x80] [addr_hi] [addr_mid] [addr_lo] [data...]
+  - First 3 bytes of response data are the echoed address
+  - Remaining bytes are the requested data
+  - Actual data starts at response_data[3], length = response_data_len - 3
+```
+
+#### SBEP Write Data Transaction
+
+From `fcn.100063f0` (CSbepComm write path):
+```
+Request frame payload: [opcode=0x17] [addr_hi] [addr_mid] [addr_lo] [data...]
+Response: [opcode=0x84] (RPY_GOOD_WR) or [opcode=0x85] (RPY_BAD_WR)
+```
+
+### 2. ESBEP (Extended SBEP) -- Full-featured
 
 **COM Server**: `Protocol.Motorola.ESbep` (`VComESbp.dll`)
 
-ESBEP is the extended protocol with additional commands for diagnostics and alignment.
+ESBEP is a strict superset of SBEP. Same wire format, additional opcodes.
 
-**ESBEP-only Opcodes** (superset of SBEP):
+#### ESBEP Opcode Map (from VComESbp.dll `fcn.10006aa0` decompilation)
 
-| Opcode | Type | Description |
-|--------|------|-------------|
-| `REQ_MODEL_NO` | Request | Query model number |
-| `REQ_SERIAL_NO` | Request | Query serial number |
-| `REQ_ESERIAL_NO` | Request | Query electronic serial number (ESN) |
-| `REQ_UUID` | Request | Query UUID |
-| `REQ_SW_VER` | Request | Query software/firmware version |
-| `REQ_FW_PART_NO` | Request | Query firmware part number |
-| `REQ_CP_VER` | Request | Query codeplug version |
-| `REQ_CP_PART_NO` | Request | Query codeplug part number |
-| `REQ_CP_SIZE` | Request | Query codeplug size |
-| `REQ_IC_VER` | Request | Query IC version numbers |
-| `REQ_LAST_PROG` | Request | Query last programmed date |
-| `REQ_POWUP_STAT` | Request | Query power-up status |
-| `REQ_LOW_BAT_CHK` | Request | Battery check |
-| `REQ_RADIO_KEY` | Request | Radio key/password check |
-| `REQ_PWD_CHK` | Request | Password verification |
-| `REQ_RADSTAT` | Request | Radio status |
-| `RPY_RADSTAT` | Reply | Radio status response |
-| `REQ_CHANNEL` | Request | Query current channel |
-| `REQ_CHAN_STEER` | Request | Channel steering (change channel) |
-| `REQ_FRAC_N_FREQ` | Request | Fractional-N frequency query |
-| `REQ_TUNE_PARAMS` | Request | Query tuning/alignment parameters |
-| `RPY_TUNE_PARAMS` | Reply | Tuning parameters response |
-| `REQ_AUTOTUNE` | Request | Auto-tune alignment |
-| `REQ_SOFTPOT` | Request | Soft potentiometer adjustment |
-| `RPY_SOFTPOT` | Reply | Soft potentiometer response |
-| `REQ_TESTMODE` | Request | Enter test mode |
-| `REQ_TEST_ENV` | Request | Test environment query |
-| `REQ_BUTTON_TST` | Request | Button test |
-| `RPY_BUTTON_TST` | Reply | Button test response |
-| `REQ_KEYPAD` | Request | Keypad query |
-| `REQ_INVOKE` | Request | Invoke operation |
-| `REQ_SIG_DET` | Request | Signal detect |
-| `REQ_WR_SERNUM` | Request | Write serial number |
-| `RPY_WR_SERNUM` | Reply | Write serial number response |
-| `RPY_OP_COMPLETE` | Reply | Operation complete |
+All SBEP opcodes are present (same byte values). Additional opcodes:
 
-**Comparison with Commercial Series ESBEP**: The Waris ESBEP has significantly more commands — adds diagnostic/alignment capabilities (AUTOTUNE, SOFTPOT, TESTMODE, BUTTON_TST, KEYPAD, FRAC_N_FREQ, etc.) that the Commercial Series lacks. The Commercial Series ESBEP has only 6 command + 6 response opcodes.
+| Opcode | Byte | Sub-cmd | Type | Description |
+|--------|------|---------|------|-------------|
+| *SBEP base opcodes 0x10-0x17, 0x80-0x86 -- same as above* | | | | |
+| `REQ_WR_SERNUM` | `0x18` | n/a | Request | Write serial number |
+| `REQ_RADIO_KEY` | `0x19` | n/a | Request | Radio key/password check |
+| `REQ_TUNE_PARAMS` | `0x1B` | n/a | Request | Query tuning parameters |
+| `REQ_BUTTON_TST` | `0x1C` | n/a | Request | Button test mode |
+| `REQ_AUTOTUNE` | `0x1F` | n/a | Request | Auto-tune alignment |
+| `REQ_SOFTPOT` | `0x20` | n/a | Request | Soft potentiometer adjust |
+| `REQ_CHANNEL` | `0x21` | n/a | Request | Query current channel |
+| `REQ_TESTMODE` | `0x22` | n/a | Request | Enter test mode |
+| `REQ_RADSTAT` | `0x23` | n/a | Request | Radio status / query base |
+| `REQ_MODEL_NO` | `0x23` | `0x00` | Query | Query model number |
+| `REQ_SERIAL_NO` | `0x23` | `0x01` | Query | Query serial number |
+| `REQ_ESERIAL_NO` | `0x23` | `0x02` | Query | Query electronic serial (ESN) |
+| `REQ_SW_VER` | `0x23` | `0x03` | Query | Query firmware version |
+| `REQ_CP_VER` | `0x23` | `0x04` | Query | Query codeplug version |
+| `REQ_POWUP_STAT` | `0x23` | `0x05` | Query | Query power-up status |
+| `REQ_SIG_DET` | `0x23` | `0x06` | Query | Signal detect |
+| `REQ_CP_SIZE` | `0x23` | `0x07` | Query | Query codeplug size |
+| `REQ_PWD_CHK` | `0x23` | `0x08` | Query | Password check |
+| `REQ_LOW_BAT_CHK` | `0x23` | `0x09` | Query | Low battery check |
+| `REQ_LAST_PROG` | `0x23` | `0x0A` | Query | Last programmed date |
+| `REQ_CP_PART_NO` | `0x23` | `0x0B` | Query | Codeplug part number |
+| `REQ_FW_PART_NO` | `0x23` | `0x0C` | Query | Firmware part number |
+| `REQ_TEST_ENV` | `0x23` | `0x0D` | Query | Test environment |
+| `REQ_IC_VER` | `0x23` | `0x0E` | Query | IC version numbers |
+| `REQ_UUID` | `0x23` | `0x0F` | Query | UUID |
+| `REQ_KEYPAD` | `0x24` | n/a | Request | Keypad query |
+| `REQ_FRAC_N_FREQ` | `0x25` | n/a | Request | Fractional-N frequency |
+| `REQ_INVOKE` | `0x26` | n/a | Request | Invoke operation |
+| `REQ_CHAN_STEER` | `0x27` | n/a | Request | Channel steering |
+| `RPY_WR_SERNUM` | `0x87` | n/a | Response | Write serial number reply |
+| `RPY_SOFTPOT` | `0x8A` | n/a | Response | Soft potentiometer reply |
+| `RPY_RADSTAT` | `0x8B` | n/a | Response | Radio status reply |
+| `RPY_OP_COMPLETE` | `0x8C` | n/a | Response | Operation complete |
+| `RPY_TUNE_PARAMS` | `0x8D` | n/a | Response | Tuning parameters reply |
+| `RPY_BUTTON_TST` | `0x8E` | n/a | Response | Button test reply |
 
-### Commpatch.dll — Communication Patch Layer
+**Request opcode range**: `0x10`-`0x27` (note gaps: no `0x1A`, `0x1D`, `0x1E`).
+**Response opcode range**: `0x80`-`0x8E` (note gaps: no `0x88`, `0x89`).
 
-`Commpatch.dll` provides a secondary SBEP implementation with direct serial access (`CSbepBroker`, `CSbepComm`, `CWinSerial`). Key details from string analysis:
+**Query sub-commands**: Opcode `0x23` (REQ_RADSTAT) doubles as a query base. When sent with a sub-command byte as the first data byte, it queries specific radio info (16 sub-types: 0x00-0x0F). This matches the Commercial Series ESBEP query opcode `0x23`.
 
-- **Echo verification**: `CWinSerial::Write: Echo byte %d does not match transmitted character` — confirms echo-back mode
-- **SBEP operations**: Read, Write, Erase Flash, Zero Flash, Softpot, Testmode, Tune Parameters, Channel Frequency, Update Serial Number, Radio Status
-- **S-Record support**: `SRecord::WriteSrec` / `SRecord::WriteSrecData` — can write codeplug as S-Record
-- **Codeplug list access**: `CCodeplug::ReadCpList` — reads structured list blocks from codeplug
-- **Serial port**: `CWinSerial::Open` opens `com%u` ports (COM1-COM4)
+**Comparison with Commercial Series ESBEP**: The Waris ESBEP has significantly more commands -- adds diagnostic/alignment capabilities (AUTOTUNE, SOFTPOT, TESTMODE, BUTTON_TST, KEYPAD, FRAC_N_FREQ, etc.) that the Commercial Series lacks. The Commercial Series ESBEP has only 6 command + 6 response opcodes.
 
-### 3. SB9600 — Legacy
+### Commpatch.dll -- Standalone SBEP Implementation
+
+`Commpatch.dll` is a self-contained SBEP stack with direct Win32 serial access, bypassing the `\\.\Commsbep` driver. It exports a single function: `_WriteToRadio@16`.
+
+**Class hierarchy** (from RTTI):
+- `CSbepBroker` -- High-level operations (ReadData, WriteData, UpdateSerialNumber)
+- `CSbepComm` -- Send/receive with retry loop, NAK handling
+- `CSbepMessage` -- Frame construction and parsing (short/long frame)
+- `CWinSerial` -- Win32 serial port (CreateFile, ReadFile, TransmitCommChar)
+- `CSbepError` / `CCommError` / `CGenError` -- Exception hierarchy
+
+**Echo-mode write** (from `fcn.10008200` / `fcn.10008070`):
+```c
+// CWinSerial::Write sends one byte at a time using TransmitCommChar()
+// At baud rates 9600/19200/38400, echo verification is enabled:
+for (int i = 0; i < frame_len; i++) {
+    TransmitCommChar(hPort, frame[i]);  // send one byte
+
+    // Every 5 bytes (or at end of frame), read back echoed bytes
+    if ((i + 1) % 5 == 0 || i + 1 == frame_len) {
+        int echo_count = (i + 1 == frame_len) ? frame_len % 5 : 5;
+        if (echo_count == 0) echo_count = 5;
+        ReadFile(hPort, echo_buf + (i + 1 - echo_count), echo_count, ...);
+    }
+}
+
+// After all bytes sent, verify echo buffer matches transmitted data
+for (int i = 0; i < frame_len; i++) {
+    if (echo_buf[i] != frame[i]) {
+        // "CWinSerial::Write: Echo byte %d does not match transmitted character"
+        throw error;
+    }
+}
+```
+
+**Retry logic** (from `fcn.100061e0` / CSbepComm::SendAndReceive):
+- Configurable retry count stored at `this+0x438`
+- On each attempt: send frame, wait for NAK check, then receive response
+- After send, reads 1 byte; if `0x60` (NAK): "Receive Negative Ack from external device"
+- On success, calls `fcn.100063f0` to read full response frame
+- Timeout-based retry with configurable delay between attempts
+
+**Error handling** (from `fcn.10005ee0`):
+- Return code 0: success
+- Return code 1: NAK received ("Received NACK from external device")
+- Return code 4: checksum error ("Reply from external device contained checksum error")
+- Return code 5: timeout ("Timeout occurred while sending SBEP command")
+- Opcode `0x86` (RPY_UNSUPPORTED): "Received Unsupported Opcode reply from external device"
+
+### 3. SB9600 -- Legacy
 
 **COM Server**: `Protocol.Motorola.Sb9600` (`VcomSb96.dll`)
+**Driver**: `\\.\Commsb96` (Win32) or `\\.\Vcomsb96.vxd` (Win9x VxD)
 
-SB9600 is the oldest protocol, from the Saber/MTS2000 era (US Patent 5,551,068). It uses a VxD kernel driver (`\\.\Commsb96` or `\\.\Vcomsb96.vxd`) due to strict timing requirements.
+SB9600 is the oldest protocol, from the Saber/MTS2000 era (US Patent 5,551,068). It uses a VxD kernel driver due to strict timing requirements.
 
-**SB9600 Opcodes**: `MEMREAD`, `MEMWRITE` (direct memory access)
+#### SB9600 Opcode Map (from VcomSb96.dll `fcn.10008850` decompilation)
 
-SB9600 is much simpler — it provides raw memory read/write without the structured command set of SBEP/ESBEP.
+| Opcode | Byte | Type | Description |
+|--------|------|------|-------------|
+| `EPREQ` | `0x06` | Command | EEPROM request (simple read/write) |
+| `MEMWRITE` | `0x07` | Command | Memory write |
+| `MEMACS` | `0x08` | Command | Memory access (read/write control) |
+| `TSTMOD` | `0x40` | Command | Test mode |
+| `MEMREAD` | `0x87` | Response | Memory read response |
+
+#### SB9600 Wire Format (from handler decompilation)
+
+SB9600 uses a fixed 5-byte frame at the driver level. The COM server translates between a structured representation and the wire bytes.
+
+**MEMREAD/MEMWRITE** (`fcn.10008b00`):
+```
+Wire format (5 bytes to/from driver):
+  Byte 0: address_hi (address >> 8)
+  Byte 1: address_lo (address & 0xFF)
+  Byte 2: data byte
+  Byte 3: frame length (always 5 at this level)
+
+Structured representation (COM layer):
+  Field 1: 16-bit address (big-endian: byte0 << 8 | byte1)
+  Field 2: data byte (byte2)
+```
+
+**EPREQ/MEMACS** (`fcn.10008c90`):
+```
+Wire format (5 bytes to/from driver):
+  Byte 0: 0x00 (fixed)
+  Byte 1: device_id
+  Byte 2: (block << 5) | (address & 0x1F)   -- packed block+address
+  Byte 3: frame length (always 5)
+
+Structured representation (COM layer):
+  Field 1: device_id (byte1)
+  Field 2: block number (byte2 >> 5)      -- 3-bit block ID
+  Field 3: address within block (byte2 & 0x1F) -- 5-bit address
+```
+
+**TSTMOD** (`fcn.10008950`):
+```
+Wire format (5 bytes to/from driver):
+  Byte 0: (block << 5) | (address & 0x1F)  -- packed block+address
+  Byte 1: data[0]
+  Byte 2: data[1]
+  Byte 3: frame length (always 5)
+
+Structured representation (COM layer):
+  Field 1: block number (byte0 >> 5)
+  Field 2: address (byte0 & 0x1F)
+  Field 3: 2 data bytes
+```
+
+### IOCTL Interface (\\.\Commsbep driver)
+
+The `VComSbep.dll` communicates with the `\\.\Commsbep` kernel driver via `DeviceIoControl()`. All IOCTL codes use device type `0x0022` (FILE_DEVICE_UNKNOWN).
+
+**IOCTL codes** (from VComSbep.dll disassembly):
+
+| IOCTL Code | Function | In Size | Out Size | Description |
+|------------|----------|---------|----------|-------------|
+| `0x220007` | 0x001 | 0x24 (36) | 0 | Send SBEP frame to radio |
+| `0x22000B` | 0x002 | 0x24 (36) | 0 | Send frame (alternate path) |
+| `0x22000F` | 0x003 | 4 | 0 | Set baud rate / port config |
+| `0x220013` | 0x004 | 4 | 4 | Send and receive (transact) |
+| `0x220017` | 0x005 | 4 | 0 | Write configuration |
+| `0x22001B` | 0x006 | var | 0 | Bulk data send |
+| `0x22001F` | 0x007 | 4 | 0 | Reset/clear state |
+| `0x220023` | 0x008 | 0x14 (20) | var | Read bulk data |
+| `0x220027` | 0x009 | 4 | 0 | Enumerate serial ports |
+| `0x22002B` | 0x00A | 4 | 0 | Close/cleanup |
+| `0x220037` | 0x00D | var | var | Extended transact |
+
+**IOCTL code formula**: `CTL_CODE(0x22, func, METHOD_BUFFERED, FILE_ANY_ACCESS)` = `(0x22 << 16) | (func << 2) | 3`.
+
+The transact IOCTL (`0x220013`) sends an SBEP frame and receives the response in a single call, with retry logic and 250ms (0xFA) sleep between retries. On failure with error code `0xECEC0007` and response opcode < `0x80` (not a response), it falls back to a reset-and-retry path.
 
 ### Radio Abstraction Commands
 
@@ -638,7 +879,7 @@ Complete rewrite of core DLLs (30→41 suffix), main EXE (gp300.exe→ProRadio.e
 
 | Aspect | Commercial Series | Professional/Waris Series |
 |--------|------------------|--------------------------|
-| **Main EXE** | cps.exe (C++/MFC) | ProRadio.exe (VB6) |
+| **Main EXE** | cps.exe (C++/MFC) | ProRadio.exe (C++/MFC) |
 | **Framework** | COM DLLs, Xalan/Xerces | ADK 5.1, Amulet constraints |
 | **File format** | .cps (XOR 0x95 → XML) | .cpg (LCG stream cipher → binary) |
 | **Also supports** | — | .srec (S-Record) |
@@ -728,3 +969,411 @@ Complete rewrite of core DLLs (30→41 suffix), main EXE (gp300.exe→ProRadio.e
 
 Build path found in PDB reference at offset 0x44A033:
 `D:\tpdh36_static_view\static_view2\Waris_CPS1\Code\Release\ProRadio.pdb`
+
+---
+
+## Pack/Unpack Transform Functions (Rud41.dll / Rcg41.dll / ProRadio.exe)
+
+The CPS uses a three-layer architecture for converting between GUI field values and binary codeplug data:
+
+1. **ProRadio.exe** — Contains 90+ application-specific pack/unpack transform functions
+2. **udc41.dll** (CudcDbCgXchg) — Orchestrates the registration of transforms and block packing/unpacking
+3. **Rcg41.dll** (Ccg framework) — Core bit-level extraction/insertion engine
+
+### DLL Roles
+
+| Binary | Size | Role | Key Classes |
+|--------|------|------|-------------|
+| ProRadio.exe | 4,497,496 B | App-specific transforms, frequency tables, enum maps | N/A (global functions) |
+| udc41.dll | 196,608 B | Pack/unpack orchestration, DB-to-codeplug bridge | CudcDbCgXchg, CudcCgToDb, CudcDbToCg, CudcRdkDbToImage |
+| Rcg41.dll | 131,072 B | Core codeplug framework, bit extraction, block parsing | CcgRdkUp, CcgRdkPkCp, CcgNumField, CcgFieldLayout |
+| Rud41.dll | 536,576 B | UI framework (tree views, property sheets, drag-drop) | CudTreeVw, CudTblDlg, CudPage |
+
+### Transform Registration Pattern
+
+Transforms are registered via `CudcDbCgXchg::Add()` during initialization:
+
+```
+CudcDbCgXchg::Add(
+    slot_id,            // Amulet slot ID for the GUI field
+    block_id,           // Ccg block ID (16-bit)
+    pack_func_ptr,      // Function pointer: DB value -> codeplug binary
+    unpack_func_ptr,    // Function pointer: codeplug binary -> DB value
+    pack_name_str,      // Debug name (e.g., "PackFrequencyWith5KHzStep")
+    unpack_name_str,    // Debug name (e.g., "UnpackFrequencyWith5KHzStep")
+    flags               // Options
+)
+```
+
+Two exchange types:
+- `cgDbXchgStraight` — Direct value transfer (IsTransform() returns 0)
+- `cgDbXchgTransform` — Uses pack/unpack function pointers (IsTransform() returns 1)
+
+### Bit-Level Field Extraction (Rcg41.dll)
+
+The core bit extraction function at Rcg41.dll+0x64E0:
+
+```c
+// Extract N bits starting at MSB position from a byte
+uint32_t extract_bits(uint8_t byte_value, uint8_t msb_start, uint8_t num_bits) {
+    return (byte_value >> (msb_start - num_bits + 1)) & ((1 << num_bits) - 1);
+}
+```
+
+Multi-byte extraction (Rcg41.dll `GetBytes`): reads bytes MSB-first, concatenates, and extracts the requested bit range. Maximum 32 bits per field.
+
+### Config Info Byte (First Byte of Codeplug)
+
+```
+Byte 0 of codeplug image:
+  Bit 0: Vector size selector (0 = 2-byte vectors, 1 = 4-byte vectors)
+  Bit 1: Vector table format (0 = standard, 1 = extended)
+  Bit 2: Layout variant flag
+  Bits 4-7: Model/layout index (extracted as MSB=7, length=4)
+```
+
+The vector size (2 or 4 bytes) determines how block addresses are stored in the Vector Block.
+
+---
+
+### Complete Pack/Unpack Function Catalog
+
+#### Frequency Transforms
+
+| Pack Function | Unpack Function | Address (Pack) | Address (Unpack) | Description |
+|---|---|---|---|---|
+| PackFrequencyWith5KHzStep | UnpackFrequencyWith5KHzStep | 0x492430 | 0x4925F0 | Main channel frequency with 5 kHz step |
+| packCnvFreq | unpackCnvFreq | 0x468B40 | 0x468DC0 | Conventional personality frequency |
+| PackBaseFreq | UnpackBaseFreq | 0x61BDE0 | 0x61BD20 | LVRIS base frequency |
+| PackBandFreq | UnpackBandFreq | 0x61C090 | 0x61BE90 | Band frequency offset |
+| PackFreqB | (shared unpack) | 0x5C6140 | 0x680EF0 | Frequency variant B |
+| PackToneFreq | (shared unpack) | 0x5D7490 | 0x680EF0 | CTCSS/tone frequency |
+| packLtrFreq | unpackLtrRxFreq | 0x4EA9A0 | 0x4EAEA0 | LTR (trunking) frequency |
+| — | unpackLtrTxFreq | — | 0x4EAEA0+offset | LTR TX frequency |
+
+#### Squelch/Signaling Transforms
+
+| Pack Function | Unpack Function | Address (Pack) | Description |
+|---|---|---|---|
+| packSqCode | (paired) | 0x469310 | PL/DPL squelch code (CTCSS/DCS) |
+| packDplInvert | (paired) | 0x468A20 | DPL code inversion flag |
+| PackSigType | UnpackSigType | 0x425D20 / 0x425E30 | Signaling type enum |
+| PackToneTag | UnpackToneTag | 0x683260 / 0x6831B0 | Tone tag identifier |
+| PackMdcCallId | UnpackMdcCallId | 0x509450 / 0x509370 | MDC1200 call ID |
+| PackAckDigit | UnpackAckDigit | — | MDC acknowledgment digit |
+| PackAckType | UnpackAckType | — | MDC acknowledgment type |
+| packDtmfPrimaryID | unpackDtmfPrimaryID | — | DTMF primary ID packing |
+| packDtmfTxTone | unpackDtmfTxTone | — | DTMF TX tone enable |
+| packDtmfResetDur | unpackDtmfResetDur | — | DTMF reset duration |
+
+#### Power/Channel Transforms
+
+| Pack Function | Unpack Function | Address (Pack) | Description |
+|---|---|---|---|
+| packPowerLevel | (paired) | 0x469C00 | TX power level (Low/High/Auto) |
+| packChanBwSel | unpackChanBwSel | — | Channel bandwidth selection |
+| packChanPerType | unpackChanPerType | — | Channel personality type |
+| packTalkaroundEn | — | — | Talkaround enable flag |
+| packTalkaroundState | — | — | Talkaround state |
+| packTxInhOnBusy | — | — | TX inhibit on busy |
+| packVolOffset | unpackVolOffset | — | Volume offset |
+
+#### Button/UI Transforms
+
+| Pack Function | Unpack Function | Description |
+|---|---|---|
+| PackFctButton | — | Function button assignment |
+| packButtons | unpackFrontBtn{1-3}{Short,Long}Buttons | Front button short/long press |
+| packLSP{1-4}FctButton | — | Side button function assignment (4 slots) |
+| packRotaryBtn | unpackRotaryBtn | Rotary knob function |
+| packPinFunc | UnpackPinFunc | Accessory pin function |
+| packKeypadCfg | unpackKeypadCfg | Keypad configuration |
+| packMobileKeypadCfg | unpackMobileKeypadCfg | Mobile keypad configuration |
+
+#### LTR Trunking Transforms
+
+| Pack Function | Unpack Function | Description |
+|---|---|---|
+| packLtrFreq | unpackLtrRxFreq / unpackLtrTxFreq | LTR Rx/Tx frequency |
+| packLtrButtons | unpackLtr{Front,Side,Top}Btn{1-3}{Short,Long}Buttons | LTR button assignments |
+| packLtrHomeRptr | unpackLtrHomeRptr | LTR home repeater |
+| packLtrPerOptionBoardCfgIndex | unpackOptionBoardCfgIndex | LTR option board config |
+
+#### Generic Arithmetic Transforms
+
+| Pack Function | Unpack Function | Description |
+|---|---|---|
+| packIntDivideByInt | unpackIntMultiplyByInt | Integer divide/multiply pair |
+| PackDoubleMultiple | UnpackIntDividedByNumIntoDouble | Double multiply/divide pair |
+| PackDoubleMultipliedByNumIntoInt | unpackDivideByStepIntoDouble | Step-based conversion |
+| PackNumericDivide | UnpackNumericDivide | Numeric division |
+| PackNumericMultiple | UnpackNumericMultiple | Numeric multiplication |
+| PackNumericMinus | UnpackNumericPlus | Numeric subtract/add pair |
+| — | UnpackNumericPlus1Multiple | Plus-one then multiply |
+| PackNumericDivideMinus1 | — | Divide then subtract 1 |
+
+#### Index/Lookup Transforms
+
+| Pack Function | Unpack Function | Description |
+|---|---|---|
+| PackListToIndex | UnpackIntInc | List selection to codeplug index |
+| packListIndex | unpackListIndex1ForZero | List index with zero mapping |
+| packListIndexOr255ForDisabled | unpackListIndexOrDisabledFor255 | 0xFF = disabled sentinel |
+| packList_Index1ForCP255 | unpackList_Index1ForCP255 | Special CP 255 mapping |
+| packIndexMinusOne | unpackIndexMinusOne | Index offset by -1 |
+| packIndexPlusOne | — | Index offset by +1 |
+| packRecCgValFromIndex | unpackRecCgValToIndex | Record codeplug value lookup |
+| packNRecCgValFromIndex | unpackNRecCgValToIndex | N-record lookup |
+| packRecCgValFromZoneIndex | — | Zone index lookup |
+| packChildRecCgValFromIndex | — | Child record lookup |
+| packChildRecIntMinusOneToCgVal | — | Child record with offset |
+
+#### Boolean/Enum Transforms
+
+| Pack Function | Unpack Function | Description |
+|---|---|---|
+| PackOppositeOfUI | UnpackOppositeOfCp | Boolean inversion (UI vs CP polarity) |
+| PackZeroForBoolIfNonapplicable | UnpackBool | Bool with N/A handling |
+| PackZeroForListInfoIfNonapplicable | — | List with N/A handling |
+| packZeroForNonApplBool | unpackToBool | Non-applicable bool |
+| packArtsEnable | — | ARTS feature enable |
+| packDisableAlerts | unpackDisableAlerts | Disable alerts flag |
+
+#### Custom Range Transforms
+
+| Pack Function | Unpack Function | Description |
+|---|---|---|
+| PackStrFor255CustomRange | UnpackInfiniteFor255CustomRange | 255 = infinite sentinel |
+| PackStrForZeroCustomRange | UnpackDisabledForZeroCustomRange | 0 = disabled sentinel |
+| PackAuxCtrlMomDurCustomRange | UnpackAuxCtrlMomDurCustomRange | Aux control momentary duration |
+| PackDosAutoMuteDurCustomRange | UnpackDosAutoMuteDurCustomRange | DOS auto-mute duration |
+| PackEmerOpenMicDurCustomRange | UnpackEmerOpenMicDurCustomRange | Emergency open mic duration |
+| PackEmerTxCycDelCustomRange | UnpackEmerTxCycDelCustomRange | Emergency TX cycle delay |
+
+#### Date/Time Transforms
+
+| Pack Function | Description |
+|---|---|
+| PackDateDay | Day of month packing |
+| PackDateMonth | Month packing |
+| PackDateYear | Year packing |
+| PackTimeHour | Hour packing |
+| PackTimeMinute | Minute packing |
+
+#### Miscellaneous Transforms
+
+| Pack Function | Unpack Function | Description |
+|---|---|---|
+| PackVariableID | UnpackVariableID | Variable ID field |
+| PackRegionalId | UnpackRegionalId | Regional identification |
+| PackRefToCnvPer | UnpackRefToCnvPer | Reference to conventional personality |
+| packExpansionType | unpackExpansionType | Expansion module type |
+| packOpnBoardType | unpackOpnBoardType | Option board type |
+| packCnvPerOptionBoardCfgIndex | unpackOptionBoardCfgIndex | Option board config index |
+| packExtAlarmCfg | UnpackExtAlarmCfg | External alarm configuration |
+| packDialTypeField | — | Dial type field |
+| packRecHssSys | unpackRecHssSys | HSS (high-speed signaling) system |
+| packRevBurstToc | unpackRevBurstToc | Reverse burst TOC |
+| packRxLowBattAlert | unpackRxLowBattAlert | Low battery alert |
+| packUnmuteMuteType | unpackUnmuteMuteType | Mute/unmute type |
+| — | unpackCpNumberPlusOneAndStoreValue | CP number + 1 |
+
+---
+
+### Decompiled Transform Formulas
+
+#### Frequency Encoding (5 kHz Step)
+
+**UnpackFrequencyWith5KHzStep** (ProRadio.exe @ 0x4925F0):
+```c
+// LVRIS_base is a global variable set per band type (at 0x7D97B8)
+// cp_value = numeric value from codeplug field
+// Divisor constant at 0x6BDBF8 = 200.0
+
+double freq_MHz = (double)(LVRIS_base * 5 + cp_value) / 200.0;
+```
+
+**PackFrequencyWith5KHzStep** (ProRadio.exe @ 0x492430):
+```c
+// Reverse of unpack
+int cp_value = (int)(freq_MHz * 200.0) - LVRIS_base * 5;
+```
+
+The LVRIS (Low-VHF Reference Index System) base value is band-dependent and loaded at runtime based on the radio's band selection. The base represents a frequency offset in 5 kHz units.
+
+**Frequency step sizes** (from unpackCnvFreq step table at ProRadio.exe):
+
+| Index | Step Size (MHz) | Step Size (kHz) |
+|-------|----------------|-----------------|
+| 0 | 0.0025 | 2.5 |
+| 1 | 0.003125 | 3.125 |
+| 2 | 0.005 | 5.0 |
+| 3 | 0.00625 | 6.25 |
+
+#### Base Frequency Encoding
+
+**UnpackBaseFreq** (ProRadio.exe @ 0x61BD20):
+```c
+// Constant at 0x6BCA60 = 0.025 (MHz per step)
+double base_freq_MHz = codeplug_value * 0.025;
+```
+
+**PackBaseFreq** (ProRadio.exe @ 0x61BDE0):
+```c
+int codeplug_value = (int)(freq_MHz / 0.025);
+// i.e., codeplug stores frequency in 25 kHz units
+```
+
+#### Conventional Frequency Encoding
+
+**unpackCnvFreq** (ProRadio.exe @ 0x468DC0):
+```c
+// Reads two field values and a step size index
+int field1 = GetNumFieldValue(entry, field_layout_1);  // main frequency offset
+int field2 = GetNumFieldValue(entry, field_layout_2);  // fine offset
+int step_idx = GetNumFieldValue(radio_info_block, 0x23B2);  // step size index
+
+// step_table = {0.0025, 0.003125, 0.005, 0.00625}  (MHz)
+// Constant at 0x6BCA60 = 0.025
+
+double freq = fStack * step_table[field1 * 8 + 4] + field2 * 0.025;
+```
+
+#### Squelch Code (CTCSS/DCS) Encoding
+
+**packSqCode** (ProRadio.exe @ 0x469310):
+
+The squelch code packing handles three types:
+1. **Type 1**: No squelch (code = 0x38B value)
+2. **Type 2**: CTCSS tone — `cp_value = tone_frequency * 10.0` (constant at 0x6BCA68 = 10.0)
+3. **Type 3**: DCS code — iterates through DCS code list, converts via `atoi()`, multiplies by `8.0` (0x40200000)
+
+Error string: "Error packing Conv Pers Squelch Code. Aborting pack."
+
+#### Power Level Encoding
+
+**packPowerLevel** (ProRadio.exe @ 0x469C00):
+
+String comparison against three values:
+```c
+if (strcmp(value, "Low") == 0)   return 0;
+if (strcmp(value, "High") == 0)  return 1;
+if (strcmp(value, "Auto") == 0)  return 2;
+// else: "Invalid TX Power Level" error
+```
+
+Strings at: 0x74963C="Low", 0x749640="High", 0x749648="Auto"
+
+#### Signaling Type Encoding
+
+**PackSigType** (ProRadio.exe @ 0x425D20):
+
+String comparison:
+```c
+if (strcmp(value, "MDC") == 0)          return 1;
+if (strcmp(value, "Quik-Call II") == 0) return 2;
+if (strcmp(value, "DTMF") == 0)         return 3;
+// else: "Invalid Signaling Type in DB" error
+```
+
+Strings at: 0x737044="MDC", 0x737048="Quik-Call II", 0x737058="DTMF"
+
+---
+
+### Upload/Download Sequence (Codeplug Read)
+
+The full unpack pipeline in Rcg41.dll:
+
+```
+CcgRdkUp::FullUnpack(byte_array, flags, size, import_map, ...)
+  |
+  +-> OnInitRdkUp(byte_array, flags, size)
+  |     |
+  |     +-> Create CcgRdkImage from raw bytes
+  |     +-> Read Config Info byte (first byte)
+  |     +-> Determine vector size (2 or 4 bytes)
+  |     +-> UnpackTypeCtrlAndVectorBlocks()
+  |           +-> Parse Type Control Block (bit array of present blocks)
+  |           +-> Parse Vector Block (offsets to each data block)
+  |
+  +-> InitAppVersionInfo(flags, size)
+  |     +-> Determine CcgCpLayout based on model/version
+  |     +-> Virtual call to app: AppCreateCpLayoutForUUID()
+  |
+  +-> ImageToDbTransfer(layout, flags, import_map)
+        |
+        +-> Log "UNPACKING" or "IMPORTING"
+        +-> GetNumberOfNonNullVectors()
+        +-> For each block in layout:
+        |     +-> Check TypeControlBlock if block is present
+        |     +-> Get block address from VectorBlock
+        |     +-> Create CcgUpOneDimBlock or CcgUpTwoDimBlock
+        |     +-> For each entry in block:
+        |           +-> For each field in entry layout:
+        |                 +-> CcgNumField / CcgCharField / CcgStrField
+        |                 +-> GetFieldStartByte(offset, entry_num, layout)
+        |                 +-> GetFieldStartMsb(msb, offset, layout)
+        |                 +-> GetBytes(start_byte, msb, num_bits, &value)
+        |                 +-> Apply unpack transform function
+        |                 +-> Store in Amulet Am_Object database
+        |
+        +-> DoSecondPassOfUnpack(model, version)
+              +-> Handle cross-block dependencies
+              +-> Validate constraints
+```
+
+### Codeplug Write (Pack) Sequence
+
+```
+CudcRdkDbToImage::DbToFile(layout, size, filename, filetype, ...)
+  |
+  +-> DbToPackCpDb(layout, benchmark, export_map)
+  |     |
+  |     +-> Log "PACKING"
+  |     +-> For each block in layout:
+  |           +-> CudcRdkDoc::CgDbXchg(block_id, layout, PACK, ...)
+  |           +-> CudcDbToCg::CreateBlockForDbObject(...)
+  |                 +-> CreateOneDimBlock() or CreateTwoDimBlock()
+  |                 +-> For each record in DB:
+  |                       +-> CreatePkEntry(db_object, ...)
+  |                       +-> For each field:
+  |                             +-> CreatePackField(am_value, field_id)
+  |                             +-> Apply pack transform function
+  |                             +-> CcgPkField stores packed value
+  |           +-> AddToPackCpDb(block_id, packed_block)
+  |
+  +-> PackCpDbToArr(byte_array, layout, size, ...)
+        +-> Write Config Info byte
+        +-> Build Type Control Block
+        +-> Build Vector Block with block offsets
+        +-> Serialize all packed blocks to byte array
+        +-> Compute checksums (per-entry or per-block)
+```
+
+### Codeplug Version Handling
+
+Version management uses virtual methods on CudcRdkDoc:
+
+| Method | Address (udc41.dll) | Purpose |
+|--------|---------------------|---------|
+| AppVersionIndexToVersionStr | 0x1000E9E0 | Convert version index (char) to string |
+| AppVersionStrToVersionIndex | 0x10004250 | Convert version string to index (char) |
+| AppFilterIndexToVersionIndex | 0x1000E200 | Map filter index to version index |
+| GetVersionModelFromUser | 0x1000EAE0 | Interactive version/model selection |
+| GetSaveAsVersionIndex | 0x1000BDD0 | Get version for save operation |
+| GetSaveAsModelIndex | 0x1000BDE0 | Get model for save operation |
+
+Version indices are stored as `char` values (0-11, corresponding to versions 0.00 through 11.00).
+
+The `AppCreateCpLayoutForUUID()` virtual method creates the appropriate `CcgCpLayout` object containing all block definitions, field layouts, and pack/unpack option flags for a specific radio model and codeplug version combination.
+
+### Key Global Variables (ProRadio.exe)
+
+| Address | Type | Name | Description |
+|---------|------|------|-------------|
+| 0x7D97B8 | int | LVRIS_base | Current band's LVRIS base value (set at runtime) |
+| 0x7DAE28 | rdkIndexToValue | frequency_IndexToVal | Frequency index-to-value converter object |
+| 0x7DAEC0 | rdkIsValueInRange | frequency_IsValInRange | Frequency range validator object |
+| 0x6BDBF8 | double | — | Constant 200.0 (frequency divisor for 5 kHz step) |
+| 0x6BCA60 | double | — | Constant 0.025 (MHz per base frequency unit) |
+| 0x6BCA68 | double | — | Constant 10.0 (CTCSS tone frequency multiplier) |

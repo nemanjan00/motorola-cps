@@ -6,7 +6,7 @@ Reverse engineer Motorola CPS (Customer Programming Software) for legacy radio f
 
 Covers two distinct radio families:
 - **Commercial Series** (CM/CP 040-380) — C++/MFC architecture, XML codeplug, ESBEP protocol
-- **Professional/Waris Series** (GP/GM 300) — VB6 + ADK 5.1 architecture, binary codeplug, SBEP/ESBEP/SB9600 protocols
+- **Professional/Waris Series** (GP/GM 300) — C++/MFC + ADK 5.1 architecture, binary codeplug, SBEP/ESBEP/SB9600 protocols
 
 ## Project Structure
 
@@ -134,16 +134,30 @@ Version prefixes observed so far:
 - **MotHeader** (800 bytes / 0x320): signature(6B) + FileType(1B) + pad(5B) + GUID(16B) + ModelNo(20B) + SerialNo(20B) + checksum(1B) + copyright + QuickInfo(300B)
 - Decryption verified against 839+ sample .cpg files from GP300 and Waris CPS
 
-### Serial Protocols (three supported, driver-mediated via DeviceIoControl)
+### Serial Protocols (fully decompiled from Commpatch.dll, VComSbep.dll, VComESbp.dll, VcomSb96.dll)
 - **SBEP** (primary): `Protocol.Motorola.Sbep` via `\\.\Commsbep` driver
-  - Short frame: `[0xF0|N] [opcode] [data...] [checksum]` (N = opcode+data count, ≤14)
-  - Long frame: `[0xFF] [opcode] [len_hi] [len_lo] [data...] [checksum]` (data >13 bytes)
+  - Short frame: `[0xF0|N] [opcode] [data...] [checksum]` (N = opcode+data count, ≤14; threshold at data_len > 0x0D)
+  - Long frame: `[0xFF] [opcode] [len_hi] [len_lo] [data...] [checksum]` (big-endian length = opcode+data count)
   - 7 request opcodes (0x10-0x17) + 7 response opcodes (0x80-0x86), NAK=0x60
-- **ESBEP** (extended): `Protocol.Motorola.ESbep` — 32 request + 13 response opcodes
-  - Superset of SBEP, adds query sub-commands on opcode 0x23 (16 sub-types), tuning (0x1B-0x27)
+  - Read: opcode 0x11, 3-byte big-endian address + 1-byte length; reply echoes address then data
+  - Write: opcode 0x17, 3-byte address + data; reply 0x84 (good) or 0x85 (bad)
+- **ESBEP** (extended): `Protocol.Motorola.ESbep` — same wire format, additional opcodes
+  - Superset of SBEP, adds opcodes 0x18-0x27 + responses 0x87-0x8E
+  - Query sub-commands on opcode 0x23 (16 sub-types: 0x00=model through 0x0F=UUID)
+  - Tuning: 0x1B (TUNE_PARAMS), 0x1F (AUTOTUNE), 0x20 (SOFTPOT)
+  - Test: 0x1C (BUTTON_TST), 0x22 (TESTMODE), 0x24 (KEYPAD)
 - **SB9600** (legacy): `Protocol.Motorola.Sb9600` via `\\.\Commsb96` VxD driver
-  - 5 opcodes only: EPREQ(0x06), MEMWRITE(0x07), MEMACS(0x08), TSTMOD(0x40), MEMREAD(0x87)
+  - 5 opcodes: EPREQ(0x06), MEMWRITE(0x07), MEMACS(0x08), TSTMOD(0x40), MEMREAD(0x87)
+  - Fixed 5-byte frames at driver level
+  - MEMREAD/MEMWRITE: [addr_hi][addr_lo][data][frame_len] -- 16-bit address, 1-byte data
+  - EPREQ/MEMACS: [0x00][device_id][(block<<5)|(addr&0x1F)][frame_len] -- 3-bit block + 5-bit addr
+  - TSTMOD: [(block<<5)|(addr&0x1F)][data0][data1][frame_len]
 - Serial config: 9600/8/N/1, echo mode, checksum = `0xFF - sum(bytes)`
+- Echo mode: TransmitCommChar one byte at a time, ReadFile every 5 bytes, verify match
+- IOCTL codes to \\.\Commsbep: 0x220007 (send), 0x22000B (send alt), 0x22000F (config), 0x220013 (transact), 0x220017 (write cfg), 0x22001F (reset), 0x220023 (read bulk), 0x220027 (enum ports)
+- Commpatch.dll: standalone SBEP stack bypassing driver, exports `_WriteToRadio@16`
+  - Classes: CSbepBroker > CSbepComm > CSbepMessage + CWinSerial
+  - Error codes: 0=success, 1=NAK, 4=checksum error, 5=timeout
 
 ### Codeplug Structure (Ccg Framework)
 - Binary format with RO (Read-Only) and RW (Read-Write) memory regions
@@ -155,11 +169,24 @@ Version prefixes observed so far:
 - Per-entry or per-block checksums: `0xFF - sum(bytes)`
 - Codeplug versions: 0.00 through 11.00 observed
 - Frequency encoding: 5 kHz step size, LVRIS Base reference system
-- 40+ pack/unpack transform functions in Rud41.dll
+- 90+ pack/unpack transform functions in ProRadio.exe (registered via CudcDbCgXchg::Add in udc41.dll)
+- Rud41.dll is UI framework only; Rcg41.dll is core codeplug framework; transforms are in ProRadio.exe
 - Amulet constraint framework (Carnegie Mellon) for radio parameter validation
+- Frequency formula: `freq_MHz = (LVRIS_base * 5 + cp_value) / 200.0` (constant=200.0 at 0x6BDBF8)
+- Base frequency stored in 25 kHz units: `base_freq_MHz = cp_value * 0.025`
+- Power level enum: 0=Low, 1=High, 2=Auto
+- Signaling type enum: 1=MDC, 2=Quik-Call II, 3=DTMF
+- CTCSS tone: `cp_value = tone_freq * 10.0`
+- Config Info byte: bit0=configInfoLength(0=2B,1=4B), bit1=isFixedVectorBlk(inverted), bit2=isImageRWCs, bits7-4=layout_version_index
+- All observed samples use byte 0x80 = layout version index 8 = "8.00"
+- Version table at ProRadio.exe+0x3D6BB8: "0.00" through "11.00" plus "03.00" (GP300 compat)
+- Step sizes: {2.5, 3.125, 5.0, 6.25} kHz (index 0-3)
+- Part number encoding: [T=H/M][SS=25/38][BB=band][F=feature][C=channels][RR=market][N=tier][suffix]
+- 226 unique part numbers across 839 samples (158 Waris, 68 GP300, zero overlap)
+- Model matrix documented in `docs/CPS_EMEA_WARIS_R06.12.05/MODEL_AND_VERSION_MATRIX.md`
 
 ### Architecture
-- Win32 VB6 app + C++/MFC ADK 5.1 DLLs
+- Win32 C++/MFC app (ProRadio.exe) + C++/MFC ADK 5.1 DLLs (GP300 gp300.exe was VB6; Waris rewrote in C++)
 - DLL suffix `30` = GP300 era, `41` = Waris era
 - COM-based radio abstraction: `Radio.Motorola.Waris` (portable), `Radio.Motorola.WarisMobile` (mobile)
 - `RSS_LAUNCHER` provides unified radio auto-detection and RSS launching

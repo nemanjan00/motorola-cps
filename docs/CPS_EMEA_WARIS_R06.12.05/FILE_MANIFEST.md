@@ -7,7 +7,7 @@
 
 **Product**: Professional Radio - Customer Programming Software
 **Supported Radios**: GP320, GP330, GP340, GP344, GP360, GP366, GP380, GP388, GM340, GM360, GM380
-**Platform**: Win32, VB6 + C++/MFC DLLs (ADK 5.1 framework)
+**Platform**: Win32, C++/MFC (ProRadio.exe + ADK 5.1 framework DLLs)
 
 ---
 
@@ -15,7 +15,7 @@
 
 | File | SHA-256 | Description | Version |
 |------|---------|-------------|---------|
-| `ProRadio.exe` | `85311f99d941b7dd0d88f5f195fac089dd037a003dae77bcc6326cdf288081c8` | VB6 main GUI application | R06.12.05 |
+| `ProRadio.exe` | `85311f99d941b7dd0d88f5f195fac089dd037a003dae77bcc6326cdf288081c8` | C++/MFC main GUI application (not VB6) | R06.12.05 |
 | `Commpatch.dll` | `7172d0253528e5c0ae427341e03bc85543fc177ce86278d31b4d2159a35e89e3` | Communication patch | ? |
 
 ## Core ADK 5.1 DLLs (C++/MFC)
@@ -52,6 +52,14 @@
 | `DrvInstall.dll` | `c804cb2372ba474a3d6d6c4f4fa5b942d027e897bd1126998b3cdbb7fce17da5` | Driver installer |
 | `commsbepx64_setup.exe` | `0ba924aa08c0a9c54eb4a7cae42c8e7f022c27de336aaca3e145ed2436262e2d` | SBEP x64 driver setup |
 
+## RDK Extension DLLs (extracted from "RDK DLLS" InstallShield group)
+
+| File | SHA-256 | Description |
+|------|---------|-------------|
+| `ruiX41.dll` | `e447b048af03b5eee8f6d1f19cec71492d3a325d19d9d8ac1e9b49fc322e630f` | RDK UI extension — file dialogs (CUiFileDlg, CUiPortDlg, strUiFileDlgInfo) |
+| `udcrX41.dll` | `7d130341202fbac37ed4e58d89416a6e856a76c6bdc7e0054bb02eedfec6ef5d` | RDK UDC driver extension — device UUID, port selection, temp file creation |
+| `udcX41.dll` | `a52ce79ed46d5e7e8bb88d172643f4a9e7e2021dc8919b7300b87f11b3f59f24` | RDK UDC extension — file dialogs with codeplug metadata (CudcRdkFileDlg) |
+
 ## Additional ADK DLLs
 
 Note: `pip41.dll` and `udc41.dll` are in the main files directory (not a separate "Incompatible" subfolder as initially expected). They are core ADK components:
@@ -85,6 +93,6 @@ GP300 had: `pip30.dll`, `udc30.dll`, `udcX30.dll`, `udcrX30.dll`, `ruiX30.dll`
 These evolved to 41-series equivalents still imported by ProRadio.exe:
 - `pip30.dll` → `pip41.dll` (captured in Incompatible_Waris_DLLs)
 - `udc30.dll` → `udc41.dll` (captured in Incompatible_Waris_DLLs)
-- `udcX30.dll` → `udcX41.dll` (**missing from extraction** — in installer but not captured)
-- `udcrX30.dll` → `udcrX41.dll` (**missing from extraction**)
-- `ruiX30.dll` → `ruiX41.dll` (**missing from extraction**)
+- `udcX30.dll` → `udcX41.dll` (extracted from "RDK DLLS" InstallShield group)
+- `udcrX30.dll` → `udcrX41.dll` (extracted from "RDK DLLS" InstallShield group)
+- `ruiX30.dll` → `ruiX41.dll` (extracted from "RDK DLLS" InstallShield group)
