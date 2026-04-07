@@ -125,9 +125,17 @@ const lastProgrammed = computed(() => {
       <div v-if="partNumberDecoded" class="card mt-4">
         <h3>Decoded Part Number</h3>
         <div class="info-grid">
-          <div v-for="(val, key) in partNumberDecoded" :key="key" class="info-row">
-            <span class="info-label">{{ key }}</span>
-            <span class="info-value text-mono">{{ val }}</span>
+          <div class="info-row">
+            <span class="info-label">Form Factor</span>
+            <span class="info-value text-mono">{{ partNumberDecoded.formFactor }}</span>
+          </div>
+          <div v-if="partNumberDecoded.band" class="info-row">
+            <span class="info-label">Band</span>
+            <span class="info-value text-mono">{{ partNumberDecoded.band.band }} ({{ partNumberDecoded.band.range }})</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Part Number</span>
+            <span class="info-value text-mono">{{ partNumberDecoded.raw }}</span>
           </div>
         </div>
       </div>
