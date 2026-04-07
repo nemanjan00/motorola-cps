@@ -1,51 +1,31 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useCodeplugStore } from '../stores/codeplug.js';
 import { getBlockFields, getFieldDef } from 'motorola-cps';
 import FieldEditor from '../components/FieldEditor.vue';
 
 const cpStore = useCodeplugStore();
-const expandedBlock = ref(null);
 
 const BLOCK_LABELS = {
-  RC_BLOCK: 'General Settings',
-  DR_BLOCK: 'Dynamic Radio',
-  AC_BLOCK: 'Accessories',
-  CB_BLOCK: 'Buttons (Mobile)',
-  CBP_BLOCK: 'Buttons (Portable)',
-  SC_BLOCK: 'Signaling',
-  MDC_BLOCK: 'MDC1200',
-  MDCC_BLOCK: 'MDC Call',
-  QC_BLOCK: 'Quik-Call II',
-  QCC_BLOCK: 'Quik-Call II Call',
-  DTMF_BLOCK: 'DTMF',
-  DTMFC_BLOCK: 'DTMF Call',
-  EM_BLOCK: 'Emergency',
-  EMDC_BLOCK: 'Emergency MDC',
-  MENU_BLOCK: 'Menu Configuration',
-  OT_BLOCK: 'One-Touch',
-  PS_BLOCK: 'Phone System',
-  SLI_BLOCK: 'Scan Lists',
-  AUXC_BLOCK: 'Auxiliary',
-  OBC_BLOCK: 'Option Board',
-  RI_BLOCK: 'Radio Information',
-  MDF_BLOCK: 'Model Definition',
-  TI_BLOCK: 'Tool Information',
-  // S5T
-  S5_RADIO_OPTION_BLOCK: 'Radio Options',
-  S5_RADIO_INFO_BLOCK: 'Radio Information',
-  S5_DYNAMIC_RADIO_BLOCK: 'Dynamic Radio',
-  S5_EMERGENCY_BLOCK: 'Emergency',
-  S5_CONTACT_LIST_BLOCK: 'Contact List',
-  S5_MULTICALL_CFG_BLOCK: 'Multicall Config',
-  S5_SEL5_SIG_SYS_LIST_BLOCK: 'Select-5 Signaling',
-  S5_DTMF_SIG_SYS_LIST_BLOCK: 'DTMF Signaling',
-  S5_SCAN_LIST_BLOCK: 'Scan Lists',
-  S5_PERSONALITY_LIST_BLOCK: 'Personalities',
-  S5_BUTTON_DEFINITION_BLOCK: 'Buttons',
-  S5_ALERT_BLOCK: 'Alerts',
-  S5_GENERAL_IO_BLOCK: 'I/O Configuration',
-  S5_USER_COMMENT_BLOCK: 'User Comments',
+  RC_BLOCK: 'General Settings', DR_BLOCK: 'Dynamic Radio', AC_BLOCK: 'Accessories',
+  CB_BLOCK: 'Buttons', SC_BLOCK: 'Signaling', MDC_BLOCK: 'MDC1200',
+  MDCC_BLOCK: 'MDC Call', QC_BLOCK: 'Quik-Call II', QCC_BLOCK: 'Quik-Call II Call',
+  DTMF_BLOCK: 'DTMF', DTMFC_BLOCK: 'DTMF Call', EM_BLOCK: 'Emergency',
+  EMDC_BLOCK: 'Emergency MDC', MENU_BLOCK: 'Menu', OT_BLOCK: 'One-Touch',
+  PS_BLOCK: 'Phone System', SLI_BLOCK: 'Scan Lists', AUXC_BLOCK: 'Auxiliary',
+  OBC_BLOCK: 'Option Board', RI_BLOCK: 'Radio Info', MDF_BLOCK: 'Model Definition',
+  TI_BLOCK: 'Tool Info', SM_BLOCK: 'Scan Members', CALL_BLOCK: 'Call List',
+  S5_RADIO_OPTION_BLOCK: 'Radio Options', S5_RADIO_INFO_BLOCK: 'Radio Info',
+  S5_DYNAMIC_RADIO_BLOCK: 'Dynamic Radio', S5_EMERGENCY_BLOCK: 'Emergency',
+  S5_CONTACT_LIST_BLOCK: 'Contacts', S5_MULTICALL_CFG_BLOCK: 'Multicall',
+  S5_SEL5_SIG_SYS_LIST_BLOCK: 'Select-5', S5_DTMF_SIG_SYS_LIST_BLOCK: 'DTMF',
+  S5_SCAN_LIST_BLOCK: 'Scan Lists', S5_PERSONALITY_LIST_BLOCK: 'Personalities',
+  S5_BUTTON_DEFINITION_BLOCK: 'Buttons', S5_ALERT_BLOCK: 'Alerts',
+  S5_GENERAL_IO_BLOCK: 'I/O Config', S5_USER_COMMENT_BLOCK: 'Comments',
+  S5_ENCODER_SEQ_LIST_BLOCK: 'Encoder Sequences', S5_SEL5_DECODER_LIST_BLOCK: 'Decoder List',
+  S5_ENCODER_STATUS_LIST_BLOCK: 'Encoder Status', S5_DECODER_STATUS_LIST_BLOCK: 'Decoder Status',
+  S5_AUTO_ACK_LIST_BLOCK: 'Auto Acknowledge', S5_USER_DEF_SIG_LIST_BLOCK: 'User Signaling',
+  S5_OPTION_BOARD_BLOCK: 'Option Board', S5_SEL5_DTMF_ENCODER_TG_LIST_BLOCK: 'DTMF Encoder TG',
 };
 
 const EXCLUDED = new Set([
@@ -66,102 +46,111 @@ const groups = computed(() => {
   return cpStore.codeplug.listBlocks()
     .filter(bn => !EXCLUDED.has(bn))
     .map(bn => {
-      const fields = getBlockFields(bn).filter(f => {
+      const allFields = getBlockFields(bn).filter(f => {
         const d = getFieldDef(f);
         return d && d.inputType;
       });
-      if (!fields.length) return null;
+      if (!allFields.length) return null;
+
+      // Split into booleans and non-booleans
+      const booleans = [];
+      const inputs = [];
+      for (const f of allFields) {
+        const d = getFieldDef(f);
+        if (d.inputType === 'boolean') booleans.push(f);
+        else inputs.push(f);
+      }
+
       const block = cpStore.codeplug.getBlock(bn);
       return {
         blockName: bn,
         label: BLOCK_LABELS[bn] || bn.replace(/_BLOCK$/, '').replace(/^S5_/, '').replace(/_/g, ' '),
-        fields,
+        inputs,
+        booleans,
         entryCount: block?.entries?.length || 1,
       };
     })
     .filter(Boolean);
 });
-
-function toggle(bn) {
-  expandedBlock.value = expandedBlock.value === bn ? null : bn;
-}
 </script>
 
 <template>
-  <div v-if="cpStore.isLoaded">
-    <h2 style="font-size:18px; font-weight:700; margin-bottom:20px; letter-spacing:-0.3px">Configuration</h2>
-
-    <div class="config-list">
-      <div v-for="g in groups" :key="g.blockName" class="config-block">
-        <div class="config-block-header" @click="toggle(g.blockName)"
-             :class="{ active: expandedBlock === g.blockName }">
-          <div class="flex items-center gap-3">
-            <svg :class="{ rotated: expandedBlock === g.blockName }" class="chevron"
-                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-            <span class="config-block-title">{{ g.label }}</span>
-            <span class="badge">{{ g.fields.length }} fields</span>
-          </div>
-        </div>
-
-        <div v-if="expandedBlock === g.blockName" class="config-block-body">
-          <template v-for="ei in g.entryCount" :key="ei">
-            <div v-if="g.entryCount > 1" class="text-sm text-muted mb-2 mt-4 fw-600">
-              Entry {{ ei }}
-            </div>
-            <div class="field-grid">
-              <FieldEditor
-                v-for="fn in g.fields" :key="fn"
-                :blockName="g.blockName"
-                :fieldName="fn"
-                :entryIndex="ei - 1"
-              />
-            </div>
-          </template>
-        </div>
+  <div v-if="cpStore.isLoaded" class="config-page">
+    <div v-for="g in groups" :key="g.blockName" class="config-section">
+      <div class="section-header">
+        <h3>{{ g.label }}</h3>
+        <span class="text-xs text-muted">{{ g.inputs.length + g.booleans.length }} fields</span>
       </div>
+
+      <template v-for="ei in g.entryCount" :key="ei">
+        <div v-if="g.entryCount > 1" class="entry-label">Entry {{ ei }}</div>
+
+        <!-- Labeled inputs: enum, frequency, integer, float, string, password -->
+        <div v-if="g.inputs.length" class="input-grid">
+          <FieldEditor v-for="fn in g.inputs" :key="fn"
+            :blockName="g.blockName" :fieldName="fn" :entryIndex="ei - 1" />
+        </div>
+
+        <!-- Booleans: compact toggle list -->
+        <div v-if="g.booleans.length" class="toggle-grid">
+          <FieldEditor v-for="fn in g.booleans" :key="fn"
+            :blockName="g.blockName" :fieldName="fn" :entryIndex="ei - 1" />
+        </div>
+      </template>
     </div>
   </div>
 
   <div v-else class="empty-state">
     <div class="icon">&#x2699;</div>
     <h2>No Codeplug Loaded</h2>
-    <p class="text-muted">Open a file or read from radio to edit configuration</p>
+    <p class="text-muted">Open a file or read from radio</p>
   </div>
 </template>
 
 <style scoped>
-.config-list {
+.config-page {
+  max-width: 880px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-width: 960px;
+  gap: 8px;
 }
-.config-block {
+.config-section {
   background: var(--bg-secondary);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
+  padding: 20px 24px 24px;
 }
-.config-block-header {
-  padding: 14px 20px;
-  cursor: pointer;
-  transition: background 0.1s;
-  user-select: none;
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
 }
-.config-block-header:hover { background: var(--bg-tertiary); }
-.config-block-header.active { background: var(--bg-tertiary); }
-.config-block-title { font-weight: 600; font-size: 14px; }
-.chevron { transition: transform 0.2s; color: var(--text-muted); flex-shrink: 0; }
-.chevron.rotated { transform: rotate(90deg); }
-.config-block-body {
-  padding: 8px 20px 24px;
-  border-top: 1px solid var(--border);
+.section-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  margin: 0;
 }
-.field-grid {
+.entry-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin: 16px 0 8px;
+}
+.input-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 4px 20px;
+}
+.toggle-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 </style>
