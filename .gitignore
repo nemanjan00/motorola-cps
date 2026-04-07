@@ -1,0 +1,16 @@
+# CPS binaries - never committed
+bins/
+triage/
+
+# Windows PE binaries that might end up at root
+*.exe
+*.dll
+
+# Motorola report/transform templates (binary-adjacent)
+*.mot
+
+# Other binary formats
+*.chm
+*.wav
+*.cps
+*.cpg
