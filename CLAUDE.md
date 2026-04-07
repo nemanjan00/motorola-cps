@@ -194,6 +194,16 @@ Version prefixes observed so far:
 - Trunking: LS Trunking (Logic Trunked Radio)
 - Phone interconnect via DTMF
 
+### DLL roles (corrected from deep RE)
+- `Rdb41.dll` = pure Amulet database ENGINE (18 prototypes, 52 slots, 16 constraint formulas). No radio data.
+- `Rud41.dll` = UI framework (tree views, property sheets, drag-drop). NOT upload/download.
+- `ProRadio.exe` = contains 90+ pack/unpack transforms + Amulet framework (statically linked, 188 exports)
+- `udc41.dll` = orchestration — registers transforms via CudcDbCgXchg::Add
+- `Rcg41.dll` = Ccg codeplug framework (pack/unpack, field layout, block structure)
+
+### Open question: Tuner vs CPS opcode naming
+CPS and Tuner send different command names for opcodes 0x1b, 0x21, 0x22 (e.g., CPS calls 0x1b "TUNE_PARAMS", Tuner calls it "TestMode"). Both tools target the same Waris radios. Radio firmware not reversed — exact per-opcode behavior TBD. See `docs/TUNER_PRO_R02.05.00/FILE_MANIFEST.md` for mapping.
+
 ## Tools Available
 
 - `r2` (radare2 6.1.2) with Ghidra decompiler (`pdg` command) — system-installed at `/usr/bin/r2`
