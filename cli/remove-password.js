@@ -133,58 +133,37 @@ async function handleSerialElpElm(esbep, model, showOnly, dryRun) {
     return;
   }
 
-  // Read DR_BLOCK (4-byte header + 14 bytes data = 18 bytes)
+  // Read DR_BLOCK: 4-byte header + 14 bytes data
   const drRaw = await esbep.readMemory(drAddr, 18);
-  const hdr = { headerSize: 4, entrySize: drRaw[1], entryQty: drRaw[2] };
-  const drData = drRaw.slice(hdr.headerSize, hdr.headerSize + hdr.entrySize);
+  const entrySize = drRaw[1];
+  const dataStart = drAddr + 4; // header is 4 bytes
 
-  // DR_BLOCK password layout (from EEPROM_ADDRESS_MAP.md):
-  // Password is BCD-encoded, 2 bytes, near byte 10-11 of the 14-byte entry
-  // DR_RADLOCKEN and DR_VALIDPSWD are bit flags
-  // Exact offsets vary but the XML field order gives us a clue
-
-  console.log('DR_BLOCK at 0x' + drAddr.toString(16) + ', ' + hdr.entrySize + ' bytes');
-  console.log('DR_BLOCK hex: ' + Buffer.from(drData).toString('hex'));
-
-  // Also check RC_BLOCK for CPS password (index 3)
-  const rcAddr = vbData[2 + 3 * 2] | (vbData[3 + 3 * 2] << 8);
-  if (rcAddr) {
-    const rcRaw = await esbep.readMemory(rcAddr, 5);
-    const rcSize = rcRaw[1];
-    const rcData = await esbep.readMemory(rcAddr, 4 + rcSize);
-    console.log('RC_BLOCK at 0x' + rcAddr.toString(16) + ', ' + rcSize + ' bytes');
-  }
+  console.log('DR_BLOCK at 0x' + drAddr.toString(16) + ', entry size ' + entrySize + ' bytes');
+  console.log('DR_BLOCK data: ' + Buffer.from(drRaw.slice(4, 4 + entrySize)).toString('hex'));
 
   if (showOnly) {
-    console.log('\nPassword bytes shown above. Use without --show to clear.');
+    console.log('\nUse without --show to clear.');
     return;
   }
 
   if (dryRun) {
-    console.log('\nWould zero password bytes in DR_BLOCK and RC_BLOCK.');
+    console.log('\nWould zero DR_BLOCK data (' + entrySize + ' bytes) to clear radio lock.');
+    console.log('Note: CPS password (RC_BLOCK) is not cleared — it only locks the CPS');
+    console.log('software, not the ESBEP protocol. Radio is fully accessible regardless.');
     return;
   }
 
-  // Clear approach: read the full codeplug as XML, clear fields, write back
-  // This is safest because we don't know exact byte offsets for all password fields
-  console.log('\nReading full codeplug to clear passwords safely...');
-  const session = new (await import('../lib/protocol/radio-session.js')).RadioSession(esbep);
-  const info = await session.identify();
-  const cp = await session.readCodeplug(info, (r, t) => process.stdout.write(`\r  ${r}/${t} bytes`));
-  console.log('');
+  // Zero the entire DR_BLOCK data area.
+  // This clears: radio lock password, lock enable, valid password flag,
+  // AND resets runtime state (last channel, scan state, etc.) to defaults.
+  // This is safe — DR_BLOCK is "dynamic radio" state, not configuration.
+  // The radio rebuilds runtime state on next power cycle.
+  const zeroed = new Uint8Array(entrySize);
+  await esbep.writeMemory(dataStart, zeroed);
 
-  const passwords = getPasswords(cp);
-  showPasswords(passwords);
-
-  if (!passwords.some(p => p.active)) {
-    console.log('\nNo active passwords on radio.');
-    return;
-  }
-
-  clearPasswordsFromCodeplug(cp);
-  console.log('\nWriting cleared codeplug...');
-  await session.writeCodeplug(cp, (w, t) => process.stdout.write(`\r  ${w}/${t} bytes`));
-  console.log('\nPasswords cleared on radio.');
+  console.log('\nDR_BLOCK zeroed — radio lock password cleared.');
+  console.log('Note: CPS password in RC_BLOCK not modified (does not lock the radio).');
+  console.log('Reset the radio for changes to take effect.');
 }
 
 async function handleSerialS5T(esbep, showOnly, dryRun) {
