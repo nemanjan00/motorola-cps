@@ -90,6 +90,7 @@ docs/                   — Reverse engineering documentation
   CPS_EMEA_R05.15/      — Commercial Series protocol & data docs
   CPS_EMEA_GP300_R03.11.16/  — Professional/GP300 Series
   CPS_EMEA_WARIS_R06.12.05/  — Professional/Waris Series
+  DPS_EMEA_600SERIES_R00.03.02/ — 600 Series DPS (GP600/GM600, MPT1327)
 ```
 
 ## Technical Details

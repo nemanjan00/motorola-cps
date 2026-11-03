@@ -30,12 +30,20 @@ Covers two distinct radio families:
       FILE_MANIFEST.md           ← hashes, cross-version comparison
     TUNER_PRO_R02.05.00/         ← Professional Tuner (RF alignment tool)
       FILE_MANIFEST.md           ← overview, softpot tuning capabilities
+    DPS_EMEA_600SERIES_R00.03.02/ ← 600 Series DPS (GP600/GM600, MPT1327)
+      OVERVIEW.md                ← radios, models, components, field catalog
+      FILE_FORMAT.md             ← .net/.per/.rad 7-byte XOR format (cracked)
+      FIELD_MAP.md               ← .rad/.net body field offsets (conv. personality mapped)
+      PROTOCOL.md                ← SBEP-variant serial protocol, RIB-less
+      SETUP_GUIDE.md             ← cable + Win3.1 VM programming how-to
+      FILE_MANIFEST.md           ← SHA-256 hashes
   processed/                     ← gitignored (never committed)
     CPS_EMEA_R05.15/files/       ← Commercial Series binaries
     CPS_EMEA_GP300_R03.09.03/files/  ← GP300 CPS R03.09.03
     CPS_EMEA_GP300_R03.11.16/files/  ← GP300 CPS R03.11.16 (last version)
     CPS_EMEA_WARIS_R06.12.05/files/  ← Waris CPS R06.12.05
     TUNER_PRO_R02.05.00/files/       ← Professional Tuner
+    DPS_EMEA_600SERIES_R00.03.02/files/ ← 600 Series DPS (GP600/GM600)
   triage/                        ← gitignored (drop new CPS versions here)
 ```
 
@@ -201,6 +209,38 @@ Version prefixes observed so far:
 - `udc41.dll` = orchestration — registers transforms via CudcDbCgXchg::Add
 - `Rcg41.dll` = Ccg codeplug framework (pack/unpack, field layout, block structure)
 
+## Key Findings — 600 Series (GP600/GM600, MPT1327 trunked)
+
+Pre-RSS/CPS generation DPS (Dealer Programming Software), 16-bit Windows 3.1 (NE)
+binaries built with Zinc Application Framework 4.0. Reads OLD GP1200/GM1200
+(GVN6007) RSS data.
+
+### File formats (.net/.per/.rad) — cracked
+- Static repeating **7-byte XOR key `5D 29 EA 64 B3 7F 1C`**, phase 0 at offset 0
+  (NOT the Waris LCG). Key hardcoded in WDPS_NP.EXE at 0x95BDA and 0x998C0.
+- Container: 9-byte magic → LE type word (0=net/1=per/2=rad) → LE format word
+  (0x0200=OLD, 0x0300=NEW) @0xD3 → header checksum `(sum(0x00..0xDA)−0x55)&0xFF`
+  @0xDB → LE dword field-table body → trailing sum8 checksum.
+- Fixed sizes: .net 1213/1189, .per 2033/1945, .rad 3025/2913 (NEW/OLD).
+- .rad = embedded .net block (0x000–0x4BC) + personality (0x4BD–0xBD0).
+- KEY9 `F6 39 2B A8 0D 51 C7 4D C2` is buffer-init filler, not crypto.
+
+### Serial protocol — SBEP variant, RIB-less
+- 9600 8N1 fixed, Win3.1 COMM API via Greenleaf CommLib, COM1–4.
+- **RIB-less single-wire half-duplex**: sender reads back its own echo.
+- Framing: byte0 = `opcode<<4|len` (len includes checksum), 0xF-nibble escapes
+  for extended opcodes/long data; checksum `0xFF − sum`, frame sum ≡ 0xFF mod 256.
+- Opcodes: 0x10 enter prog mode, 0x11 read block (**24-bit address**),
+  0x13 query max block, 0x17 write block (0x84/0x85 result), 0x19 mode switch,
+  0x20 softpot r/w, 0x21 set address, 0x22 tuning write, 0x23 identity strings.
+- ACK=`50` byte, NAK=`60`; retries 3, ACK timeout 200 ms, inter-byte gap 121 ms.
+- Personality regions are 0x7F1/0x799 bytes = .per body sizes (radio region IS
+  the .per body); alignment block 0x280 bytes @ radio addr 0xD80.
+- `WSERIAL.EXE` is a dealer serializer (patches identity/service password into
+  the EXE), not a comms tool. Service menus password-gated; default-programming
+  menu requires a hardware dongle.
+- 28 model numbers M08{band E/K/N/P/R}H{tier A/E/F}{ch 4/6/8}CK{rev 1-3} (+BN).
+
 ### Open question: Tuner vs CPS opcode naming
 CPS and Tuner send different command names for opcodes 0x1b, 0x21, 0x22 (e.g., CPS calls 0x1b "TUNE_PARAMS", Tuner calls it "TestMode"). Both tools target the same Waris radios. Radio firmware not reversed — exact per-opcode behavior TBD. See `docs/TUNER_PRO_R02.05.00/FILE_MANIFEST.md` for mapping.
 
@@ -251,6 +291,14 @@ CPS and Tuner send different command names for opcodes 0x1b, 0x21, 0x22 (e.g., C
 | PRO5250 | Portable | VHF, UHF1-2 | 5-Tone |
 | PRO7250 | Mobile | VHF, UHF1-2 | 5-Tone |
 
+### 600 Series (DPS, MPT1327 trunked)
+
+| Radio | Type | Signaling |
+|-------|------|-----------|
+| GP600 | Portable | MPT1327 (RegioNet43/MPT1343/Dutch PTT) |
+| GM600 | Mobile | MPT1327 (RegioNet43/MPT1343/Dutch PTT) |
+| GP1200/GM1200 | (legacy, OLD-format files only) | MPT1327 |
+
 ## Regional Variants
 
 | Region | Status | Notes |
@@ -284,6 +332,12 @@ CPS and Tuner send different command names for opcodes 0x1b, 0x21, 0x22 (e.g., C
 | Version | Location | Date Analyzed |
 |---------|----------|---------------|
 | Professional Tuner R02.05.00 | `docs/TUNER_PRO_R02.05.00/` | 2026-04-07 |
+
+### 600 Series DPS (pre-CPS, MPT1327 trunked)
+
+| Version | Region | Location | Date Analyzed |
+|---------|--------|----------|---------------|
+| R00.03.02+ | EMEA | `docs/DPS_EMEA_600SERIES_R00.03.02/` | 2026-10-21 |
 
 ### Rejected / No New Data
 
