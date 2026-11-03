@@ -13,6 +13,34 @@ dump): `processed/.../captures/native-eeprom.bin` (the 640 native bytes) and `..
 DPS decode). Offsets below are **radio addresses**; subtract `0x0D80` for the file offset into
 `native-eeprom.bin`.
 
+## Byte-coverage map (what's reversed vs. remaining)
+
+Occupancy of the 640 bytes (`.`=`00`, `f`=`FF`, `X`=data) with region status:
+
+```
+0x0D80 XXXXXXXXXXXXXXXX  Radio/alignment block (READ-ONLY). serial @0x0D88 ✓;
+0x0D90 XXXXXXXXXXXXXXXX    tuning/softpot + band-cal grid @0x0DDA (freq formula) — UNMAPPED
+0x0DA0..0x0E12 XXXX...      (factory alignment; needs the Tuner tool; not host-editable)
+0x0E13 XXXXXX.X.XXX.X.X  NETWORK block (MPT system params) — UNMAPPED (edited by WDPS_NP.EXE)
+0x0E20..0x0E4F  data        dense system data
+0x0E50..0x0E6F  sparse      small-value list @0x0E5F–0x0E6C (0C 09 05 0B 03 07 02 0A ...)
+0x0E70..0x0EAE  00          empty/reserved on this radio
+0x0EB0 XXX.XXXXX.XXXXX.   likely system/control-channel frequencies (0x3778→446.0, 0xACFE→446.99)
+0x0EC0..0x0EFF  00          empty
+0x0F00..0x0F07  Network tail (0x0F06–07 in Network checksum domain)
+0x0F08..0x0F32  PERSONALITY config — MAPPED: MPT numbers, Call Timers, power, options, group list
+0x0F33..0x0F66  "00 00 00 80" ×13 table — UNMAPPED meaning (not per-channel options)
+0x0F67..0x0F82  conventional channel table (4×7B) — MAPPED (freq/PL/+6 options)
+0x0F83..0x0F99  scan/sequence table (bf32 0f32 1f32 …) — UNMAPPED meaning
+0x0FA0..0x0FF3  FF           unused padding
+0x0FF4         personality checksum (additive) ✓ ; 0x0FF5–0x0FFB DPS-cleared field
+```
+
+Large `00`/`FF` runs are genuinely unused on this radio (nothing to decode there). The real
+remaining work for "every bit": the **Network block** (`0x0E13`–`0x0F07`, via WDPS_NP), the two
+personality tables (`0x0F33`, `0x0F83`), the alignment/tuning region (via Tuner), and the leftover
+small config bytes in `0x0F15`–`0x0F29`.
+
 ## Frequency encoding — CONFIRMED (all 4 channels, 6 values)
 
 A frequency is a **big-endian 16-bit** value. Bit 15 selects the channel step; the low 15 bits
