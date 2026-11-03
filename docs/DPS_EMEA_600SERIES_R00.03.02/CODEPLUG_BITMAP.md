@@ -96,6 +96,17 @@ baseline dump (six known values appear in the dialog's order — not coincidence
 | `0x0F11` BE16 | Highest Callable No. | 799 (`0x031F`) |
 | `0x0F13` BE16 | Own Fleet Group No. | 5500 (`0x157C`) |
 
+**Call Timers** (Edit → Trunking → Call Timers) continue in the same packed area, BE16 seconds:
+`0x0F16` = Limit Normal Call Duration (300 s = 05:00), `0x0F18` = Limit Emergency Call Duration
+(30 s = 00:30) — both unique matches. The small activation/absence/alarm delays (10/1/3/2) are in
+`0x0F20`–`0x0F29` but need contrast to pin (values too common to match uniquely).
+
+**Block boundary:** the checksum-domain probe puts `0x0F06`–`0x0F07` in the **Network** block and
+`0x0F08`+ in the **Personality** block. So MPT *Personality* Data / Call Timers / Common Radio
+params are all personality; the ~240-byte **Network** block (`0x0E13`–`0x0F07`, MPT system params)
+is the separate "Network" data source edited by **`WDPS_NP.EXE`** — still essentially unmapped (its
+field layout is the 60-record descriptor table at NP file `0x9B9E0` / IDA `dseg54`).
+
 Still TBD in/after this table: Highest Group No. (979 — not a plain BE16 match; maybe packed/derived),
 Own No. Prefix (243), Indv./Group Dial Digits (3/3), Imitate OACSU, and the NPD/LNR flags & Tx Power
 combo (Tx Power here likely overlaps the per-channel `+6` bit3). The `2B 15 7C 87 / 2B 15 7C 88`
