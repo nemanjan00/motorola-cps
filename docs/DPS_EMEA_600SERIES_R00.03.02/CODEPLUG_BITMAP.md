@@ -159,6 +159,7 @@ personality block (inside the `0x0FF4` checksum domain). Bound by write-contrast
 
 | radio addr | field | encoding |
 |---|---|---|
+| `0x0F1A`–`0x0F1B` | **Call Enable** bitmask | 12+ call-type flags (`BF FF` = all on); Edit→Trunking→Call Enable. Toggling flags cleared bits in `0x0F1A`; exact bit→flag order TBD |
 | `0x0F1E` | **Low Power level** | calibrated byte, not raw W (5 W = `0x2D`, 8 W = `0x39`; ~+4/W here) |
 | `0x0F1F` | **High Power level** | calibrated byte (25 W = `0x64`, 24 W = `0x62`; ~−2/W here) |
 | `0x0F23` bit6 (`0x40`) | **Acoustic Feedback** | 1 = enabled |
