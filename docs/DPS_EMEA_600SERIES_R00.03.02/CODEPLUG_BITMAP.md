@@ -110,7 +110,10 @@ field layout is the 60-record descriptor table at NP file `0x9B9E0` / IDA `dseg5
 Still TBD in/after this table: Highest Group No. (979 — not a plain BE16 match; maybe packed/derived),
 Own No. Prefix (243), Indv./Group Dial Digits (3/3), Imitate OACSU, and the NPD/LNR flags & Tx Power
 combo (Tx Power here likely overlaps the per-channel `+6` bit3). The `2B 15 7C 87 / 2B 15 7C 88`
-run at `0x0F2B`–`0x0F31` = Own Prefix(43)+Fleet Group(5500)+id — likely the Own Group Numbers list.
+run at `0x0F2B`–`0x0F32` is the **Own Group Numbers** list (Edit → Trunking → Own Group Numbers):
+2 entries × 4 bytes = `[Group Prefix u8 = 0x2B=43][Fleet Group BE16 = 0x157C=5500][Group u8]`, with
+`0x87`/`0x88` = displayed groups 907/908 (group = byte + 0x304; MPT group-address offset). Talkgroup
+Enable (No/No) isn't in these 4 bytes — a flag elsewhere. Preceding byte `0x0F2A` = 0x00.
 
 ## Common Radio Parameters — personality config region `0x0F00`–`0x0F32`
 
