@@ -129,6 +129,25 @@ baseline dump (six known values appear in the dialog's order — not coincidence
 (30 s = 00:30) — both unique matches. The small activation/absence/alarm delays (10/1/3/2) are in
 `0x0F20`–`0x0F29` but need contrast to pin (values too common to match uniquely).
 
+### Network block structure (`0x0E13`–`0x0F07`, from WDPS_NP)
+
+The Network block is the MPT1327 *system* definition, authored as a `.net` file in the separate
+**Network Programmer (WDPS_NP.EXE)** and merged into the radio codeplug at programming time (WDPS_NP
+has no Read-Radio — File→Open `.net` only). Its editors (= the block's sections):
+**MPT Network Specific, Hunt Options, Radio Flags, Preferential NDD Data, Access Authorisation,
+Control Channel List, Channel Frequency Plan, Counters, Timers.**
+
+Correlated to the radio dump (the sample `dps.net` has *different* values, so only structure matches):
+- `0x0E5F`–`0x0E6C` = **Control Channel List** — 8 entries (radio: channel numbers `0C 09 05 0B 03 07
+  02 0A`; dps.net sample had 58/62/64/77/…), with Time-shared / Home-Channel flag bits.
+- `0x0EB0`–`0x0EBD` = **Channel Frequency Plan** frequencies (`0x3778`→446.00, `0xACFE`→446.99,
+  `0xA9DE`→441.99 via the freq formula) — the number→MHz map.
+- `0x0E13`–`0x0E4F` = dense MPT-network/hunt/flags/NDD/access/counter/timer fields (per the editors).
+
+To byte-map the radio's actual network values: in WDPS_DP, Read Radio → File→Save a `.rad` (it
+embeds the radio's `.net` at file `0x000`–`0x4BC`), decode it with [FILE_FORMAT.md](FILE_FORMAT.md)
+/ [FIELD_MAP.md](FIELD_MAP.md), then value-match into `0x0E13`–`0x0F07`. **Not yet done.**
+
 **Block boundary:** the checksum-domain probe puts `0x0F06`–`0x0F07` in the **Network** block and
 `0x0F08`+ in the **Personality** block. So MPT *Personality* Data / Call Timers / Common Radio
 params are all personality; the ~240-byte **Network** block (`0x0E13`–`0x0F07`, MPT system params)
