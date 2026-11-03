@@ -41,10 +41,9 @@ Full ordered opcode sequence from the two captures (`sniff-readall.log`, `sniff-
 
 - **Read:** `23 23 13` (model + CP-version strings, max block) → `11 × 20` (32-byte reads over
   `0x0D80`–`0x0FFF`). Done.
-- **Write:** `23 23 13` (re-query) → **`17 × 17`** (32-byte write-blocks, each answered `0x84`
-  OK) → a final `10`. **There is no `0x19`.** `0x10` appears only at the *end* (a reset/exit),
+- **Write:** `23 23 13` (re-query) → **`17 × 17`** write-blocks (mostly 32-byte; the last two are 7 B @`0x0FF5` and 2 B @`0x0FF3`), each answered `0x84` OK → a final `10`. **There is no `0x19`.** `0x10` appears only at the *end* (a reset/exit),
   not the start.
-- **Write covers only `0x0E13`–`0x0FFF`.** The first `0x17` is at `0x000E13`; `0x0D80`–`0x0E12`
+- **Write covers only `0x0E13`–`0x0FFB`.** The first `0x17` is at `0x000E13`; `0x0D80`–`0x0E12`
   (serial `807IYA0903CG` + alignment/softpot data) is **read-only and never rewritten**. So the
   radio-writable codeplug is the ~`0x1ED`-byte region `0x0E13`–`0x0FFF` (channels, identity,
   options); the lower part is factory alignment.
