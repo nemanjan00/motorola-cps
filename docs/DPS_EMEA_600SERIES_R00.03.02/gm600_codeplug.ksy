@@ -34,8 +34,8 @@ instances:
     doc: |
       Conventional personality table at radio 0x0F67. 7-byte records; max 4 entries
       on a GM600. The table ends at the first record whose Tx frequency word = 0xFFFF
-      (DPS field help: "Tx frequency 0 ends the entries"); `marker` is a constant 0x08,
-      not the terminator.
+      (DPS field help: "Tx frequency 0 ends the entries"); the `options` byte is not the
+      terminator.
 
 types:
   channel:
@@ -52,14 +52,13 @@ types:
       - id: rx_pl_index
         type: u1
         doc: Rx PL (CTCSS) tone index; 0 = disabled (inferred; 0 on reference radio).
-      - id: marker
+      - id: options
         type: u1
         doc: |
-          Constant 0x08 on every channel, independent of freq/PL — a structural marker, NOT an
-          options byte. A write-probe proved the per-channel options (Power/Inhibit/Monitor/Data)
-          are NOT packed here (writing 0x08|bit is rejected by DPS as invalid); they live in a
-          separate personality structure, not yet bit-bound. The table ends on Tx freq = 0xFFFF,
-          not on this byte. See CODEPLUG_BITMAP.md.
+          Per-channel options bitfield; default 0x08. bit3 (0x08) always set ("valid"; clearing it
+          -> DPS "Personality data is invalid"). bit4 (0x10) = Monitor (Yes=1) — confirmed by DPS
+          write-contrast. Tx Power / Tx Inhibit / Data are other bits here, not yet individually
+          bound. Not the table terminator (table ends on Tx freq = 0xFFFF). See CODEPLUG_BITMAP.md.
     instances:
       rx_hz:
         value: '375000000 + (rx_raw & 0x7fff) * (((rx_raw & 0x8000) != 0) ? 6250 : 5000)'
