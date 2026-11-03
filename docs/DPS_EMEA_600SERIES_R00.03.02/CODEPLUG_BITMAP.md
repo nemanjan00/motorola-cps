@@ -80,6 +80,24 @@ closed-loop mouse via the QEMU monitor after `WIN.INI MouseSpeed=0` + paced comm
 DPS validation constraints: **Tx Inhibit is incompatible with Tx PL**; frequencies must stay on the
 channel step grid (off-step → "Personality data is invalid").
 
+## Common Radio Parameters — personality config region `0x0F00`–`0x0F32`
+
+DPS's Edit → Common Radio Parameters (radio-wide settings) are stored in this region of the
+personality block (inside the `0x0FF4` checksum domain). Bound by write-contrast:
+
+| radio addr | field | encoding |
+|---|---|---|
+| `0x0F1E` | **Low Power level** | calibrated byte, not raw W (5 W = `0x2D`, 8 W = `0x39`; ~+4/W here) |
+| `0x0F1F` | **High Power level** | calibrated byte (25 W = `0x64`, 24 W = `0x62`; ~−2/W here) |
+| `0x0F23` bit6 (`0x40`) | **Acoustic Feedback** | 1 = enabled |
+| `0x0F25` | **Alert Tone Volume Offset** | linear (0 → `0x00`, 4 → `0x04`) |
+| `0x0F2A` bit7 (`0x80`) | **Telephone Type Handset** | 1 = enabled |
+
+Still to bind here: Minimum Volume Level, Display Backlight Mode (enum), DTMF tone durations /
+overdialing flags, Keypad Lock, and the `b0 2b 07 d1 …` / `15 7c 87` data near `0x0F0C`–`0x0F32`
+(signaling/timers). Power levels being calibration bytes means a host can't set watts directly
+without the cal curve.
+
 ## Identity & info block — CONFIRMED
 
 | Radio addr | Field | Encoding |
