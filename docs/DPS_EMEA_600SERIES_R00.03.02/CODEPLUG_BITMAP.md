@@ -37,21 +37,41 @@ lives in a flash bank not present in the dump, but the formula is proven from da
 
 ## Channel table — CONFIRMED
 
-Radio `0x0F67`, array of **7-byte records**, terminated when byte 6 ≠ `0x08`:
+Radio `0x0F67`, array of **7-byte records**, terminated by the first record whose **Tx
+frequency word = `0xFFFF`** (the `.per` field help: "Tx frequency 0 ends the entries"):
 
 | Offset in record | Field | Encoding | Status |
 |---|---|---|---|
 | +0 | Rx frequency | BE16, formula above | **confirmed** |
-| +2 | Tx frequency | BE16, formula above (==Rx for simplex) | **confirmed** |
-| +4 | Tx PL tone | TPL list index (0 = none); CH4 = `0x13`=19 matches `.per` | **confirmed** |
-| +5 | (unknown) | `0x00` in all 4 records here | inferred: flags |
-| +6 | record marker | `0x08` = channel present; ≠`0x08` ends the table | **confirmed** |
+| +2 | Tx frequency | BE16, formula above (==Rx for simplex); `0xFFFF` = end | **confirmed** |
+| +4 | Tx PL tone | TPL list index (0 = none); CH4 = `0x13`=19 matches `.per`/GUI | **confirmed** |
+| +5 | Rx PL tone | RPL list index (0 = none); `0x00` here = "Disabled" in GUI | **confirmed** |
+| +6 | structural marker | **constant `0x08`** on every channel, independent of freq/PL | **confirmed** |
 
-This radio: 4 records at `0x0F67/0x0F6E/0x0F75/0x0F7C`, then `0x0F83` has byte6=`0x0F` (table end).
+This radio: 4 records at `0x0F67/0x0F6E/0x0F75/0x0F7C`, then `0x0F83` has Tx word `0xFFFF`
+(table end). GUI columns (Edit → Conventional Personality) confirm all four: Rx/Tx MHz, Tx Power,
+Tx Inhibit, Rx PL, Tx PL, Monitor, Data — ch4 shows `Tx PL = 3Z 123.0` (= native `+4` `0x13`).
 
-**Not locatable from this radio** (every channel here has the same value, so there is no contrast
-to bind them): Rx PL, Tx power (all High), Tx-inhibit, monitor, data-channel. Needs a radio whose
-channels differ in these to place them. The `.per` carries them as separate 32-bit fields.
+### `+6` is NOT where the per-channel options live (proven by live write-probe, 2026-11-03)
+
+A live write-probe (see [LIVE_CAPTURE.md](LIVE_CAPTURE.md) → "Option-bit write-probe") settled this:
+
+- `+6` is a **constant `0x08` on all four channels even though their freq/Tx-PL differ**, so it is
+  neither a per-channel checksum (would vary) nor an options byte at its default.
+- Writing `+6` = `0x08|bit0/1/2` (on channels with no Tx PL) → DPS "**The following fields/tables
+  are set to invalid values: Conventional Personality**". Clearing bit3 (`+6`=`0x07`) → "**Personality
+  data is invalid**". So arbitrary `+6` bit patterns are rejected: `0x08` is a required value, not a
+  bitfield of independent options.
+
+**Conclusion:** Tx Power / Tx Inhibit / Monitor / Data are **not** in the 7-byte channel record.
+They live in a **separate per-channel structure inside the personality block** — the most likely
+home is the run of **13 × `00 00 00 80` 4-byte entries at `0x0F33`–`0x0F66`** (one per possible
+channel, default option word with flag `0x80`), which sits just before the freq table. Binding the
+individual option bits there still needs DPS-generated contrast (a modified codeplug DPS writes) or
+the personality field-descriptor table in `WDPS_NP.EXE` — **not yet done.**
+
+DPS validation constraints observed along the way: **Tx Inhibit is incompatible with Tx PL**;
+frequencies must stay on the channel step grid (an off-step freq → "Personality data is invalid").
 
 ## Identity & info block — CONFIRMED
 
@@ -70,11 +90,27 @@ channels differ in these to place them. The `.per` carries them as separate 32-b
 | `0x0F67`–`0x0F82` | **conventional channel table** (4×7 bytes) | **confirmed** |
 | `0x0F83`–`0x0FFF` | padding / trailing (`FF`-filled tail, trailing bytes) | not decoded |
 
-## Checksum — UNRESOLVED
+## Checksum — ADDITIVE per-block; target/boundaries UNRESOLVED
 
-`sum(all 640) & 0xFF = 0xB0`; no clean whole-block `0xFF−sum` relationship. The EEPROM likely uses
-per-sub-block checksums (consistent with the project's per-block `0xFF−sum` note); the exact
-block boundaries were not pinned down this pass.
+DPS validates per-block checksums on read (`Radio / Network / Personality Data Checksum Failure`).
+Write-probes show the checksum is **additive** — a net-zero change inside a block passes, any
+non-zero net delta fails that block's check — and that `0x0F06` (Network) and the channel region
+(Personality) are in different domains. That is *all* the probes prove.
+
+The scheme is **not** `0xFF−sum`: summing the coarse regions below gives Radio `0xD1`, Network
+`0xDD`, Personality `0x06` (none `0xFF`), and the Personality sum is not even invariant across DPS's
+write (`0x06` → `0xF2`), so these boundaries are wrong and the stored checksum byte is elsewhere.
+`sum(all 640) & 0xFF = 0xB0`. The real target constant, boundaries, and checksum-byte location are
+**unknown** — and a host writing a genuinely modified codeplug needs them. (Over-claim of a clean
+`0xFF−sum` corrected after an independent pre-write-dump cross-check.)
+
+## DPS clears a 7-byte field on write
+
+Diffing the pre-write dump against DPS's captured write: DPS changed exactly **7 bytes**,
+`0x0FF5`–`0x0FFB`, from `20 00 00 00 00 11 DC` (factory) to `FF FF FF FF FF FF FF` — the only change
+outside re-writing data. Likely a programming-history / flag / counter field (`11 DC` ~ a value),
+cleared on each write. `native-eeprom.bin` is the **pre-write** image and holds the factory bytes;
+replaying the captured write (`sbep_write.py --restore`) restores the post-DPS state, not factory.
 
 ## Validated decoder
 
@@ -98,3 +134,39 @@ def freq_mhz(v):                       # v = BE16 as stored
 - The `0x0D80`–`0x0E60` tuning softpot encoding (needs the Tuner tool's field map or more pairs).
 - Confirm the reference/step constants in DPS's unpack transform (`WDPS_DP.EXE`) for independent
   proof — the formula is data-proven but not yet traced in code.
+
+## Native option-flag bindings — attempted, UNRESOLVED (needs contrast)
+
+Goal was to bind the per-channel option fields (Tx Power, Tx Inhibit, Rx/Tx PL, Monitor, Data,
+Transmit Timeout) to native byte/bit positions. Two GUI-free angles were tried:
+
+**Angle 1 — DP static bit-layout tables.** `WDPS_DP.EXE` has three 14-byte-record tables:
+`0xa9060` (34 recs) and `0xa93e0` (10 recs) are ASCII char-maps (fid = letter/digit code — noise);
+`0xa9de0` (31 recs, fids 1001–1155) is the **network (.net)** block bit-layout (mirror of NP
+seg54), mapping to the 0x00–0x70 network block, followed by `0x000d`-kind enum records. **No
+personality/conventional-channel option bit-table exists** in DP in this form.
+
+**Angle 2 — RAM dump.** In `dpsram.bin` the native codeplug buffer is resident at `0x62ED0A`, and
+DPS's decoded channel objects are at `~0x6AAFF8` (each channel's Rx/Tx Hz as LE32, e.g. 446068750).
+But every channel on the reference radio carries identical options, so the dump gives no contrast
+either, and the native byte6→option decode is pack/unpack code, not stored metadata.
+
+**Confirmed native channel record (radio 0x0F67, 7 bytes/entry, 4 entries):**
+
+| +off | field | notes |
+|------|-------|-------|
+| +0 | Rx BE16 | freq formula |
+| +2 | Tx BE16 | freq formula |
+| +4 | Tx PL index | u8; CH4 = 0x13 (19 = 123.0 Hz), others 0 — **confirmed** |
+| +5 | Rx PL index | u8; 0 on all channels — **inferred** |
+| +6 | flags/marker | u8; **constant 0x08** on all 4 channels |
+
+The per-channel options (power/inhibit/monitor/data) are **not individually locatable**: all four
+channels are Power=High / Inhibit=Off / Monitor=No / Data=No, so there is no value contrast; byte+5
+and byte+6 are the only non-freq/PL per-channel bytes and are constant (`00`, `08`). Whether `+6`
+packs those flags (so `0x08` = the all-default encoding) or is a record marker with options bit-packed
+elsewhere could not be decided from static data or the no-contrast RAM.
+
+**To finish:** a write-contrast capture — change one option in DPS, Write Radio, diff the native
+`0x17` payload against `native-eeprom.bin` — or read a radio whose channels have differing options.
+That is the only way to assign these bits.

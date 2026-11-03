@@ -33,8 +33,9 @@ instances:
     repeat-expr: 4
     doc: |
       Conventional personality table at radio 0x0F67. 7-byte records; max 4 entries
-      on a GM600. A record is valid while `marker` == 0x08 (the DPS field help notes
-      Tx frequency 0 also marks end-of-entries).
+      on a GM600. The table ends at the first record whose Tx frequency word = 0xFFFF
+      (DPS field help: "Tx frequency 0 ends the entries"); `marker` is a constant 0x08,
+      not the terminator.
 
 types:
   channel:
@@ -53,7 +54,12 @@ types:
         doc: Rx PL (CTCSS) tone index; 0 = disabled (inferred; 0 on reference radio).
       - id: marker
         type: u1
-        doc: 0x08 for a present entry; table ends when != 0x08.
+        doc: |
+          Constant 0x08 on every channel, independent of freq/PL — a structural marker, NOT an
+          options byte. A write-probe proved the per-channel options (Power/Inhibit/Monitor/Data)
+          are NOT packed here (writing 0x08|bit is rejected by DPS as invalid); they live in a
+          separate personality structure, not yet bit-bound. The table ends on Tx freq = 0xFFFF,
+          not on this byte. See CODEPLUG_BITMAP.md.
     instances:
       rx_hz:
         value: '375000000 + (rx_raw & 0x7fff) * (((rx_raw & 0x8000) != 0) ? 6250 : 5000)'

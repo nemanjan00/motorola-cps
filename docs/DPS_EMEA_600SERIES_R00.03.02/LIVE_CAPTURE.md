@@ -87,6 +87,33 @@ All on host `lab` (x86_64, Arch/CachyOS), no Windows media needed:
 This rig reads/decodes any GM600/GP600 DPS supports, and captures the exact protocol — the
 authoritative way to validate the reverse-engineered format for new radios/versions.
 
+## Option-bit write-probe (and what it corrected)
+
+To bind the per-channel option bits we wrote the radio directly with a standalone SBEP client
+(`captures/sbep_client.py` read, `captures/sbep_write.py` write — now also in the glasgow-rib repo
+`tools/`), replaying DPS's captured write stream with a few bytes patched, and read the result back
+through DPS. Method and findings:
+
+- Writing works from a plain host client: every `0x17` block returns `0x84` (OK). The radio stores
+  whatever it is told **regardless of validity**; DPS validates only on *read*.
+- **Checksum is additive, not `0xFF−sum`.** A net-zero change inside a block (e.g. `+1`/`−1`, or an
+  option `+k` balanced by lowering a Tx-PL index `−k`) passes; any non-zero net delta fails with a
+  block-specific `… Data Checksum Failure`. This localized the domains (`0x0F06` → Network; channel
+  region → Personality) but does **not** give the target constant, boundaries, or checksum-byte —
+  the summed regions give `0xD1/0xDD/0x06`, none `0xFF`. See CODEPLUG_BITMAP.md → "Checksum".
+- **`+6` is not the options byte.** It is a constant `0x08` on every channel; writing `0x08|bit`
+  → "invalid values: Conventional Personality", clearing bit3 → "Personality data is invalid". So
+  Tx Power / Inhibit / Monitor / Data live in a separate personality structure (candidate: the
+  `13 × 00 00 00 80` entries at `0x0F33`), **not yet bit-bound**.
+- Constraints surfaced: Tx Inhibit incompatible with Tx PL; frequencies must stay on the step grid.
+- **DPS's write clears `0x0FF5`–`0x0FFB`** (`20 00 00 00 00 11 DC` → `FF×7`): the 7-byte block at
+  `0x0FF5` in the capture is that clear. `native-eeprom.bin` is the pre-write image (factory bytes);
+  `--restore` returns the post-DPS state, not factory.
+
+Blocking the exact Monitor/Power/Inhibit/Data binding: the headless VM can't edit the grid (dead
+guest mouse; combos ignore injected keys), so DPS won't produce a modified codeplug for contrast.
+Needs a real display, or the conventional-personality field table in `WDPS_NP.EXE`.
+
 ## Supersedes
 
 - `DUMP_SEQUENCE.md` open items ("absolute region addresses", "direct vs 0x21"): **answered** —
