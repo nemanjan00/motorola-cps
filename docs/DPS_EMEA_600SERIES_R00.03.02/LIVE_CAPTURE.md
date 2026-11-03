@@ -35,6 +35,22 @@ Captured 2026-11-03. Artifacts in `../../processed/DPS_EMEA_600SERIES_R00.03.02/
 - `0x23` replies (8B frames): index 0 → `02 09` (model code), index 4 → `"02.03"` (codeplug
   version string).
 
+## Read and Write sequences (captured, byte-verified)
+
+Full ordered opcode sequence from the two captures (`sniff-readall.log`, `sniff-write.log`):
+
+- **Read:** `23 23 13` (model + CP-version strings, max block) → `11 × 20` (32-byte reads over
+  `0x0D80`–`0x0FFF`). Done.
+- **Write:** `23 23 13` (re-query) → **`17 × 17`** (32-byte write-blocks, each answered `0x84`
+  OK) → a final `10`. **There is no `0x19`.** `0x10` appears only at the *end* (a reset/exit),
+  not the start.
+- **Write covers only `0x0E13`–`0x0FFF`.** The first `0x17` is at `0x000E13`; `0x0D80`–`0x0E12`
+  (serial `807IYA0903CG` + alignment/softpot data) is **read-only and never rewritten**. So the
+  radio-writable codeplug is the ~`0x1ED`-byte region `0x0E13`–`0x0FFF` (channels, identity,
+  options); the lower part is factory alignment.
+- `0x17` write frame: `FF 17 00 24 00 <a_hi> <a_mid> <a_lo> <32 data> <cks>` (long frame, like the
+  `0x80` read reply); result `0x84` = OK (`0x85` = fail).
+
 ## Decoded codeplug (this radio)
 
 Model **M08RHF4CK3**, identity **322**. Conventional channels (from `radio.per`):
