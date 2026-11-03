@@ -135,7 +135,16 @@ params are all personality; the ~240-byte **Network** block (`0x0E13`–`0x0F07`
 is the separate "Network" data source edited by **`WDPS_NP.EXE`** — still essentially unmapped (its
 field layout is the 60-record descriptor table at NP file `0x9B9E0` / IDA `dseg54`).
 
-Still TBD in/after this table: Highest Group No. (979 — not a plain BE16 match; maybe packed/derived),
+**Derived (not stored):** Group Ident 7007, Highest Group No. 979, Own No. Prefix 243, Own Ident 124
+are absent from the dump in any BE16/LE16/BCD form — they are computed MPT1327 address values
+(prefix/ident decomposition of the stored fleet-group/group numbers), not codeplug bytes.
+
+**`0x0F33`–`0x0F66` = 13 × 4-byte slots**, all `00 00 00 80` on this radio (only the 4th byte, a
+`0x80` empty/disabled marker, is set). An empty list (scan or call/phone list) — needs a populated
+entry (DPS contrast) to decode its fields. **`0x0F8A`–`0x0F99`** is an 11-entry 2-byte sequence
+(`bf32 0f32 1f32 … 9f33 0f33`), also list-like — meaning TBD by contrast.
+
+Still TBD in/after the number table: Indv./Group Dial Digits (3/3),
 Own No. Prefix (243), Indv./Group Dial Digits (3/3), Imitate OACSU, and the NPD/LNR flags & Tx Power
 combo (Tx Power here likely overlaps the per-channel `+6` bit3). The `2B 15 7C 87 / 2B 15 7C 88`
 run at `0x0F2B`–`0x0F32` is the **Own Group Numbers** list (Edit → Trunking → Own Group Numbers):
