@@ -80,6 +80,27 @@ closed-loop mouse via the QEMU monitor after `WIN.INI MouseSpeed=0` + paced comm
 DPS validation constraints: **Tx Inhibit is incompatible with Tx PL**; frequencies must stay on the
 channel step grid (off-step → "Personality data is invalid").
 
+## MPT Personality Data — packed BE16 number table @ `0x0F08`
+
+Edit → Trunking → MPT Personality Data. Located by matching the DPS dialog values against the
+baseline dump (six known values appear in the dialog's order — not coincidence). Packed big-endian
+16-bit, byte-contiguous (fields start at odd offsets):
+
+| radio addr | field | value on ref radio |
+|---|---|---|
+| `0x0F08` (u8) | Own Prefix (MPT1327 format) | 43 (`0x2B`) |
+| `0x0F09` BE16 | Own Fleet Indv. No. | 2001 (`0x07D1`) |
+| `0x0F0B` BE16 | Own Unit No. (= radio identity) | 322 (`0x0142`) |
+| `0x0F0D` BE16 | Highest Unit No. | 899 (`0x0383`) |
+| `0x0F0F` BE16 | Lowest Callable No. | 200 (`0x00C8`) |
+| `0x0F11` BE16 | Highest Callable No. | 799 (`0x031F`) |
+| `0x0F13` BE16 | Own Fleet Group No. | 5500 (`0x157C`) |
+
+Still TBD in/after this table: Highest Group No. (979 — not a plain BE16 match; maybe packed/derived),
+Own No. Prefix (243), Indv./Group Dial Digits (3/3), Imitate OACSU, and the NPD/LNR flags & Tx Power
+combo (Tx Power here likely overlaps the per-channel `+6` bit3). The `2B 15 7C 87 / 2B 15 7C 88`
+run at `0x0F2B`–`0x0F31` = Own Prefix(43)+Fleet Group(5500)+id — likely the Own Group Numbers list.
+
 ## Common Radio Parameters — personality config region `0x0F00`–`0x0F32`
 
 DPS's Edit → Common Radio Parameters (radio-wide settings) are stored in this region of the
