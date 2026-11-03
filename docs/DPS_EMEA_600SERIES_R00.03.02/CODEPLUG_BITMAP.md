@@ -46,7 +46,7 @@ frequency word = `0xFFFF`** (the `.per` field help: "Tx frequency 0 ends the ent
 | +2 | Tx frequency | BE16, formula above (==Rx for simplex); `0xFFFF` = end | **confirmed** |
 | +4 | Tx PL tone | TPL list index (0 = none); CH4 = `0x13`=19 matches `.per`/GUI | **confirmed** |
 | +5 | Rx PL tone | RPL list index (0 = none); `0x00` here = "Disabled" in GUI | **confirmed** |
-| +6 | per-channel options | default `0x08` (bit3 always set); **bit4 `0x10` = Monitor** (confirmed) | partly bound |
+| +6 | per-channel options | bit0 Data, bits2:1 Tx Inhibit, bit3 Tx Power(1=High), bit4 Monitor (see bitfield below) | **bound** |
 
 This radio: 4 records at `0x0F67/0x0F6E/0x0F75/0x0F7C`, then `0x0F83` has Tx word `0xFFFF`
 (table end). GUI columns (Edit → Conventional Personality) confirm all four: Rx/Tx MHz, Tx Power,
@@ -64,10 +64,18 @@ baseline dump → **exactly two bytes changed**:
 | `0x0FF4` | `E6 → F6` | personality checksum byte (additive; `+0x10` data → `+0x10` here) |
 
 So the `+6` byte **does** hold the per-channel options (not a separate `0x0F33` table — the earlier
-guess here was wrong). Default `0x08`: bit3 always set ("valid"; clearing → "Personality data is
-invalid"). bit4 = Monitor. Tx Power / Tx Inhibit / Data are other `+6` bits, **not yet individually
-bound** — same method: toggle one in DPS, diff. Driving DPS is now automated headlessly
-(`mouse_ctl.py`, closed-loop mouse via QEMU monitor after `WIN.INI MouseSpeed=0` + paced commands).
+guess here was wrong). Full bitfield, each bit bound by its own 1-write DPS contrast:
+
+| `+6` bit | mask | field | values |
+|---|---|---|---|
+| 0 | `0x01` | Data | 1=Yes (Data=Yes → `08→09`) |
+| 2:1 | `0x06` | Tx Inhibit | 0 Disabled, 1 On BUSY (`08→0A`), 2 Unless PL (needs Tx PL) |
+| 3 | `0x08` | Tx Power | 1=High, 0=Low (Power=Low → `08→00`) |
+| 4 | `0x10` | Monitor | 1=Yes (Monitor=Yes → `08→18`) |
+| 7:5 | `0xE0` | unknown | not yet bound |
+
+Default `0x08` = Power High, rest off. Driving DPS is now automated headlessly (`mouse_ctl.py`,
+closed-loop mouse via the QEMU monitor after `WIN.INI MouseSpeed=0` + paced commands).
 
 DPS validation constraints: **Tx Inhibit is incompatible with Tx PL**; frequencies must stay on the
 channel step grid (off-step → "Personality data is invalid").

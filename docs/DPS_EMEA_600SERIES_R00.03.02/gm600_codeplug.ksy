@@ -55,10 +55,10 @@ types:
       - id: options
         type: u1
         doc: |
-          Per-channel options bitfield; default 0x08. bit3 (0x08) always set ("valid"; clearing it
-          -> DPS "Personality data is invalid"). bit4 (0x10) = Monitor (Yes=1) — confirmed by DPS
-          write-contrast. Tx Power / Tx Inhibit / Data are other bits here, not yet individually
-          bound. Not the table terminator (table ends on Tx freq = 0xFFFF). See CODEPLUG_BITMAP.md.
+          Per-channel options bitfield (default 0x08), all bound by DPS write-contrast:
+          bit0 (0x01)=Data(1=Yes); bits2:1 (0x06)=Tx Inhibit (0 Disabled,1 On BUSY,2 Unless PL);
+          bit3 (0x08)=Tx Power (1=High,0=Low); bit4 (0x10)=Monitor (1=Yes); bits7:5 unknown.
+          Not the table terminator (table ends on Tx freq = 0xFFFF). See CODEPLUG_BITMAP.md.
     instances:
       rx_hz:
         value: '375000000 + (rx_raw & 0x7fff) * (((rx_raw & 0x8000) != 0) ? 6250 : 5000)'
