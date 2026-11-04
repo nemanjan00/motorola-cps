@@ -8,7 +8,9 @@ doc: |
   from the radio over SBEP (opcode 0x11) at radio address 0x0D80-0x0FFF (640 bytes).
   File offset 0 = radio 0x0D80, so (radio address - 0x0D80) = offset here.
 
-  Everything in this spec is bound to the bit against ground truth: a live DPS
+  Every NAMED field here is bound to the bit against ground truth (undecoded spans are
+  kept as labelled raw regions, and a few config bytes — 0x0F15, 0x0F20-0x0F22, 0x0F24,
+  0x0F29 — are not yet bound): a live DPS
   "Read Radio" of radio serial 807IYA0903 (model M08RHF4CK3, UHF R-band) plus a
   large set of DPS write-contrasts (change one field in DPS -> Write Radio -> diff
   the dump). Values cited in docs are this reference radio's. See CODEPLUG_BITMAP.md,
@@ -193,8 +195,9 @@ instances:
     repeat-expr: 4
     doc: |
       Conventional personality table (radio 0x0F67-0x0F82). 7-byte records, exactly 4
-      on a GM600. The table ends at a record whose Tx word = 0xFFFF; 0x0F83 onward is
-      the Shortform buffer, not channels.
+      on a GM600 (a fixed count for this model). 0x0F83 onward is the Shortform Dialling
+      buffer, not channels — its 0xF-nibble padding happens to read as 0xFFFF, which only
+      *coincidentally* looks like a table terminator (it breaks once a dial string grows).
 
   # ---- 0x203-0x219 : Shortform Dialling buffer ----
   shortform_dialling:
@@ -222,7 +225,8 @@ instances:
       sum of the personality data (NOT 0xFF-sum). A host writing a modified personality
       must recompute it (+= sum of its data-byte deltas). Tracked across every contrast
       (e.g. Monitor=Yes moved data +0x10 and this byte E6->F6). Summed extent ends before
-      0x0FF4; candidate ~radio 0x0F1D-0x0FE0, not pinned exactly.
+      0x0FF4; NOT pinned (inclusive 0x0F1D-0x0FE0 sums to 0xE5 != stored 0xE6; 0x0F1D-0x0FDF
+      sums to 0xE6, so the end is likely 0x0FDF, unconfirmed).
   trailing_field:
     pos: 0x275
     size: 7
@@ -279,7 +283,10 @@ types:
         value: prefix == 0 and group_raw == 0x80
       group_number:
         value: group_raw + 0x304
-        doc: Displayed group = group_raw + 0x304 (MPT group-address offset); e.g. 0x87->907.
+        doc: |
+          Displayed group, INFERRED from two adjacent samples (0x87->907, 0x88->908) as
+          group_raw + 0x304 — a 2-point fit, not a verified MPT1327 encoding; it may
+          differ for other values.
 
   channel:
     seq:
@@ -288,7 +295,7 @@ types:
         doc: Rx frequency word (see rx_hz).
       - id: tx_raw
         type: u2
-        doc: Tx frequency word (see tx_hz). 0xFFFF marks the end of the channel table.
+        doc: Tx frequency word (see tx_hz). GM600 has a fixed 4 entries; there is NO reliable 0xFFFF terminator (see the channels doc).
       - id: tx_pl
         type: u1
         enum: pl_tone
@@ -332,8 +339,8 @@ types:
 
 enums:
   yes_no:
-    0: no
-    1: yes
+    0: "no"
+    1: "yes"
   tx_power_level:
     0: low
     1: high

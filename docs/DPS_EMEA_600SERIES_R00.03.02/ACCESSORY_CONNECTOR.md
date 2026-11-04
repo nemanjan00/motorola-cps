@@ -2,6 +2,8 @@
 
 Pinout of the rear 16-pin accessory connector (from Motorola service documentation).
 Relevant to the programming cable, the flat-audio/repeater path, and firmware-access questions.
+The table is the **generic GM350/600/900 family** pinout; **GM600-specific deviations are flagged
+inline** — notably **pin 8 is unpopulated on the GM600** (see its row and CONNECTION.md).
 
 | Pin | Name | Type | Notes |
 |---|---|---|---|
@@ -12,7 +14,7 @@ Relevant to the programming cable, the flat-audio/repeater path, and firmware-ac
 | **5** | **Flat TX Audio** | Analog I/P | **unfiltered TX path inject (e.g. modem), 150 mVRMS = 60% dev, >25 kΩ** |
 | **6** | **BUS+** | Digital I/O | **radio SCI serial bus — programming & tuning (= SBEP). Also mic-conn pin 7** |
 | 7 | GND | Ground | analog + digital ground |
-| 8 | GP3 | Digital O/P | **shared with the serial-bus DATA line**; overridden by serial when prog lead plugged |
+| 8 | GP3 (**NU on GM600**) | — | **GM600: NOT FITTED** — serial-data driver Q0421 + pull-up R0428 are unpopulated, so pin 8 is **dead; leave open** (confirmed by CONNECTION.md + a floating measurement). The "GP3 / shared serial-data-out" function is a generic GM350/900 feature, absent here. |
 | 9 | GP4 | Digital I/P | codeplug-assignable; **grounding forces radio ON** (usually emergency) |
 | 10 | Ignition Sense | Digital I/P | ignition auto-on; R0423 (4.7k, not fitted) = permanent-on |
 | 11 | **RX Audio** | Analog O/P | **continuous discriminator (flat/unfiltered) RX audio, 330 mVRMS = 60% dev, 600 Ω** |
@@ -45,8 +47,10 @@ Microphone connector (8-pin): 3=Mic Hook, 4=GND, 5=Mic Audio, 6=Mic PTT, 7=**BUS
 
 ## Repeater / squelch signals (from the CNTL GM600 schematic, sheet 8402626Y08)
 
-Controller board = **MCU U0101** (PROC350, 68HC11-class, 5195136A02) + **ASFIC U0201** (35U45,
-audio/signalling filter). The squelch logic is on the ASFIC:
+Controller board = **MCU U0101** (a 68HC11 K-series part) + **ASFIC U0201**. The GM600 manual lists
+**two board variants** — {U0101 `5195136A02` + U0201 `5105835U41`} and {U0101 `5195136A01` (masked
+68HC11K4) + U0201 `5105835U45`}; the schematic sheet used here shows U0201 `35U45` (= `5105835U45`),
+i.e. the A01/K4 variant (see FIRMWARE.md for the CPU-variant detail). The squelch logic is on the ASFIC:
 
 - **`SQDET` = ASFIC U0201 pin H1** — Squelch Detect (noise/carrier COS): the radio's carrier-operated
   squelch status, i.e. a repeater COR.

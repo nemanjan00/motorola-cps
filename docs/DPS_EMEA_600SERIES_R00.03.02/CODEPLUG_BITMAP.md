@@ -70,19 +70,21 @@ lives in a flash bank not present in the dump, but the formula is proven from da
 
 ## Channel table — CONFIRMED
 
-Radio `0x0F67`, array of **7-byte records**, terminated by the first record whose **Tx
-frequency word = `0xFFFF`** (the `.per` field help: "Tx frequency 0 ends the entries"):
+Radio `0x0F67`, array of **7-byte records** — a **fixed 4 entries on the GM600** (`0x0F67`–`0x0F82`).
+(The `.per` field help says "Tx frequency 0 ends the entries", but in the native codeplug `0x0F83`
+onward is the Shortform buffer, whose `0xF`-nibble padding only *coincidentally* reads `0xFFFF` — NOT
+a real terminator; see the Shortform Dialling section.):
 
 | Offset in record | Field | Encoding | Status |
 |---|---|---|---|
 | +0 | Rx frequency | BE16, formula above | **confirmed** |
-| +2 | Tx frequency | BE16, formula above (==Rx for simplex); `0xFFFF` = end | **confirmed** |
+| +2 | Tx frequency | BE16, formula above (==Rx for simplex) | **confirmed** |
 | +4 | Tx PL tone | TPL list index (0 = none); CH4 = `0x13`=19 matches `.per`/GUI | **confirmed** |
 | +5 | Rx PL tone | RPL list index (0 = none); `0x00` here = "Disabled" in GUI | **confirmed** |
 | +6 | per-channel options | bit0 Data, bits2:1 Tx Inhibit, bit3 Tx Power(1=High), bit4 Monitor (see bitfield below) | **bound** |
 
-This radio: 4 records at `0x0F67/0x0F6E/0x0F75/0x0F7C`, then `0x0F83` has Tx word `0xFFFF`
-(table end). GUI columns (Edit → Conventional Personality) confirm all four: Rx/Tx MHz, Tx Power,
+This radio: 4 records at `0x0F67/0x0F6E/0x0F75/0x0F7C`; `0x0F83` onward is the Shortform buffer
+(its `FF` padding is not a channel terminator). GUI columns (Edit → Conventional Personality) confirm all four: Rx/Tx MHz, Tx Power,
 Tx Inhibit, Rx PL, Tx PL, Monitor, Data — ch4 shows `Tx PL = 3Z 123.0` (= native `+4` `0x13`).
 
 ### `+6` byte = per-channel options; Monitor = bit4 (contrast-confirmed 2026-11-04)
@@ -284,7 +286,8 @@ byte by `+0x10` and byte **`0x0FF4`** by `+0x10` (`E6 → F6`) — so `0x0FF4` i
 checksum byte** and it tracks the data sum with the same sign (`checksum = Σ(data) & 0xFF`). A host
 editing the personality must recompute it (`+= Σ of its data-byte deltas`).
 
-Summed range is still being pinned (candidate `~0x0F1D–0x0FE0`, sums to `0xE6` on baseline). The
+Summed range is still being pinned: on baseline, inclusive `0x0F1D–0x0FE0` sums to `0xE5` (≠ stored
+`0xE6`), while `0x0F1D–0x0FDF` sums to exactly `0xE6` — so the end is likely `0x0FDF`, unconfirmed. The
 NETWORK block has its own checksum domain (`0x0F06` is in it — changing it → `Network Data Checksum
 Failure`); its checksum byte/range are not yet located. `sum(all 640) & 0xFF = 0xB0` (per-block, not
 whole-image). An earlier `0xFF−sum` claim here was wrong (caught by a pre-write-dump cross-check).
