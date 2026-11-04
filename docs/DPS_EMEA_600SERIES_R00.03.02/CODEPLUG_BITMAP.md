@@ -171,10 +171,12 @@ fleet 5500 / groups 907-908 cross-validate against the network). So a network wr
 `.net` authored from scratch in WDPS_NP to match THIS radio's personality, then merged+written — a
 substantial task — or the merge transform reversed statically.
 
-Format note (new): a **`.rad` from this DPS is XOR-encoded** with the repeating 7-byte key
-`5D 29 EA 64 B3 7F 1C` (phase 0) — RAD1 magic `C6 1E 18 D5 7A 21 86 1D 34` ⊕ key = the plaintext
-`9B 37 F2 B1 C9 5E 9A 40 1D`. (The `.per` saved by this same DPS is plaintext — so `.per` plaintext
-but `.rad` XOR'd in R00.05.04; see [FILE_FORMAT.md](FILE_FORMAT.md).)
+Format note (new): both **`.rad` and `.net` from this DPS are XOR-encoded** with the repeating
+7-byte key `5D 29 EA 64 B3 7F 1C` (phase 0) — RAD1 and DPS.NET both decode to the plaintext magic
+`9B 37 F2 B1 C9 5E 9A 40 1D`. The `.per` saved by this same DPS is **plaintext**. So in R00.05.04:
+`.per` plaintext, `.net`/`.rad` XOR'd (see [FILE_FORMAT.md](FILE_FORMAT.md)). The decoded `.net`
+body is a structured field-table (not a flat byte image), so mapping it onto the compacted native
+network block `0x0E13`–`0x0F07` is a real transform, not a direct correlation.
 
 **Block boundary:** the checksum-domain probe puts `0x0F06`–`0x0F07` in the **Network** block and
 `0x0F08`+ in the **Personality** block. So MPT *Personality* Data / Call Timers / Common Radio
