@@ -293,9 +293,27 @@ whole-image). An earlier `0xFF−sum` claim here was wrong (caught by a pre-writ
 
 Diffing the pre-write dump against DPS's captured write: DPS changed exactly **7 bytes**,
 `0x0FF5`–`0x0FFB`, from `20 00 00 00 00 11 DC` (factory) to `FF FF FF FF FF FF FF` — the only change
-outside re-writing data. Likely a programming-history / flag / counter field (`11 DC` ~ a value),
-cleared on each write. `native-eeprom.bin` is the **pre-write** image and holds the factory bytes;
+outside re-writing data. `native-eeprom.bin` is the **pre-write** image and holds the factory bytes;
 replaying the captured write (`sbep_write.py --restore`) restores the post-DPS state, not factory.
+
+**Investigation (2026-11-04) — factory/firmware-owned field, not DPS-managed.** The surrounding
+context is `0ff4: e6 | 20 00 00 00 00 11 DC | ff ff ff ff` (`0x0FF4` = personality checksum; the
+field is the last 7 bytes of the writable region `…0x0FFB`; `0x0FFC`–`0x0FFF` and `0x0FC0`–`0x0FF3`
+are erased `FF`). Framing: `0x20`, then LE32 `0x00000000`, then BE16 `0x11DC` (4572). Ruled out /
+established:
+- **Not a block checksum.** Additive sums of the three domains on the baseline are Radio `0xD1`,
+  Network `0xB5`, Personality `0x3B` — none equals `0x20`/`0x11`/`0xDC`.
+- **Not in the DPS personality model.** The 7-byte pattern (and `0x11DC`/`0xDC11`) does **not** appear
+  anywhere in `radio.per` (the plaintext DPS-decoded personality), so DPS does not expand or store it.
+- **Not written by `WSERIAL.EXE`.** That tool serializes the *DPS executable* for licensing
+  (`WSERIAL <exepath> [-S<serial>] …`, `EXE_INFO::write_serial/read_serial`), it does not write the
+  radio — pattern count in the binary is 0. (Corrects the older "WSERIAL writes radio identity" note.)
+
+Conclusion: `0x0FF5`–`0x0FFB` is **factory/firmware-owned data** (production tracking, an
+alignment/tuning signature, or a firmware runtime marker) that customer programming (DPS) legitimately
+**blanks** because a customer write invalidates it. Positive field-level decode would require 68HC11
+firmware RE or a before/after contrast on a second radio — both out of current scope. Keep the factory
+bytes (only in the pre-write dumps); do not assume they are reconstructible.
 
 ## Validated decoder
 
