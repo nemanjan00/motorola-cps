@@ -51,11 +51,13 @@ audio/signalling filter). The squelch logic is on the ASFIC:
 - **`SQDET` = ASFIC U0201 pin H1** — Squelch Detect (noise/carrier COS): the radio's carrier-operated
   squelch status, i.e. a repeater COR.
 - **`CHACT` = pin H2** — Channel Activity.
-- **`PLLIM` = ASFIC U0201 pin G4** — PL Limiter output: the RECEIVED PL (CTCSS) sub-audible tone after
+- **`PLLIM` = ASFIC U0201 pin A4** — PL Limiter output: the RECEIVED PL (CTCSS) sub-audible tone after
   the ASFIC's PL bandpass filter + hard limiter, as a clean logic square wave. This is what the MCU
   captures to decode PL — tap it to read the actual received tone (measure period / compare to your
-  expected PL in the controller, or feed a tone decoder). Input side: `PLIN` (J7). `RXLIMOUT` (J4) is
-  the main RX-audio limiter (data/discriminator path).
+  expected PL in the controller, or feed a tone decoder). Input side: `PLIN`. `RXLIMOUT` (pin G4) is
+  the main RX-audio limiter (data/discriminator path); `RXAUDOUT` = J4.
+  (Pin designators verified against the page-9 schematic at high zoom: column reads UPCLK=D1,
+  XTALOUT=E2, PLLIM=A4, RXLIMOUT=G4, RXAUDOUT=J4, … SQDET=H1, CHACT=H2.)
 - The valid-tone *decision* is firmware (MCU), so there is no "PL valid" pin — but `PLLIM` gives the
   raw filtered+limited tone to do the compare yourself.
 
@@ -67,7 +69,7 @@ GM600 firmware greys it out).
 at U0201 if needed.
 
 Repeater hookup options:
-- **PL-gated COR straight off the board (best):** `SQDET` (U0201 H1, carrier) + `PLLIM` (U0201 G4,
+- **PL-gated COR straight off the board (best):** `SQDET` (U0201 H1, carrier) + `PLLIM` (U0201 A4,
   received PL tone). Gate on SQDET AND a PLLIM period match = proper tone squelch, no external decoder.
 - **Carrier squelch (COS) only:** `SQDET` (H1); or threshold **RSSI** (buffered as `RSSI_BUF` via
   R0210 1k → connector **pin 15**) externally.
