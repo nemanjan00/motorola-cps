@@ -225,8 +225,10 @@ instances:
       sum of the personality data (NOT 0xFF-sum). A host writing a modified personality
       must recompute it (+= sum of its data-byte deltas). Tracked across every contrast
       (e.g. Monitor=Yes moved data +0x10 and this byte E6->F6). Summed extent ends before
-      0x0FF4; NOT pinned (inclusive 0x0F1D-0x0FE0 sums to 0xE5 != stored 0xE6; 0x0F1D-0x0FDF
-      sums to 0xE6, so the end is likely 0x0FDF, unconfirmed).
+      0x0FF4; NOT pinned — inclusive 0x0F1D-0x0FE0 sums to 0xE5 (!= stored 0xE6) and
+      0x0F1D-0x0FDF sums to 0xE6, but 0x0FE0-0x0FF3 is all 0xFF so the sum cannot pin the
+      boundary in that run; 0x0FDF is only a candidate. Settle it with a contrast write to
+      a byte just inside vs just outside 0x0FDF and see which moves 0x0FF4.
   trailing_field:
     pos: 0x275
     size: 7
@@ -287,6 +289,8 @@ types:
           Displayed group, INFERRED from two adjacent samples (0x87->907, 0x88->908) as
           group_raw + 0x304 — a 2-point fit, not a verified MPT1327 encoding; it may
           differ for other values.
+        -ke-write-expr: _value - 0x304
+        -ke-write-target: group_raw
 
   channel:
     seq:
@@ -313,8 +317,14 @@ types:
       rx_hz:
         value: '375000000 + (rx_raw & 0x7fff) * (((rx_raw & 0x8000) != 0) ? 6250 : 5000)'
         doc: f = 375.000 MHz + (word & 0x7FFF) * step; step = 6.25 kHz if bit15 else 5 kHz.
+        # kaitai-editor extension (ignored by ksc): pick the 6.25 kHz grid (set
+        # bit15) when the value lands on it, else the 5 kHz grid.
+        -ke-write-expr: '((_value - 375000000) % 6250 == 0) ? (round((_value - 375000000) / 6250) | 0x8000) : round((_value - 375000000) / 5000)'
+        -ke-write-target: rx_raw
       tx_hz:
         value: '375000000 + (tx_raw & 0x7fff) * (((tx_raw & 0x8000) != 0) ? 6250 : 5000)'
+        -ke-write-expr: '((_value - 375000000) % 6250 == 0) ? (round((_value - 375000000) / 6250) | 0x8000) : round((_value - 375000000) / 5000)'
+        -ke-write-target: tx_raw
       is_simplex:
         value: rx_raw == tx_raw
       data_channel:
@@ -349,46 +359,128 @@ enums:
     1: on_busy
     2: unless_pl
   pl_tone:
-    # CTCSS/PL tone index. 0 = Disabled; names are pl_<Motorola code>_<Hz>.
+    # CTCSS/PL tone index. 0 = Disabled; labels are "<Hz> (<Motorola code>)".
     # Source: FIELD_HELP_REFERENCE.md (confirmed idx 19 = 3Z = 123.0 Hz on ch4).
-    0: disabled
-    1: pl_xz_67_0
-    2: pl_wz_69_3
-    3: pl_xa_71_9
-    4: pl_wa_74_4
-    5: pl_xb_77_0
-    6: pl_wb_79_7
-    7: pl_yz_82_5
-    8: pl_ya_85_4
-    9: pl_yb_88_5
-    10: pl_zz_91_5
-    11: pl_za_94_8
-    12: pl_zb_97_4
-    13: pl_1z_100_0
-    14: pl_1a_103_5
-    15: pl_1b_107_2
-    16: pl_2z_110_9
-    17: pl_2a_114_8
-    18: pl_2b_118_8
-    19: pl_3z_123_0
-    20: pl_3a_127_3
-    21: pl_3b_131_8
-    22: pl_4z_136_5
-    23: pl_4a_141_3
-    24: pl_4b_146_2
-    25: pl_5z_151_4
-    26: pl_5a_156_7
-    27: pl_5b_162_2
-    28: pl_6z_167_9
-    29: pl_6a_173_8
-    30: pl_6b_179_9
-    31: pl_7z_186_2
-    32: pl_7a_192_8
-    33: pl_m1_203_5
-    34: pl_8z_206_5
-    35: pl_m2_210_7
-    36: pl_m3_218_1
-    37: pl_m4_225_7
-    38: pl_m5_233_6
-    39: pl_m6_241_8
-    40: pl_m7_250_3
+    0:
+      id: disabled
+      doc: Disabled
+    1:
+      id: xz
+      doc: 67.0 Hz (XZ)
+    2:
+      id: wz
+      doc: 69.3 Hz (WZ)
+    3:
+      id: xa
+      doc: 71.9 Hz (XA)
+    4:
+      id: wa
+      doc: 74.4 Hz (WA)
+    5:
+      id: xb
+      doc: 77.0 Hz (XB)
+    6:
+      id: wb
+      doc: 79.7 Hz (WB)
+    7:
+      id: yz
+      doc: 82.5 Hz (YZ)
+    8:
+      id: ya
+      doc: 85.4 Hz (YA)
+    9:
+      id: yb
+      doc: 88.5 Hz (YB)
+    10:
+      id: zz
+      doc: 91.5 Hz (ZZ)
+    11:
+      id: za
+      doc: 94.8 Hz (ZA)
+    12:
+      id: zb
+      doc: 97.4 Hz (ZB)
+    13:
+      id: t1z
+      doc: 100.0 Hz (1Z)
+    14:
+      id: t1a
+      doc: 103.5 Hz (1A)
+    15:
+      id: t1b
+      doc: 107.2 Hz (1B)
+    16:
+      id: t2z
+      doc: 110.9 Hz (2Z)
+    17:
+      id: t2a
+      doc: 114.8 Hz (2A)
+    18:
+      id: t2b
+      doc: 118.8 Hz (2B)
+    19:
+      id: t3z
+      doc: 123.0 Hz (3Z)
+    20:
+      id: t3a
+      doc: 127.3 Hz (3A)
+    21:
+      id: t3b
+      doc: 131.8 Hz (3B)
+    22:
+      id: t4z
+      doc: 136.5 Hz (4Z)
+    23:
+      id: t4a
+      doc: 141.3 Hz (4A)
+    24:
+      id: t4b
+      doc: 146.2 Hz (4B)
+    25:
+      id: t5z
+      doc: 151.4 Hz (5Z)
+    26:
+      id: t5a
+      doc: 156.7 Hz (5A)
+    27:
+      id: t5b
+      doc: 162.2 Hz (5B)
+    28:
+      id: t6z
+      doc: 167.9 Hz (6Z)
+    29:
+      id: t6a
+      doc: 173.8 Hz (6A)
+    30:
+      id: t6b
+      doc: 179.9 Hz (6B)
+    31:
+      id: t7z
+      doc: 186.2 Hz (7Z)
+    32:
+      id: t7a
+      doc: 192.8 Hz (7A)
+    33:
+      id: m1
+      doc: 203.5 Hz (M1)
+    34:
+      id: t8z
+      doc: 206.5 Hz (8Z)
+    35:
+      id: m2
+      doc: 210.7 Hz (M2)
+    36:
+      id: m3
+      doc: 218.1 Hz (M3)
+    37:
+      id: m4
+      doc: 225.7 Hz (M4)
+    38:
+      id: m5
+      doc: 233.6 Hz (M5)
+    39:
+      id: m6
+      doc: 241.8 Hz (M6)
+    40:
+      id: m7
+      doc: 250.3 Hz (M7)

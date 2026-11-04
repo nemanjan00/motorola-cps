@@ -287,7 +287,9 @@ checksum byte** and it tracks the data sum with the same sign (`checksum = Σ(da
 editing the personality must recompute it (`+= Σ of its data-byte deltas`).
 
 Summed range is still being pinned: on baseline, inclusive `0x0F1D–0x0FE0` sums to `0xE5` (≠ stored
-`0xE6`), while `0x0F1D–0x0FDF` sums to exactly `0xE6` — so the end is likely `0x0FDF`, unconfirmed. The
+`0xE6`), while `0x0F1D–0x0FDF` sums to exactly `0xE6` — but `0x0FE0`–`0x0FF3` is all `0xFF`, so the
+sum can't pin the boundary in that run; `0x0FDF` is only a candidate (settle it with a contrast write
+to a byte just inside vs just outside `0x0FDF` and see which moves `0x0FF4`). The
 NETWORK block has its own checksum domain (`0x0F06` is in it — changing it → `Network Data Checksum
 Failure`); its checksum byte/range are not yet located. `sum(all 640) & 0xFF = 0xB0` (per-block, not
 whole-image). An earlier `0xFF−sum` claim here was wrong (caught by a pre-write-dump cross-check).
