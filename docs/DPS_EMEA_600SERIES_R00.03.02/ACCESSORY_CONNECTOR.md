@@ -42,3 +42,27 @@ Microphone connector (8-pin): 3=Mic Hook, 4=GND, 5=Mic Audio, 6=Mic PTT, 7=**BUS
   connector** — so firmware dump/flash via HC11 bootstrap likely needs opening the radio and strapping
   MODA/MODB, not just an accessory-connector lead. (Contrast: the 26-pin Waris radios expose a boot
   pin on their connector.)
+
+## Repeater / squelch signals (from the CNTL GM600 schematic, sheet 8402626Y08)
+
+Controller board = **MCU U0101** (PROC350, 68HC11-class, 5195136A02) + **ASFIC U0201** (35U45,
+audio/signalling filter). The squelch logic is on the ASFIC:
+
+- **`SQDET` = ASFIC U0201 pin H1** — Squelch Detect (noise/carrier COS): the radio's carrier-operated
+  squelch status, i.e. a repeater COR.
+- **`CHACT` = pin H2** — Channel Activity.
+- Related ASFIC pins: `PLIN` (J7, recovered PL in), `SQIN` (H7), `PLCLK` (C3), `RSSI` (G8, in). The
+  ASFIC *filters* PL but the valid-tone decision is firmware (MCU reads it) — there is **no dedicated
+  "PL valid" output pin**.
+
+**SQDET/CHACT run ASFIC→MCU; they are NOT on the accessory connector** — tap them on the board at
+U0201 if needed.
+
+Repeater hookup options:
+- **Carrier squelch (COS):** tap `SQDET` (U0201 H1) on the board; or threshold **RSSI** (buffered as
+  `RSSI_BUF` via R0210 1k → connector **pin 15**) externally.
+- **Tone squelch (PL), no board mod:** feed **`FLT_RX_AUDIO`** (flat/discriminator RX, continuous,
+  buffered by U0202-2 MC3403 unity gain → connector **pin 11**) into an external CTCSS decoder; its
+  tone-valid output is the TONE SQL. (`RX_AUDIO`, the de-emphasized path via U0202-4, is also on the
+  connector.)
+- **TX side:** `FLAT_TX_AUDIO` inject (**pin 5**), external PTT on GP1 (**pin 3**).
