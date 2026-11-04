@@ -65,8 +65,12 @@ ASFIC general-control-bit outputs drive the GP/alarm functions: `GCB0→AUDIO_PA
 `GCB1→EXTERNAL_ALARM`, `GCB2→B+_CONTROL`, `GCB3→GPO1` (hence EXTERNAL_ALARM exists in HW even though
 GM600 firmware greys it out).
 
-**SQDET/CHACT/PLLIM run ASFIC→MCU; they are NOT on the accessory connector** — tap them on the board
-at U0201 if needed.
+**SQDET/CHACT/PLLIM run ASFIC→MCU; they are NOT on the accessory connector.** Note **U0201 is a BGA**
+(the A4/H1 grid designators = ball grid), so its pads are untappable. Tap at the **QFP MCU U0101**
+instead: **PLLIM lands on U0101 pin 10 = `PA1_IC2`** (a 68HC11 Input-Capture pin — the MCU measures
+the PLLIM square-wave period to decode PL), confirmed by tracing the page-9 schematic. Pin 10 is in
+the Port-A capture cluster (…pin9=`PA2_IC1`, pin10=`PA1_IC2`, pin11=`PA0_IC3`). It's an MCU input, so
+tapping is read-only/benign; use fine wire + strain relief, buffer (74HC14) for a long run.
 
 Repeater hookup options:
 - **PL-gated COR straight off the board (best):** `SQDET` (U0201 H1, carrier) + `PLLIM` (U0201 A4,
