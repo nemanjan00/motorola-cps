@@ -29,7 +29,7 @@ Occupancy of the 640 bytes (`.`=`00`, `f`=`FF`, `X`=data) with region status:
 0x0EC0..0x0EFF  00          empty
 0x0F00..0x0F07  Network tail (0x0F06–07 in Network checksum domain)
 0x0F08..0x0F32  PERSONALITY config — MAPPED: MPT numbers, Call Timers, power, options, group list
-0x0F33..0x0F66  "00 00 00 80" ×13 table — UNMAPPED meaning (not per-channel options)
+0x0F33..0x0F66  Own Group Numbers list — 13 empty slots (continues 0x0F2B; 15 groups max) — MAPPED
 0x0F67..0x0F82  conventional channel table (4×7B) — MAPPED (freq/PL/+6 options); exactly 4 entries
 0x0F83..0x0F99  Shortform Dialling buffer — MAPPED (BCD-nibble dial strings, 0xF-terminated)
 0x0FA0..0x0FF3  FF           unused padding
@@ -193,6 +193,12 @@ run at `0x0F2B`–`0x0F32` is the **Own Group Numbers** list (Edit → Trunking 
 2 entries × 4 bytes = `[Group Prefix u8 = 0x2B=43][Fleet Group BE16 = 0x157C=5500][Group u8]`, with
 `0x87`/`0x88` = displayed groups 907/908 (group = byte + 0x304; MPT group-address offset). Talkgroup
 Enable (No/No) isn't in these 4 bytes — a flag elsewhere. Preceding byte `0x0F2A` = 0x00.
+
+The list continues into **`0x0F33`–`0x0F66` = 13 more 4-byte slots** (empty = `00 00 00 80`), so up
+to **15 Own Group entries** total. Confirmed by adding a 3rd entry in DPS → slot `0x0F33` filled
+`2B 15 7C 88` (verifying the `[prefix][fleet BE16][group]` format and the `0x80`→populated marker).
+That add also bumped **`0x0F1D`** `02`→`03`, so `0x0F1D` low bits = **Own Group count** (bits 4,5 of
+the same byte are the NPD flags above — a packed count+flags byte).
 
 ## Common Radio Parameters — personality config region `0x0F00`–`0x0F32`
 
