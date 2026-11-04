@@ -160,9 +160,13 @@ Correlated to the radio dump (the sample `dps.net` has *different* values, so on
 To byte-map the radio's actual network values — **the `.rad`-export path does NOT work**: tried it
 (WDPS_DP Read Radio → File→Save, Format=Radio → `RAD1`, 3025 B NEW `.rad`), and the embedded `.net`
 section decodes to **KEY9 filler** (`F6 39 2B A8 0D 51 C7 4D C2` repeat = empty), i.e. WDPS_DP does
-not expose the live network data as `.net`. So binding network bytes needs the **native→`.net`
-transform reversed from WDPS_NP.EXE** (its 9 editors + the `dseg54` descriptor table), then applied
-to `native-eeprom.bin`. **Not yet done.**
+not expose the live network data as `.net`. So binding network bytes needs either a **live
+write-contrast** (WDPS_DP's MPT-network editor → Write Radio → diff, the method that bound the
+personality options — see [LIVE_CAPTURE.md](LIVE_CAPTURE.md)) or the **native→`.net` transform
+reversed statically**. Note: the `dseg54` 14-byte table is **NOT** that transform — it is a Zinc UI
+*layout* table (reader `sub_791AC` is a proportional-geometry engine; see
+[FIELD_MAP.md](FIELD_MAP.md)). Radio-offset binding lives in the `c_field`/`c_new` constructors.
+**Not yet done.** The complete field *inventory* is in [FIELD_DICTIONARY.md](FIELD_DICTIONARY.md).
 
 All three quick contrast avenues are blocked (verified): (1) WDPS_NP has no Read-Radio; (2) WDPS_DP's
 `.rad` export decodes to KEY9 filler (network not exposed); (3) opening a foreign `.net` (dps.net)
@@ -181,8 +185,14 @@ network block `0x0E13`–`0x0F07` is a real transform, not a direct correlation.
 **Block boundary:** the checksum-domain probe puts `0x0F06`–`0x0F07` in the **Network** block and
 `0x0F08`+ in the **Personality** block. So MPT *Personality* Data / Call Timers / Common Radio
 params are all personality; the ~240-byte **Network** block (`0x0E13`–`0x0F07`, MPT system params)
-is the separate "Network" data source edited by **`WDPS_NP.EXE`** — still essentially unmapped (its
-field layout is the 60-record descriptor table at NP file `0x9B9E0` / IDA `dseg54`).
+is the separate "Network" data source, editable in **`WDPS_DP.EXE`** (which also contains the full
+MPT1327 network form symbols and can Read/Write Radio) as well as `WDPS_NP.EXE`. Its field set is
+fully enumerated in [FIELD_DICTIONARY.md](FIELD_DICTIONARY.md) (MPT1327 timers `T*`/counters `N*`,
+call-type enables, fleet/group numbering, control-channel list, NDD/preferential dialling, operator
+IDs, dialling plan). Byte-offset binding within `0x0E13`–`0x0F07` is partially correlated above
+(Control Channel List `0x0E5F`, Channel Frequency Plan `0x0EB0`); the rest needs write-contrast.
+(The NP `0x9B9E0`/`dseg54` 14-byte table is a Zinc UI layout table, not the codeplug map — see
+[FIELD_MAP.md](FIELD_MAP.md).)
 
 **Derived (not stored):** Group Ident 7007, Highest Group No. 979, Own No. Prefix 243, Own Ident 124
 are absent from the dump in any BE16/LE16/BCD form — they are computed MPT1327 address values
@@ -331,14 +341,11 @@ either, and the native byte6→option decode is pack/unpack code, not stored met
 | +2 | Tx BE16 | freq formula |
 | +4 | Tx PL index | u8; CH4 = 0x13 (19 = 123.0 Hz), others 0 — **confirmed** |
 | +5 | Rx PL index | u8; 0 on all channels — **inferred** |
-| +6 | flags/marker | u8; **constant 0x08** on all 4 channels |
+| +6 | **options** | u8; default `0x08` — **bound by write-contrast** (see "Per-channel options" above) |
 
-The per-channel options (power/inhibit/monitor/data) are **not individually locatable**: all four
-channels are Power=High / Inhibit=Off / Monitor=No / Data=No, so there is no value contrast; byte+5
-and byte+6 are the only non-freq/PL per-channel bytes and are constant (`00`, `08`). Whether `+6`
-packs those flags (so `0x08` = the all-default encoding) or is a record marker with options bit-packed
-elsewhere could not be decided from static data or the no-contrast RAM.
-
-**To finish:** a write-contrast capture — change one option in DPS, Write Radio, diff the native
-`0x17` payload against `native-eeprom.bin` — or read a radio whose channels have differing options.
-That is the only way to assign these bits.
+**RESOLVED (write-contrast):** the `+6` byte **is** the per-channel options bitfield, not a record
+marker. The earlier "constant 0x08 / not locatable" note (below) was from the no-contrast static
+read; a later DPS-edit→Write Radio→diff bound every bit: bit0 Data, bits2:1 Tx Inhibit, bit3 Tx
+Power (default 1=High → `0x08`), bit4 Monitor. Full table in the "Per-channel options in the +6 byte"
+section earlier. Each edit also moved the personality checksum byte `0x0FF4` by the same delta
+(additive). This is the same method to finish the network block.

@@ -94,6 +94,15 @@ def set_conv(d, i, **kw):
   diff two real files with known GUI edits.
 - 66-single network field order (0xDC–0x1E3): sample not at defaults, can't
   anchor by value.
-- NP seg54 (file 0x9B9E0): 59 × 14-byte records mapping fields to **radio
-  codeplug bit positions** (nibble/bit packing, reader at file 0x795B4) — the
-  on-air/EEPROM layout, for future radio-I/O work.
+- NP seg54 (file 0x9B9E0): 59 × 14-byte records — **CORRECTED: these are UI
+  field *layout* descriptors, NOT radio bit positions.** The "reader at file
+  0x795B4" is `sub_791AC`, a Zinc proportional-geometry layout engine: it walks
+  the records (stride 0x0E, 0xFFFF terminator), matches each by a 32-bit field
+  key (rec+0/+2) against a field object's `[+46h]`, then computes screen
+  x/y/w/h via `__aFlmul`/`__aFldiv` and calls widget setter vtable slots
+  (`+44h/+48h/+30h`). `sub_772A0` (its caller) builds the window. So neither the
+  14-byte table nor the 40-byte registry encodes EEPROM offsets — offset binding
+  is applied in the `c_field`/`c_new` constructors. Earlier "radio bit positions"
+  reading was wrong (it matched the stale note in CODEPLUG_BITMAP). See
+  [FIELD_DICTIONARY.md](FIELD_DICTIONARY.md) for the full 195-field inventory and
+  [PACKED_LAYOUT.md](PACKED_LAYOUT.md).
