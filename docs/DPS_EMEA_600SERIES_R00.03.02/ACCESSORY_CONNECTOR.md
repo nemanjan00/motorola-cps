@@ -51,18 +51,27 @@ audio/signalling filter). The squelch logic is on the ASFIC:
 - **`SQDET` = ASFIC U0201 pin H1** — Squelch Detect (noise/carrier COS): the radio's carrier-operated
   squelch status, i.e. a repeater COR.
 - **`CHACT` = pin H2** — Channel Activity.
-- Related ASFIC pins: `PLIN` (J7, recovered PL in), `SQIN` (H7), `PLCLK` (C3), `RSSI` (G8, in). The
-  ASFIC *filters* PL but the valid-tone decision is firmware (MCU reads it) — there is **no dedicated
-  "PL valid" output pin**.
+- **`PLLIM` = ASFIC U0201 pin G4** — PL Limiter output: the RECEIVED PL (CTCSS) sub-audible tone after
+  the ASFIC's PL bandpass filter + hard limiter, as a clean logic square wave. This is what the MCU
+  captures to decode PL — tap it to read the actual received tone (measure period / compare to your
+  expected PL in the controller, or feed a tone decoder). Input side: `PLIN` (J7). `RXLIMOUT` (J4) is
+  the main RX-audio limiter (data/discriminator path).
+- The valid-tone *decision* is firmware (MCU), so there is no "PL valid" pin — but `PLLIM` gives the
+  raw filtered+limited tone to do the compare yourself.
 
-**SQDET/CHACT run ASFIC→MCU; they are NOT on the accessory connector** — tap them on the board at
-U0201 if needed.
+ASFIC general-control-bit outputs drive the GP/alarm functions: `GCB0→AUDIO_PA_ENABLE`,
+`GCB1→EXTERNAL_ALARM`, `GCB2→B+_CONTROL`, `GCB3→GPO1` (hence EXTERNAL_ALARM exists in HW even though
+GM600 firmware greys it out).
+
+**SQDET/CHACT/PLLIM run ASFIC→MCU; they are NOT on the accessory connector** — tap them on the board
+at U0201 if needed.
 
 Repeater hookup options:
-- **Carrier squelch (COS):** tap `SQDET` (U0201 H1) on the board; or threshold **RSSI** (buffered as
-  `RSSI_BUF` via R0210 1k → connector **pin 15**) externally.
-- **Tone squelch (PL), no board mod:** feed **`FLT_RX_AUDIO`** (flat/discriminator RX, continuous,
-  buffered by U0202-2 MC3403 unity gain → connector **pin 11**) into an external CTCSS decoder; its
-  tone-valid output is the TONE SQL. (`RX_AUDIO`, the de-emphasized path via U0202-4, is also on the
-  connector.)
+- **PL-gated COR straight off the board (best):** `SQDET` (U0201 H1, carrier) + `PLLIM` (U0201 G4,
+  received PL tone). Gate on SQDET AND a PLLIM period match = proper tone squelch, no external decoder.
+- **Carrier squelch (COS) only:** `SQDET` (H1); or threshold **RSSI** (buffered as `RSSI_BUF` via
+  R0210 1k → connector **pin 15**) externally.
+- **Tone squelch without a board tap:** feed **`FLT_RX_AUDIO`** (flat/discriminator RX, continuous,
+  U0202-2 MC3403 unity gain → connector **pin 11**) into an external CTCSS decoder. (`RX_AUDIO`,
+  de-emphasized via U0202-4, is also on the connector.)
 - **TX side:** `FLAT_TX_AUDIO` inject (**pin 5**), external PTT on GP1 (**pin 3**).
