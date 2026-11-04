@@ -32,10 +32,10 @@ instances:
     repeat: expr
     repeat-expr: 4
     doc: |
-      Conventional personality table at radio 0x0F67. 7-byte records; max 4 entries
-      on a GM600. The table ends at the first record whose Tx frequency word = 0xFFFF
-      (DPS field help: "Tx frequency 0 ends the entries"); the `options` byte is not the
-      terminator.
+      Conventional personality table at radio 0x0F67. 7-byte records; exactly 4 entries
+      on a GM600 (0x0F67-0x0F82). 0x0F83 onward is the Shortform Dialling buffer
+      (BCD-nibble dial strings), not a channel record — an earlier "Tx=0xFFFF terminator"
+      reading was a mis-parse of that buffer. See CODEPLUG_BITMAP.md.
 
 types:
   channel:

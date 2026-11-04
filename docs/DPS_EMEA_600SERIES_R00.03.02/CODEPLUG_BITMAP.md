@@ -30,8 +30,8 @@ Occupancy of the 640 bytes (`.`=`00`, `f`=`FF`, `X`=data) with region status:
 0x0F00..0x0F07  Network tail (0x0F06–07 in Network checksum domain)
 0x0F08..0x0F32  PERSONALITY config — MAPPED: MPT numbers, Call Timers, power, options, group list
 0x0F33..0x0F66  "00 00 00 80" ×13 table — UNMAPPED meaning (not per-channel options)
-0x0F67..0x0F82  conventional channel table (4×7B) — MAPPED (freq/PL/+6 options)
-0x0F83..0x0F99  scan/sequence table (bf32 0f32 1f32 …) — UNMAPPED meaning
+0x0F67..0x0F82  conventional channel table (4×7B) — MAPPED (freq/PL/+6 options); exactly 4 entries
+0x0F83..0x0F99  Shortform Dialling buffer — MAPPED (BCD-nibble dial strings, 0xF-terminated)
 0x0FA0..0x0FF3  FF           unused padding
 0x0FF4         personality checksum (additive) ✓ ; 0x0FF5–0x0FFB DPS-cleared field
 ```
@@ -168,8 +168,8 @@ are absent from the dump in any BE16/LE16/BCD form — they are computed MPT1327
 
 **`0x0F33`–`0x0F66` = 13 × 4-byte slots**, all `00 00 00 80` on this radio (only the 4th byte, a
 `0x80` empty/disabled marker, is set). An empty list (scan or call/phone list) — needs a populated
-entry (DPS contrast) to decode its fields. **`0x0F8A`–`0x0F99`** is an 11-entry 2-byte sequence
-(`bf32 0f32 1f32 … 9f33 0f33`), also list-like — meaning TBD by contrast.
+entry (DPS contrast) to decode its fields. (`0x0F83`–`0x0F99` is the Shortform Dialling buffer —
+see its own section, now decoded.)
 
 Still TBD in/after the number table: Indv./Group Dial Digits (3/3),
 Own No. Prefix (243), Indv./Group Dial Digits (3/3), Imitate OACSU, and the NPD/LNR flags & Tx Power
@@ -197,6 +197,26 @@ Still to bind here: Minimum Volume Level, Display Backlight Mode (enum), DTMF to
 overdialing flags, Keypad Lock, and the `b0 2b 07 d1 …` / `15 7c 87` data near `0x0F0C`–`0x0F32`
 (signaling/timers). Power levels being calibration bytes means a host can't set watts directly
 without the cal curve.
+
+## Shortform Dialling buffer — `0x0F83`–`0x0F99` (contrast-confirmed)
+
+DTMF dial strings (Edit → Trunking → Shortform Dialling), **BCD-nibble packed, `0xF`-terminated**,
+one variable-length string per position, in fixed order. Nibble `0xB` = `*`. Bound by contrast
+(Base Call 306→999 → `0x0F83 30→99`, `0x0F84 6F→9F`; checksum `0x0FF4 E6→7F` = +0x99 = the data
+delta). Reference-radio bytes `30 6F FF FF FF 40 0F BF 32 0F 32 1F 32 3F 32 4F 32 5F 32 6F 32 7F 32`
+decode as:
+
+| position | nibbles | value |
+|---|---|---|
+| Base Call | `306|` | 306 |
+| A / B / C | `FF FF FF` | allocated (Conv Chan / Call-in-Absence / External Alarm) |
+| D | `400|` | 400 |
+| Ext Line | `B|` | `*` |
+| 1,2,3,4,… | `320| 321| 323| 324| 325| 326| 327|…` | 320,321,323,324,… |
+
+This region was previously mis-labelled a "ch5 end-marker / scan table"; it is the shortform buffer.
+The conventional channel table is therefore **exactly 4 entries** (`0x0F67`–`0x0F82`); `0x0F83` begins
+this buffer.
 
 ## Identity & info block — CONFIRMED
 
