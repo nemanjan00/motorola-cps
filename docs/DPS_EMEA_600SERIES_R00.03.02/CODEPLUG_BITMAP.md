@@ -116,7 +116,7 @@ baseline dump (six known values appear in the dialog's order — not coincidence
 
 | radio addr | field | value on ref radio |
 |---|---|---|
-| `0x0F08` (u8) | Own Prefix (MPT1327 format) | 43 (`0x2B`) |
+| `0x0F08` bits0-5 | Own Prefix (MPT1327 format) | 43 (`0x2B`); bit7 = **LNR Enable** (inverted: set=off), bit6 spare |
 | `0x0F09` BE16 | Own Fleet Indv. No. | 2001 (`0x07D1`) |
 | `0x0F0B` BE16 | Own Unit No. (= radio identity) | 322 (`0x0142`) |
 | `0x0F0D` BE16 | Highest Unit No. | 899 (`0x0383`) |
@@ -132,6 +132,10 @@ baseline dump (six known values appear in the dialog's order — not coincidence
 - `0x0F27` u8 = Normal Call Activation Delay (0.25 s units; `08`=2 s — inferred, same pair)
 - `0x0F28` u8 = External Alarm Duration (seconds; `01`→`05` for 1→5 s)
 (All contrast-confirmed except `0x0F27`; checksum `0x0FF4` tracked each.)
+
+**MPT flags** (contrast): `0x0F1D` bits 4,5 = Alert Tones in NPD / MAINT Telegrams in NPD (one
+each, order TBD); `0x0F08` bit7 = LNR Enable (inverted). Still TBD here: Imitate OACSU, MPT Tx
+Power Level combo (likely mirrors per-channel `+6` bit3), Highest Group No., Indv/Group Dial Digits.
 
 ### Network block structure (`0x0E13`–`0x0F07`, from WDPS_NP)
 
