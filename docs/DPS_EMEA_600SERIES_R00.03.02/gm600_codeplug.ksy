@@ -3,60 +3,272 @@ meta:
   title: Motorola GM600 native codeplug (68HC11 internal EEPROM, radio 0x0D80-0x0FFF)
   file-extension: bin
   endian: be
-  bit-endian: be
 doc: |
   Native on-air/EEPROM codeplug of a Motorola GM600 (600-series, MPT1327), as read
   from the radio over SBEP (opcode 0x11) at radio address 0x0D80-0x0FFF (640 bytes).
-  Offsets here are relative to the start of that 640-byte block (file offset 0 = radio 0x0D80).
+  File offset 0 = radio 0x0D80, so (radio address - 0x0D80) = offset here.
 
-  Reverse engineered against ground truth: a live DPS "Read Radio" of radio serial
-  807IYA0903 (model M08RHF4CK3) and the DPS-decoded .per. Frequency formula, channel
-  table, PL tone indices and per-channel option bits are all bound by live DPS
-  write-contrast. See CODEPLUG_BITMAP.md, FIELD_HELP_REFERENCE.md.
+  Everything in this spec is bound to the bit against ground truth: a live DPS
+  "Read Radio" of radio serial 807IYA0903 (model M08RHF4CK3, UHF R-band) plus a
+  large set of DPS write-contrasts (change one field in DPS -> Write Radio -> diff
+  the dump). Values cited in docs are this reference radio's. See CODEPLUG_BITMAP.md,
+  FIELD_HELP_REFERENCE.md, LIVE_CAPTURE.md.
 
-  Not modeled here (out of scope / not byte-bound): the MPT1327 network/trunking block
-  (radio ~0x0E13-0x0F07, fields enumerated in FIELD_DICTIONARY.md but offsets not pinned),
-  the factory RF-alignment grid (radio 0x0D80-0x0E12, read-only), and Transmit Time-out
-  (known in GUI, personality block, exact offset not yet bound).
+  640-byte block map (all bytes accounted for):
+    0x000-0x092  alignment_block  radio 0x0D80-0x0E12  READ-ONLY factory cal (serial, softpot, band grid)
+    0x093-0x187  network_block    radio 0x0E13-0x0F07  MPT1327 *system* data (mostly not byte-bound; out of scope)
+    0x188-0x1AA  personality cfg  radio 0x0F08-0x0F2A  MPT numbers, call timers, power, flags (bound)
+    0x1AB-0x1E6  own_groups[15]   radio 0x0F2B-0x0F66  Own Group Numbers list
+    0x1E7-0x202  channels[4]      radio 0x0F67-0x0F82  conventional channel table
+    0x203-0x219  shortform        radio 0x0F83-0x0F99  Shortform Dialling buffer (BCD nibbles)
+    0x21A-0x273  personality_tail radio 0x0F9A-0x0FF3  remaining personality (not byte-bound)
+    0x274        pers checksum    radio 0x0FF4         additive personality checksum
+    0x275-0x27B  trailing_field   radio 0x0FF5-0x0FFB  factory/firmware marker
+    0x27C-0x27F  final_tail       radio 0x0FFC-0x0FFF  DPS leaves untouched
 
 instances:
+
+  # ---- 0x000-0x092 : alignment / factory block (read-only) ----
+  alignment_block:
+    pos: 0x00
+    size: 0x93
+    doc: |
+      Radio/alignment block (radio 0x0D80-0x0E12), READ-ONLY (DPS never rewrites it).
+      Holds the serial (below), tuning/softpot values, and the band-calibration grid
+      at radio 0x0DDA (file 0x5A). Internals not byte-decoded (needs TUNER_PRO).
   serial:
     pos: 0x08
     type: str
     size: 12
     encoding: ASCII
-    doc: Radio serial + suffix, e.g. "807IYA0903CG" (radio 0x0D88).
-  identity:
+    doc: Radio serial + 2-char suffix, e.g. "807IYA0903CG" (radio 0x0D88).
+
+  # ---- 0x093-0x187 : MPT1327 network/system block (out of scope) ----
+  network_block:
+    pos: 0x93
+    size: 0xF5
+    doc: |
+      MPT1327 *system* definition (radio 0x0E13-0x0F07, ~240 B): network specific,
+      hunt options, radio flags, preferential NDD, access authorisation, control
+      channel list, channel frequency plan, counters, timers. Authored as a .net in
+      WDPS_NP.EXE and merged at programming time. Fields fully enumerated in
+      FIELD_DICTIONARY.md; per-byte binding intentionally OUT OF SCOPE (not needed for
+      conventional use). Two sub-regions are offset-correlated (below). 0x0F06-0x0F07
+      are in the Network checksum domain.
+  control_channel_list:
+    pos: 0xDF
+    size: 14
+    doc: |
+      Control Channel List (radio 0x0E5F-0x0E6C): 8 entries, radio channel numbers
+      (ref: 0C 09 05 0B 03 07 02 0A) with Time-shared / Home-Channel flag bits. Offset
+      correlated, exact per-entry layout not pinned.
+  channel_frequency_plan:
+    pos: 0x130
+    size: 14
+    doc: |
+      Channel Frequency Plan (radio 0x0EB0-0x0EBD): trunked channel-number -> frequency
+      map as BE16 words using the same freq formula as the conventional channels
+      (0x3778->446.00, 0xACFE->446.99, 0xA9DE->441.99 MHz). Offset correlated.
+
+  # ---- 0x188-0x1AA : personality config (MPT numbers / timers / power / flags) ----
+  own_prefix_flags:
+    pos: 0x188
+    type: prefix_flags
+    doc: radio 0x0F08. bits0-5 Own Prefix (MPT1327 fmt), bit7 LNR Enable (inverted).
+  own_fleet_indv_no:
+    pos: 0x189
+    type: u2
+    doc: Own Fleet Indv. No. (radio 0x0F09), e.g. 2001.
+  own_unit_no:
     pos: 0x18b
     type: u2
-    doc: MPT1327 own number / Own Unit Number (BE16), e.g. 322 (radio 0x0F0B).
+    doc: Own Unit No. = displayed radio identity (radio 0x0F0B), e.g. 322.
+  highest_unit_no:
+    pos: 0x18d
+    type: u2
+    doc: Highest Unit No. (radio 0x0F0D), e.g. 899.
+  lowest_callable_no:
+    pos: 0x18f
+    type: u2
+    doc: Lowest Callable No. (radio 0x0F0F), e.g. 200.
+  highest_callable_no:
+    pos: 0x191
+    type: u2
+    doc: Highest Callable No. (radio 0x0F11), e.g. 799.
+  own_fleet_group_no:
+    pos: 0x193
+    type: u2
+    doc: Own Fleet Group No. (radio 0x0F13), e.g. 5500.
+  limit_normal_call_s:
+    pos: 0x196
+    type: u2
+    doc: Limit Normal Call Duration, seconds (radio 0x0F16), e.g. 300 = 05:00.
+  limit_emergency_call_s:
+    pos: 0x198
+    type: u2
+    doc: Limit Emergency Call Duration, seconds (radio 0x0F18), e.g. 30 = 00:30.
+  call_enable_mask:
+    pos: 0x19a
+    type: u2
+    doc: |
+      Call Enable bitmask (radio 0x0F1A-0x0F1B), 12+ call-type flags; BF FF = all on
+      (Edit->Trunking->Call Enable). Exact bit->call-type order TBD.
+  call_in_absence_delay_s:
+    pos: 0x19c
+    type: u1
+    doc: Call in Absence Delay, seconds (radio 0x0F1C).
+  group_count_flags:
+    pos: 0x19d
+    type: group_count_flags
+    doc: radio 0x0F1D. low bits = Own Group count; bit4/bit5 = NPD flags.
+  low_power_level:
+    pos: 0x19e
+    type: u1
+    doc: |
+      Low Power level (radio 0x0F1E), CALIBRATED byte (not raw watts): 5 W=0x2D,
+      8 W=0x39 (~+4/W). Host can't set watts without the cal curve.
+  high_power_level:
+    pos: 0x19f
+    type: u1
+    doc: High Power level (radio 0x0F1F), calibrated byte (25 W=0x64, 24 W=0x62, ~-2/W).
+  acoustic_feedback_byte:
+    pos: 0x1a3
+    type: u1
+    doc: radio 0x0F23; bit6 (0x40) = Acoustic Feedback enabled (see acoustic_feedback).
+  alert_tone_vol_offset:
+    pos: 0x1a5
+    type: u1
+    doc: Alert Tone Volume Offset (radio 0x0F25), linear (0->0x00, 4->0x04).
+  emergency_call_activation_delay:
+    pos: 0x1a6
+    type: u1
+    doc: Emergency Call Activation Delay (radio 0x0F26), 0.25 s units (3 s=0x0C, 1 s=0x04).
+  normal_call_activation_delay:
+    pos: 0x1a7
+    type: u1
+    doc: Normal Call Activation Delay (radio 0x0F27), 0.25 s units (0x08 = 2 s, inferred).
+  external_alarm_duration_s:
+    pos: 0x1a8
+    type: u1
+    doc: External Alarm Duration, seconds (radio 0x0F28), 0x01->0x05 = 1->5 s.
+  telephone_handset_byte:
+    pos: 0x1aa
+    type: u1
+    doc: radio 0x0F2A; bit7 (0x80) = Telephone Type Handset enabled (see telephone_type_handset).
+  # derived bit flags (reference the raw bytes above)
+  acoustic_feedback:
+    value: (acoustic_feedback_byte & 0x40) != 0
+    doc: Acoustic Feedback enabled (0x0F23 bit6).
+  telephone_type_handset:
+    value: (telephone_handset_byte & 0x80) != 0
+    doc: Telephone Type Handset fitted (0x0F2A bit7).
+
+  # ---- 0x1AB-0x1E6 : Own Group Numbers list ----
+  own_groups:
+    pos: 0x1ab
+    type: own_group
+    repeat: expr
+    repeat-expr: 15
+    doc: |
+      Own Group Numbers (radio 0x0F2B-0x0F66), up to 15 entries x 4 bytes
+      (Edit->Trunking->Own Group Numbers). Empty entry = 00 00 00 80.
+
+  # ---- 0x1E7-0x202 : conventional channel table ----
   channels:
     pos: 0x1e7
     type: channel
     repeat: expr
     repeat-expr: 4
     doc: |
-      Conventional personality table at radio 0x0F67. 7-byte records; exactly 4 entries
-      on a GM600 (0x0F67-0x0F82). 0x0F83 onward is the Shortform Dialling buffer
-      (BCD-nibble dial strings), not a channel record. See CODEPLUG_BITMAP.md.
+      Conventional personality table (radio 0x0F67-0x0F82). 7-byte records, exactly 4
+      on a GM600. The table ends at a record whose Tx word = 0xFFFF; 0x0F83 onward is
+      the Shortform buffer, not channels.
+
+  # ---- 0x203-0x219 : Shortform Dialling buffer ----
+  shortform_dialling:
+    pos: 0x203
+    size: 0x17
+    doc: |
+      Shortform Dialling buffer (radio 0x0F83-0x0F99). DTMF dial strings, BCD-nibble
+      packed, 0xF-terminated, one variable-length string per position in fixed order
+      (nibble 0xB = '*'). Ref bytes decode to Base Call 306, etc.
+
+  # ---- 0x21A-0x273 : remaining personality (not byte-bound) ----
+  personality_tail:
+    pos: 0x21a
+    size: 0x5a
+    doc: |
+      Remaining personality bytes (radio 0x0F9A-0x0FF3): more signalling/timers and
+      undecoded config inside the 0x0FF4 checksum domain. Not byte-bound.
+
+  # ---- 0x274 / 0x275 / 0x27C : checksum + trailers ----
   personality_checksum:
     pos: 0x274
     type: u1
     doc: |
-      Personality-block checksum byte (radio 0x0FF4). Additive: stored low byte of a
-      running sum of the personality data (NOT 0xFF-sum). A host writing a modified
-      personality must recompute this (+= sum of its data-byte deltas). Summed range
-      ends before 0x0FF4; candidate extent ~radio 0x0F1D-0x0FE0 (not pinned exactly).
+      Personality checksum byte (radio 0x0FF4). ADDITIVE: stored low byte of a running
+      sum of the personality data (NOT 0xFF-sum). A host writing a modified personality
+      must recompute it (+= sum of its data-byte deltas). Tracked across every contrast
+      (e.g. Monitor=Yes moved data +0x10 and this byte E6->F6). Summed extent ends before
+      0x0FF4; candidate ~radio 0x0F1D-0x0FE0, not pinned exactly.
   trailing_field:
     pos: 0x275
     size: 7
     doc: |
       Factory/firmware-owned trailing field (radio 0x0FF5-0x0FFB). Factory value
-      20 00 00 00 00 11 DC; DPS blanks it to FF FF FF FF FF FF FF on write. Not a
-      checksum, not present in the decoded .per, not written by WSERIAL.EXE. Likely a
-      production/alignment/runtime marker; positive decode needs firmware RE.
+      20 00 00 00 00 11 DC; DPS blanks it to FF..FF on write. Not a checksum, not in the
+      decoded .per, not written by WSERIAL.EXE. Positive decode needs firmware RE.
+  final_tail:
+    pos: 0x27c
+    size: 4
+    doc: Radio 0x0FFC-0x0FFF. DPS's write leaves these untouched.
 
 types:
+  prefix_flags:
+    seq:
+      - id: raw
+        type: u1
+    instances:
+      own_prefix:
+        value: raw & 0x3f
+        doc: Own Prefix in MPT1327 format (bits 0-5), e.g. 43.
+      lnr_enabled:
+        value: (raw & 0x80) == 0
+        doc: LNR Enable (bit7 INVERTED - set means OFF). bit6 spare.
+
+  group_count_flags:
+    seq:
+      - id: raw
+        type: u1
+    instances:
+      own_group_count:
+        value: raw & 0x0f
+        doc: Number of populated Own Group entries (low bits), e.g. 2.
+      alert_tones_npd:
+        value: (raw & 0x10) != 0
+        doc: Alert Tones in NPD Calls (bit4; bit4/bit5 pairing with MAINT order TBD).
+      maint_telegrams_npd:
+        value: (raw & 0x20) != 0
+        doc: MAINT Telegrams in NPD Calls (bit5).
+
+  own_group:
+    seq:
+      - id: prefix
+        type: u1
+        doc: Group Prefix (e.g. 0x2B = 43).
+      - id: fleet_group
+        type: u2
+        doc: Fleet Group number BE16 (e.g. 0x157C = 5500).
+      - id: group_raw
+        type: u1
+        doc: Group byte; 0x80 on an empty slot.
+    instances:
+      is_empty:
+        value: prefix == 0 and group_raw == 0x80
+      group_number:
+        value: group_raw + 0x304
+        doc: Displayed group = group_raw + 0x304 (MPT group-address offset); e.g. 0x87->907.
+
   channel:
     seq:
       - id: rx_raw
@@ -76,14 +288,12 @@ types:
       - id: options
         type: u1
         doc: |
-          Per-channel options byte (radio +6, default 0x08). Decoded fields below
-          (data_channel, tx_inhibit, tx_power, monitor); bits 7:5 = opt_reserved.
+          Per-channel options byte (radio +6, default 0x08). Decoded below:
+          data_channel/tx_inhibit/tx_power/monitor; bits 7:5 = opt_reserved.
     instances:
       rx_hz:
         value: '375000000 + (rx_raw & 0x7fff) * (((rx_raw & 0x8000) != 0) ? 6250 : 5000)'
-        doc: |
-          Frequency in Hz. f = 375.000 MHz + (word & 0x7FFF) * step, where
-          step = 6.25 kHz if bit15 set, else 5 kHz.
+        doc: f = 375.000 MHz + (word & 0x7FFF) * step; step = 6.25 kHz if bit15 else 5 kHz.
       tx_hz:
         value: '375000000 + (tx_raw & 0x7fff) * (((tx_raw & 0x8000) != 0) ? 6250 : 5000)'
       is_simplex:
@@ -106,7 +316,7 @@ types:
         doc: Monitor / carrier squelch (options bit4).
       opt_reserved:
         value: (options >> 5) & 0x07
-        doc: Options bits 7:5 — not yet bound (always 0 on reference radio).
+        doc: Options bits 7:5 - not yet bound (0 on reference radio).
 
 enums:
   yes_no:
@@ -120,7 +330,7 @@ enums:
     1: on_busy
     2: unless_pl
   pl_tone:
-    # CTCSS/PL tone index. 0 = Disabled; names are <Motorola code>_<Hz>.
+    # CTCSS/PL tone index. 0 = Disabled; names are pl_<Motorola code>_<Hz>.
     # Source: FIELD_HELP_REFERENCE.md (confirmed idx 19 = 3Z = 123.0 Hz on ch4).
     0: disabled
     1: pl_xz_67_0
