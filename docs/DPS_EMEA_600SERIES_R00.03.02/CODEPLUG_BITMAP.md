@@ -151,6 +151,13 @@ not expose the live network data as `.net`. So binding network bytes needs the *
 transform reversed from WDPS_NP.EXE** (its 9 editors + the `dseg54` descriptor table), then applied
 to `native-eeprom.bin`. **Not yet done.**
 
+All three quick contrast avenues are blocked (verified): (1) WDPS_NP has no Read-Radio; (2) WDPS_DP's
+`.rad` export decodes to KEY9 filler (network not exposed); (3) opening a foreign `.net` (dps.net)
+in WDPS_DP is refused — *"Network data is incompatible with Personality data"* (the personality's
+fleet 5500 / groups 907-908 cross-validate against the network). So a network write-contrast needs a
+`.net` authored from scratch in WDPS_NP to match THIS radio's personality, then merged+written — a
+substantial task — or the merge transform reversed statically.
+
 Format note (new): a **`.rad` from this DPS is XOR-encoded** with the repeating 7-byte key
 `5D 29 EA 64 B3 7F 1C` (phase 0) — RAD1 magic `C6 1E 18 D5 7A 21 86 1D 34` ⊕ key = the plaintext
 `9B 37 F2 B1 C9 5E 9A 40 1D`. (The `.per` saved by this same DPS is plaintext — so `.per` plaintext
