@@ -144,9 +144,17 @@ Correlated to the radio dump (the sample `dps.net` has *different* values, so on
   `0xA9DE`→441.99 via the freq formula) — the number→MHz map.
 - `0x0E13`–`0x0E4F` = dense MPT-network/hunt/flags/NDD/access/counter/timer fields (per the editors).
 
-To byte-map the radio's actual network values: in WDPS_DP, Read Radio → File→Save a `.rad` (it
-embeds the radio's `.net` at file `0x000`–`0x4BC`), decode it with [FILE_FORMAT.md](FILE_FORMAT.md)
-/ [FIELD_MAP.md](FIELD_MAP.md), then value-match into `0x0E13`–`0x0F07`. **Not yet done.**
+To byte-map the radio's actual network values — **the `.rad`-export path does NOT work**: tried it
+(WDPS_DP Read Radio → File→Save, Format=Radio → `RAD1`, 3025 B NEW `.rad`), and the embedded `.net`
+section decodes to **KEY9 filler** (`F6 39 2B A8 0D 51 C7 4D C2` repeat = empty), i.e. WDPS_DP does
+not expose the live network data as `.net`. So binding network bytes needs the **native→`.net`
+transform reversed from WDPS_NP.EXE** (its 9 editors + the `dseg54` descriptor table), then applied
+to `native-eeprom.bin`. **Not yet done.**
+
+Format note (new): a **`.rad` from this DPS is XOR-encoded** with the repeating 7-byte key
+`5D 29 EA 64 B3 7F 1C` (phase 0) — RAD1 magic `C6 1E 18 D5 7A 21 86 1D 34` ⊕ key = the plaintext
+`9B 37 F2 B1 C9 5E 9A 40 1D`. (The `.per` saved by this same DPS is plaintext — so `.per` plaintext
+but `.rad` XOR'd in R00.05.04; see [FILE_FORMAT.md](FILE_FORMAT.md).)
 
 **Block boundary:** the checksum-domain probe puts `0x0F06`–`0x0F07` in the **Network** block and
 `0x0F08`+ in the **Personality** block. So MPT *Personality* Data / Call Timers / Common Radio
