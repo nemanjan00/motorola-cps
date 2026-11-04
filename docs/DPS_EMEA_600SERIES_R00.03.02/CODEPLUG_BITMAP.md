@@ -166,7 +166,10 @@ personality options — see [LIVE_CAPTURE.md](LIVE_CAPTURE.md)) or the **native�
 reversed statically**. Note: the `dseg54` 14-byte table is **NOT** that transform — it is a Zinc UI
 *layout* table (reader `sub_791AC` is a proportional-geometry engine; see
 [FIELD_MAP.md](FIELD_MAP.md)). Radio-offset binding lives in the `c_field`/`c_new` constructors.
-**Not yet done.** The complete field *inventory* is in [FIELD_DICTIONARY.md](FIELD_DICTIONARY.md).
+**Out of scope (project decision 2026-11-04): the trunking network block byte-binding is skipped** —
+its fields stay enumerated in [FIELD_DICTIONARY.md](FIELD_DICTIONARY.md) (the complete inventory) and
+a few offsets are correlated above, but the live write-contrast sweep to pin each byte is not being
+pursued (not needed for conventional use).
 
 All three quick contrast avenues are blocked (verified): (1) WDPS_NP has no Read-Radio; (2) WDPS_DP's
 `.rad` export decodes to KEY9 filler (network not exposed); (3) opening a foreign `.net` (dps.net)
