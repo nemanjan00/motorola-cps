@@ -36,10 +36,15 @@ Occupancy of the 640 bytes (`.`=`00`, `f`=`FF`, `X`=data) with region status:
 0x0FF4         personality checksum (additive) ✓ ; 0x0FF5–0x0FFB DPS-cleared field
 ```
 
-Large `00`/`FF` runs are genuinely unused on this radio (nothing to decode there). The real
-remaining work for "every bit": the **Network block** (`0x0E13`–`0x0F07`, via WDPS_NP), the two
-personality tables (`0x0F33`, `0x0F83`), the alignment/tuning region (via Tuner), and the leftover
-small config bytes in `0x0F15`–`0x0F29`.
+Large `00`/`FF` runs are genuinely unused on this radio (nothing to decode there). The
+**Personality block (`0x0F00`–`0x0FFB`) is now essentially fully mapped** — channels, options,
+MPT personality numbers, call timers, power/audio, Own Group list (+empty slots), Shortform buffer,
+Call Enable, NPD/LNR flags, checksum. Remaining for literal "every bit":
+- **Network block** `0x0E13`–`0x0F07` (~240 B, MPT *system* data) — needs a radio-compatible `.net`
+  authored in WDPS_NP + merge-write contrast, or the native↔`.net` transform reversed statically.
+- **Alignment/tuning** `0x0D80`–`0x0E12` — read-only factory cal; needs the TUNER_PRO tool.
+- A few obscure personality enums (Counter Direction, Backlight Mode, DTMF durations, dial digits,
+  Imitate OACSU, exact Call-Enable bit→flag order) — each a quick contrast when wanted.
 
 ## Frequency encoding — CONFIRMED (all 4 channels, 6 values)
 
