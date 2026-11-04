@@ -317,13 +317,15 @@ types:
       rx_hz:
         value: '375000000 + (rx_raw & 0x7fff) * (((rx_raw & 0x8000) != 0) ? 6250 : 5000)'
         doc: f = 375.000 MHz + (word & 0x7FFF) * step; step = 6.25 kHz if bit15 else 5 kHz.
-        # kaitai-editor extension (ignored by ksc): pick the 6.25 kHz grid (set
-        # bit15) when the value lands on it, else the 5 kHz grid.
-        -ke-write-expr: '((_value - 375000000) % 6250 == 0) ? (round((_value - 375000000) / 6250) | 0x8000) : round((_value - 375000000) / 5000)'
+        # kaitai-editor extension (ignored by ksc): prefer the 5 kHz grid (bit15 clear);
+        # fall back to the 6.25 kHz grid (set bit15) only when the value is not on the
+        # 5 kHz grid. Matches DPS (uses 5 kHz when it can, 6.25 kHz otherwise); the reverse
+        # preference would flip the step bit on dual-grid freqs like ch4 438.625 MHz.
+        -ke-write-expr: '((_value - 375000000) % 5000 == 0) ? round((_value - 375000000) / 5000) : (round((_value - 375000000) / 6250) | 0x8000)'
         -ke-write-target: rx_raw
       tx_hz:
         value: '375000000 + (tx_raw & 0x7fff) * (((tx_raw & 0x8000) != 0) ? 6250 : 5000)'
-        -ke-write-expr: '((_value - 375000000) % 6250 == 0) ? (round((_value - 375000000) / 6250) | 0x8000) : round((_value - 375000000) / 5000)'
+        -ke-write-expr: '((_value - 375000000) % 5000 == 0) ? round((_value - 375000000) / 5000) : (round((_value - 375000000) / 6250) | 0x8000)'
         -ke-write-target: tx_raw
       is_simplex:
         value: rx_raw == tx_raw
