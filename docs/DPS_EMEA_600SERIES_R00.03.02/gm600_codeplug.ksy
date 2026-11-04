@@ -55,6 +55,18 @@ instances:
       FIELD_DICTIONARY.md; per-byte binding intentionally OUT OF SCOPE (not needed for
       conventional use). Two sub-regions are offset-correlated (below). 0x0F06-0x0F07
       are in the Network checksum domain.
+
+      Inside this block is a packed "Radio Config Byte1" (the Radio Flags). Its bit
+      layout is DECODED (live WDPS_NP .net write-contrast, see FIELD_MAP.md), though its
+      exact offset within this block is not yet pinned (needs the .net->radio merge):
+        bit7 (0x80) = Registration On Power Up (inverted: 1 = disabled)
+        bits[6:5] (0x60) = Conventional Mode (0=Inhibit,1=Dealer,2=All,3=RegioNet43)
+        bit4 (0x10) = De/Pre-emphasis (0=MPT1327, 1=PAA1382)
+        bits[3:0] = Short Addressing PABX / Tx Timer Clear Down / Ignore LAB Subfield /
+                    Synch Pattern Type (not individually bound)
+      In the .net file this packed byte is at decoded offset 0x4A0 (value 0xE7 in the
+      sample DPS.NET). The "Radio Config Byte1/Byte2" shown in the Radio Flags dialog
+      (0x00) are a separate spare pair, NOT this packed byte.
   control_channel_list:
     pos: 0xDF
     size: 14
