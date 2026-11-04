@@ -23,6 +23,36 @@ Rx/Tx base Hz. Tail caveat: if freq plan is 15 records, tail is 7 dwords at 0x4A
 = (RadioCfg1=0xE7, RadioCfg2=0, NVote=4, LowestSys=1, HighestSys=1023, LMVote=18,
 TVote=5); either reading keeps 0x3F0/0x3F4 solid.
 
+### Radio Flags — single-field dwords + packed Radio Config Byte1 (live WDPS_NP contrast)
+
+Three of the "66 single fields" (dwords 0–65) are now name-mapped, by a live
+WDPS_NP `.net` write-contrast (edit one field in View→/Edit→Radio Flags, Save,
+XOR-decode, diff vs baseline `DPS.NET`; 2026-11-04). Each Radio-Flags field
+appears **twice** in the `.net`: as its own body dword, and as a bit in the
+**packed Radio Config Byte1 @ 0x4A0** (the compacted byte that merges into the
+radio network block). Header bytes 0xD5/0xD7–0xDB and the trailing file checksum
+(byte 0x4BC, last byte of the 1213-B NEW `.net`) change on every save — ignore them.
+
+| field | body dword | file off | Radio Config Byte1 @0x4A0 | values |
+|---|---|---|---|---|
+| Registration On Power Up | #46 | 0x0194 | bit7 `0x80` (inverted: 1 = disabled) | 0=off / 1=on (dword) |
+| De/Pre-emphasis | #48 | 0x019C | bit4 `0x10` | 0=MPT1327 / 1=PAA1382 |
+| Conventional Mode | #51 | 0x01A8 | bits[6:5] `0x60` | 0=Inhibit, 1=Dealer, 2=All, 3=RegioNet43 |
+
+So **Radio Config Byte1** (`0xE7` = `1110 0111` in sample `DPS.NET`) decodes as:
+bit7 Registration-on-powerup (inverted), bits[6:5] Conventional Mode, bit4
+De/Pre-emphasis, low nibble bits[3:0] = the remaining Radio-Flags checkboxes
+(Short Addressing PABX / Tx Timer Clear Down / Ignore LAB Subfield / Synch Pattern
+— not individually bound yet). The dword encoding is the authoritative/editable
+form; Byte1 is the packed form headed for the radio.
+
+NOTE: the "Radio Config Byte1/Byte2" **displayed** in the Radio Flags dialog
+(0x00 on both the GM600 and this `DPS.NET`) are a *separate* spare/override pair —
+NOT this packed 0x4A0 byte (which reads 0xE7 while the dialog shows 0x00). The
+radio-codeplug offset of the packed byte within the network block (0x0E13–0x0F07)
+still needs the `.net`→radio merge transform (out of scope); only the bit-packing
+and semantics are bound here.
+
 ## .RAD personality section (0x4BD–0xBCF; identical layout to .PER body)
 
 - **0x4BD**: word `02 00` (section tag); **0x4C0**: radio serial, ASCII 10+NUL
