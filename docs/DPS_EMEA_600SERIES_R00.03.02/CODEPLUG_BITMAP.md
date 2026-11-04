@@ -124,10 +124,14 @@ baseline dump (six known values appear in the dialog's order — not coincidence
 | `0x0F11` BE16 | Highest Callable No. | 799 (`0x031F`) |
 | `0x0F13` BE16 | Own Fleet Group No. | 5500 (`0x157C`) |
 
-**Call Timers** (Edit → Trunking → Call Timers) continue in the same packed area, BE16 seconds:
-`0x0F16` = Limit Normal Call Duration (300 s = 05:00), `0x0F18` = Limit Emergency Call Duration
-(30 s = 00:30) — both unique matches. The small activation/absence/alarm delays (10/1/3/2) are in
-`0x0F20`–`0x0F29` but need contrast to pin (values too common to match uniquely).
+**Call Timers** (Edit → Trunking → Call Timers), packed in this area:
+- `0x0F16` BE16 = Limit Normal Call Duration (300 s = 05:00)
+- `0x0F18` BE16 = Limit Emergency Call Duration (30 s = 00:30)
+- `0x0F1C` u8 = Call in Absence Delay (seconds; `CA`→`CF` for 10→15 s)
+- `0x0F26` u8 = Emergency Call Activation Delay (**0.25 s units**: 3 s=`0C`, 1 s=`04`)
+- `0x0F27` u8 = Normal Call Activation Delay (0.25 s units; `08`=2 s — inferred, same pair)
+- `0x0F28` u8 = External Alarm Duration (seconds; `01`→`05` for 1→5 s)
+(All contrast-confirmed except `0x0F27`; checksum `0x0FF4` tracked each.)
 
 ### Network block structure (`0x0E13`–`0x0F07`, from WDPS_NP)
 
