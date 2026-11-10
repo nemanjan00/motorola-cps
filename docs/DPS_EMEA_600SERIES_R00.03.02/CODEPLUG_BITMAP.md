@@ -278,21 +278,45 @@ this buffer.
 | `0x0F67`–`0x0F82` | **conventional channel table** (4×7 bytes) | **confirmed** |
 | `0x0F83`–`0x0FFF` | padding / trailing (`FF`-filled tail, trailing bytes) | not decoded |
 
-## Checksum — ADDITIVE; personality byte @ `0x0FF4` found
+## Checksum — SOLVED (firmware-verified): 5 per-block additive sums, `(Σ − 0x55) & 0xFF`
 
-DPS validates per-block checksums on read (`Radio / Network / Personality Data Checksum Failure`).
-The checksum is **additive, stored (not `0xFF−sum`)**: the Monitor write-contrast changed one data
-byte by `+0x10` and byte **`0x0FF4`** by `+0x10` (`E6 → F6`) — so `0x0FF4` is the **personality
-checksum byte** and it tracks the data sum with the same sign (`checksum = Σ(data) & 0xFF`). A host
-editing the personality must recompute it (`+= Σ of its data-byte deltas`).
+**Fully reversed from the radio firmware (`motofix.BIN`) and verified against the live codeplug.**
+The 640-byte codeplug is protected by **five per-block additive checksums**. Each checksum byte sits
+**immediately after its block's data** and equals:
 
-Summed range is still being pinned: on baseline, inclusive `0x0F1D–0x0FE0` sums to `0xE5` (≠ stored
-`0xE6`), while `0x0F1D–0x0FDF` sums to exactly `0xE6` — but `0x0FE0`–`0x0FF3` is all `0xFF`, so the
-sum can't pin the boundary in that run; `0x0FDF` is only a candidate (settle it with a contrast write
-to a byte just inside vs just outside `0x0FDF` and see which moves `0x0FF4`). The
-NETWORK block has its own checksum domain (`0x0F06` is in it — changing it → `Network Data Checksum
-Failure`); its checksum byte/range are not yet located. `sum(all 640) & 0xFF = 0xB0` (per-block, not
-whole-image). An earlier `0xFF−sum` claim here was wrong (caught by a pre-write-dump cross-check).
+```
+checksum = (Σ(block_data_bytes) − 0x55) & 0xFF
+```
+
+| Block | Data range (radio addr) | Checksum byte | DPS name |
+|-------|-------------------------|---------------|----------|
+| 1 | `0x0D80`–`0x0D84` (5 B)   | `0x0D85` | (serial/header) |
+| 2 | `0x0D86`–`0x0D92` (13 B)  | `0x0D93` | (serial/header) |
+| 3 | `0x0D94`–`0x0E11` (126 B) | `0x0E12` | **Radio** |
+| 4 | `0x0E13`–`0x0F06` (244 B) | `0x0F07` | **Network** |
+| 5 | `0x0F08`–`0x0FF3` (236 B) | `0x0FF4` | **Personality** |
+
+All five verified on the live `native-eeprom.bin` (computed == stored for every block). Patching any
+data byte and recomputing its block's checksum makes the radio accept the codeplug (confirmed in the
+68HC11 emulator: a bad checksum shows an error display, the corrected one boots normally).
+
+**Firmware evidence.** Per-block validator at `0xB8E1`/`0xB900` (bank 3): it sums the block byte-by-byte
+(each byte fetched through the banked reader `0x9E1E`) into an 8-bit accumulator, then reads the stored
+checksum byte at the block end and checks `stored == 0xAA − ~sum` (= `sum − 0x55`, since
+`0xAA − (0xFF − sum) = sum − 0x55`). The `Radio / Network / Personality Data Checksum Failure` strings
+map to blocks 3/4/5. (The earlier `0xFF−sum` and `Σ(data)&0xFF` guesses here were both close but wrong:
+the real relation carries the constant `−0x55` offset, and the personality range is `0x0F08–0x0FF3`,
+not the `0x0F1D–0x0FDF` guessed before the firmware was reversed.)
+
+```python
+# recompute all 5 codeplug checksums (radio-addr base 0x0D80); see tools/gm600_codeplug.py
+CKS = [0x0D85, 0x0D93, 0x0E12, 0x0F07, 0x0FF4]
+def fix_checksums(cp, base=0x0D80):           # cp = bytearray of the 640-byte codeplug
+    start = base
+    for c in CKS:
+        cp[c-base] = (sum(cp[start-base:c-base]) - 0x55) & 0xFF
+        start = c + 1
+```
 
 ## DPS clears a 7-byte field on write
 
