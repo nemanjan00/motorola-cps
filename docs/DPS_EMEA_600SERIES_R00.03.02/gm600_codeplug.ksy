@@ -58,24 +58,18 @@ instances:
       conventional use). Two sub-regions are offset-correlated (below). 0x0F06-0x0F07
       are in the Network checksum domain.
 
-      Inside this block is a packed "Radio Config Byte1" (the Radio Flags). Its bit
-      layout is DECODED (live WDPS_NP .net write-contrast, see FIELD_MAP.md), though its
-      exact offset within this block is not yet pinned (needs the .net->radio merge):
-        bit7 (0x80) = Registration On Power Up (inverted: 1 = disabled)
-        bits[6:5] (0x60) = Conventional Mode (0=Inhibit,1=Dealer,2=All,3=RegioNet43)
-        bit4 (0x10) = De/Pre-emphasis (0=MPT1327, 1=PAA1382)
-        bits[3:0] = Short Addressing PABX / Tx Timer Clear Down / Ignore LAB Subfield /
-                    Synch Pattern Type (not individually bound)
-      In the .net file this packed byte is at decoded offset 0x4A0 (value 0xE7 in the
-      sample DPS.NET). The "Radio Config Byte1/Byte2" shown in the Radio Flags dialog
-      (0x00) are a separate spare pair, NOT this packed byte.
+      The DPS .net/.rad "66 single fields" pack in order into 0x0E13-0x0E36 (bytes,
+      nibble pairs, one BE16), confirmed for 35 values against a DPS .rad of this radio;
+      their names are unbound (FIELD_MAP.md). An earlier "packed Radio Config Byte1"
+      bit decode is contradicted by the DPS files themselves; do not use it.
   control_channel_list:
-    pos: 0xDF
-    size: 14
+    pos: 0xDD
+    size: 16
     doc: |
-      Control Channel List (radio 0x0E5F-0x0E6C): 8 entries, radio channel numbers
-      (ref: 0C 09 05 0B 03 07 02 0A) with Time-shared / Home-Channel flag bits. Offset
-      correlated, exact per-entry layout not pinned.
+      Control Channel List (radio 0x0E5D-0x0E6C): 8 x 2-byte entries, channel number in
+      the low byte (bench radio: 0C 09 05 0B 03 07 02 0A, same order as the list in a DPS
+      .rad of this radio). Where the Time-shared / Home-Channel flags go is not pinned
+      (all clear in the reference); the high byte may carry them or channel bits 8-9.
   channel_frequency_plan:
     pos: 0x130
     size: 14

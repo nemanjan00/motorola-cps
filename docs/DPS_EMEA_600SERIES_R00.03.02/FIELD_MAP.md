@@ -19,39 +19,49 @@ function's field-count loops (66 singles, then 6×3, 32×3, 8×2, then freq plan
 | 0x4AC–0x4BB | 244–247 | Tail (Lowest/Highest System Channel, LMVote, TVote — or Radio Config Bytes + NVote; see caveat) | dwords |
 
 Sample anchors: freq plan entry 0 = (0, 420000000, 410000000) → 0x3F0/0x3F4 are
-Rx/Tx base Hz. Tail caveat: if freq plan is 15 records, tail is 7 dwords at 0x4A0
-= (RadioCfg1=0xE7, RadioCfg2=0, NVote=4, LowestSys=1, HighestSys=1023, LMVote=18,
-TVote=5); either reading keeps 0x3F0/0x3F4 solid.
+Rx/Tx base Hz. **The frequency plan is 15 records and the tail is 7 dwords at 0x4A0**
+(RadioCfg1, RadioCfg2, NVote, LowestSys, HighestSys, LMVote, TVote) — verified on `rad1.rad`
+(DPS read of the bench GM600): HighestSys = 80 and the plan holds channels 0, 1, 80; slots past
+the used ones hold filler garbage, not zeros. Sample `DPS.NET` tail = (0xE7, 0, 4, 1, 1023, 18, 5).
 
-### Radio Flags — single-field dwords + packed Radio Config Byte1 (live WDPS_NP contrast)
+### The 66 single fields = EEPROM network block, packed (verified, 2026-11-12)
 
-Three of the "66 single fields" (dwords 0–65) are now name-mapped, by a live
-WDPS_NP `.net` write-contrast (edit one field in View→/Edit→Radio Flags, Save,
-XOR-decode, diff vs baseline `DPS.NET`; 2026-11-04). Each Radio-Flags field
-appears **twice** in the `.net`: as its own body dword, and as a bit in the
-**packed Radio Config Byte1 @ 0x4A0** (the compacted byte that merges into the
-radio network block). Header bytes 0xD5/0xD7–0xDB and the trailing file checksum
-(byte 0x4BC, last byte of the 1213-B NEW `.net`) change on every save — ignore them.
+Comparing `rad1.rad` with the same radio's EEPROM (`native-eeprom.bin`), the single-field dwords
+appear in order from radio `0x0E13`, packed by size — 35 consecutive values match:
 
-| field | body dword | file off | Radio Config Byte1 @0x4A0 | values |
-|---|---|---|---|---|
-| Registration On Power Up | #46 | 0x0194 | bit7 `0x80` (inverted: 1 = disabled) | 0=off / 1=on (dword) |
-| De/Pre-emphasis | #48 | 0x019C | bit4 `0x10` | 0=MPT1327 / 1=PAA1382 |
-| Conventional Mode | #51 | 0x01A8 | bits[6:5] `0x60` | 0=Inhibit, 1=Dealer, 2=All, 3=RegioNet43 |
+| EEPROM | singles | packing |
+|---|---|---|
+| `0x0E13` | #0–#1 | bits, unresolved (`0x80` for 1, 0) |
+| `0x0E14` | #2, #3 | nibbles (`0x45` = 4, 5) |
+| `0x0E15`–`0x0E25` | #4–#20 | one byte each |
+| `0x0E26`–`0x0E27` | #21 | BE16 (515) |
+| `0x0E28`–`0x0E2E` | #22–#28 | one byte each |
+| `0x0E2F` | #29, #30 | nibbles (`0xAA` = 10, 10) |
+| `0x0E30`–`0x0E32` | #31–#33 | one byte each |
+| `0x0E33`–`0x0E36` | #34–#37 | unclear; `0x0E35` = #36, `0x0E36` = #37 |
+| `0x0E37`– | #38+ | nibble pair `0x11`, then BE16 words, not 1:1 in order |
 
-So **Radio Config Byte1** (`0xE7` = `1110 0111` in sample `DPS.NET`) decodes as:
-bit7 Registration-on-powerup (inverted), bits[6:5] Conventional Mode, bit4
-De/Pre-emphasis, low nibble bits[3:0] = the remaining Radio-Flags checkboxes
-(Short Addressing PABX / Tx Timer Clear Down / Ignore LAB Subfield / Synch Pattern
-— not individually bound yet). The dword encoding is the authoritative/editable
-form; Byte1 is the packed form headed for the radio.
+The Control Channel List (`rad1.rad`: 12, 9, 5, 11, 3, 7, 2, 10) is radio `0x0E5D`–`0x0E6C`,
+8 × 2-byte entries, channel in the low byte (earlier notes said `0x0E5F`, 2 bytes late).
+Names of the singles are still unmapped (one NP edit → DPS write → EEPROM diff per field).
 
-NOTE: the "Radio Config Byte1/Byte2" **displayed** in the Radio Flags dialog
-(0x00 on both the GM600 and this `DPS.NET`) are a *separate* spare/override pair —
-NOT this packed 0x4A0 byte (which reads 0xE7 while the dialog shows 0x00). The
-radio-codeplug offset of the packed byte within the network block (0x0E13–0x0F07)
-still needs the `.net`→radio merge transform (out of scope); only the bit-packing
-and semantics are bound here.
+### Radio Flags — single-field dwords (live WDPS_NP contrast)
+
+Three of the "66 single fields" are name-mapped by a live WDPS_NP `.net` write-contrast (edit
+one field in View→/Edit→Radio Flags, Save, XOR-decode, diff vs baseline `DPS.NET`; 2026-11-04).
+Header bytes 0xD5/0xD7–0xDB and the trailing file checksum change on every save — ignore them.
+
+| field | body dword | file off | values |
+|---|---|---|---|
+| Registration On Power Up | #46 | 0x0194 | 0=off / 1=on |
+| De/Pre-emphasis | #48 | 0x019C | 0=MPT1327 / 1=PAA1382 |
+| Conventional Mode | #51 | 0x01A8 | 0=Inhibit, 1=Dealer, 2=All, 3=RegioNet43 |
+
+**RETRACTED (2026-11-12):** an earlier version decoded these as bits of a "packed Radio Config
+Byte1 @ 0x4A0" (bit7 registration inverted, bits[6:5] conventional mode, bit4 de-emphasis). The
+files contradict it: `DPS.NET` has Conventional Mode = 2 but 0xE7 has bits[6:5] = 3; `rad1.rad`
+has Registration = 0 but 0x1A has bit7 = 0. 0x4A0 is the first tail dword (RadioCfg1), meaning
+unidentified. Where the three flags land in the radio network block is unknown.
 
 ## .RAD personality section (0x4BD–0xBCF; identical layout to .PER body)
 
@@ -62,7 +72,9 @@ and semantics are bound here.
 - 0x7F7–0x8D6: 14 × 16-byte records, (200,0,0,0) — probable shortform-dial/button
   number table [low confidence]
 - **0x8D7–0x956: Conventional Personality — 4 entries × 32 bytes (VERIFIED)**.
-  Order confirmed via field-dependency pair table (NP seg24, file 0x993C0+):
+  Order confirmed via field-dependency pair table (NP seg24, file 0x993C0+), and on `rad1.rad`:
+  Rx/Tx Hz, Tx Power = 1 and Tx PL = 19 match the bench radio's EEPROM channel table. In a
+  `.per` (plaintext) the same table is at 0x4F7 and the serial at 0x0E0.
 
 | +offset | Field | Encoding |
 |---------|-------|----------|

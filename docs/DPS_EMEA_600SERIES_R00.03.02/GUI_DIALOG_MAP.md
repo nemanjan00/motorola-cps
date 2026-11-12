@@ -28,9 +28,9 @@ Every network/system dialog is **view-only** in WDPS_DP (authored in WDPS_NP); e
 dialog is service-password-gated. Nothing else editable exists in the tree.
 
 **The three "ham" fields** (Registration On Power Up, De/Pre-emphasis, Conventional Mode) live only
-in the **view-only** View → Network → Radio Flags dialog, packed into **Radio Config Byte1/Byte2**
-(both `0x00` on this radio) in the network block — so they are NOT bindable by the WDPS_DP
-write-contrast method. See the Radio Flags entry below.
+in the **view-only** View → Network → Radio Flags dialog, so they are NOT bindable by the WDPS_DP
+write-contrast method. (The dialog's Radio Config Byte1/Byte2 read `0x00`; the earlier "the three
+flags pack into Byte1" decode is retracted — see FIELD_MAP.md.) See the Radio Flags entry below.
 
 ## Edit menu (editable radio data)
 
@@ -82,11 +82,11 @@ Current M08RHF4CK3; selectable table of PTX600/GP600 variants (AZP93VJ*, 146-174
   Voting Timer=10 min; RSSI margins LM1=6, LM2=6, LM3=0, LM4=0.
 - **Radio Flags:** Registration On Power Up=off; Short Addressing PABX Calls=on; Tx Timer Clear
   Down=off; Ignore LAB Subfield=on; Synch. Pattern Type=MPT 1327; **De/Pre-emphasis=MPT 1327**;
-  **Conventional Mode=All**; Radio Config Byte1=0x00, Byte2=0x00. ← the three "ham" fields pack here.
+  **Conventional Mode=All**; Radio Config Byte1=0x00, Byte2=0x00 (meaning unknown; the old "the three ham fields pack here" claim is retracted).
 - **Preferential NDD Data:** NDD Sample Duration=1 s; [Entry|Priority|Field Length|Sub-field] = 1|1|9|5.
 - **Access Authorisation:** [#|Identity|Class] = 1|000000000|Zone (Identity range 0-31).
 - **Control Channel List:** [Entry|Channel|Time-shared|Home]: 1:12, 2:9, 3:5, 4:11, 5:3, 6:7, 7:2, …
-  (matches radio bytes 0C 09 05 0B 03 07 02 … at 0x0E5F).
+  (matches radio entries 0C 09 05 0B 03 07 02 0A at 0x0E5D–0x0E6C, low bytes).
 - **Channel Frequency Plan:** [Entry|Channel|Rx|Tx]: 0 → 440.993750/445.993750; 1 → 441.000000/
   446.000000; 80 → 441.987500/446.987500. Range 403-470 MHz, step 5 / 6.25 kHz.
 - **Counters:** Continuous NC1=20,NC2=20,NV=1,NX1=2,NX2=10; Time-Shared NC1=0,NC2=0,NV=1,NX1=0,NX2=0;

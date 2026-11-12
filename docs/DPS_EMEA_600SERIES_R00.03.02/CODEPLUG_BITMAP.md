@@ -23,7 +23,7 @@ Occupancy of the 640 bytes (`.`=`00`, `f`=`FF`, `X`=data) with region status:
 0x0DA0..0x0E12 XXXX...      (factory alignment; needs the Tuner tool; not host-editable)
 0x0E13 XXXXXX.X.XXX.X.X  NETWORK block (MPT system params) — UNMAPPED (edited by WDPS_NP.EXE)
 0x0E20..0x0E4F  data        dense system data
-0x0E50..0x0E6F  sparse      small-value list @0x0E5F–0x0E6C (0C 09 05 0B 03 07 02 0A ...)
+0x0E50..0x0E6F  sparse      small-value list @0x0E5D–0x0E6C (0C 09 05 0B 03 07 02 0A ...)
 0x0E70..0x0EAE  00          empty/reserved on this radio
 0x0EB0 XXX.XXXXX.XXXXX.   likely system/control-channel frequencies (0x3778→446.0, 0xACFE→446.99)
 0x0EC0..0x0EFF  00          empty
@@ -153,7 +153,7 @@ has no Read-Radio — File→Open `.net` only). Its editors (= the block's secti
 Control Channel List, Channel Frequency Plan, Counters, Timers.**
 
 Correlated to the radio dump (the sample `dps.net` has *different* values, so only structure matches):
-- `0x0E5F`–`0x0E6C` = **Control Channel List** — 8 entries (radio: channel numbers `0C 09 05 0B 03 07
+- `0x0E5D`–`0x0E6C` = **Control Channel List** — 8 × 2-byte entries, channel in the low byte (verified vs `rad1.rad`) (radio: channel numbers `0C 09 05 0B 03 07
   02 0A`; dps.net sample had 58/62/64/77/…), with Time-shared / Home-Channel flag bits.
 - `0x0EB0`–`0x0EBD` = **Channel Frequency Plan** frequencies (`0x3778`→446.00, `0xACFE`→446.99,
   `0xA9DE`→441.99 via the freq formula) — the number→MHz map.
@@ -195,7 +195,7 @@ MPT1327 network form symbols and can Read/Write Radio) as well as `WDPS_NP.EXE`.
 fully enumerated in [FIELD_DICTIONARY.md](FIELD_DICTIONARY.md) (MPT1327 timers `T*`/counters `N*`,
 call-type enables, fleet/group numbering, control-channel list, NDD/preferential dialling, operator
 IDs, dialling plan). Byte-offset binding within `0x0E13`–`0x0F07` is partially correlated above
-(Control Channel List `0x0E5F`, Channel Frequency Plan `0x0EB0`); the rest needs write-contrast.
+(Control Channel List `0x0E5D`, Channel Frequency Plan `0x0EB0`); the rest needs write-contrast.
 (The NP `0x9B9E0`/`dseg54` 14-byte table is a Zinc UI layout table, not the codeplug map — see
 [FIELD_MAP.md](FIELD_MAP.md).)
 

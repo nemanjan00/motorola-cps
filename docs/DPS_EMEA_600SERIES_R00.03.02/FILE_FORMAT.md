@@ -1,7 +1,10 @@
 # DPS 600 Series — File Format (.NET / .PER / .RAD)
 
 **Status: fully decoded and verified** against the bundled samples `DPS.NET`
-(1213 bytes) and `DPS.RAD` (3025 bytes). All offsets below are post-decryption.
+(1213 bytes) and `DPS.RAD` (3025 bytes), and (2026-11-12) against three files DPS R00.05.04
+saved from the bench GM600: `rad1.rad` (XOR'd) and `radio.per` / `radio_mod.per` (2033 bytes,
+**plaintext** — `.per` is not ciphered). Magic, type, format and both checksums hold in 5/5.
+All offsets below are post-decryption.
 
 ## 1. Obfuscation — static 7-byte XOR
 
