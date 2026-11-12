@@ -17,6 +17,7 @@ Covers two distinct radio families:
   docs/                          ← git tracked (RE documentation only)
     REVERSING_GUIDE.md           ← process doc for new CPS versions
     MOTOROLA_PUBLIC_KNOWLEDGE.md ← community reference with crosscheck flags
+    GM600.md                     ← GM600 hardware/firmware analysis (full AT29C020 flash dump, verified)
     CPS_EMEA_R05.15/             ← Commercial Series CPS
       PROTOCOL_AND_STRUCTS.md    ← full ESBEP protocol, XML schema, field catalog
       DATA_PIPELINE.md           ← GUI↔binary↔EEPROM pipeline, byte maps, encoding
@@ -216,7 +217,8 @@ binaries built with Zinc Application Framework 4.0. Reads OLD GP1200/GM1200
 (GVN6007) RSS data.
 
 ### File formats (.net/.per/.rad) — cracked
-- Static repeating **7-byte XOR key `5D 29 EA 64 B3 7F 1C`**, phase 0 at offset 0
+- Static repeating **7-byte XOR key `5D 29 EA 64 B3 7F 1C`**, phase 0 at offset 0 (`.net`/`.rad`;
+  a `.per` saved by DPS R00.05.04 is plaintext, frequencies as LE32 Hz)
   (NOT the Waris LCG). Key hardcoded in WDPS_NP.EXE at 0x95BDA and 0x998C0.
 - Container: 9-byte magic → LE type word (0=net/1=per/2=rad) → LE format word
   (0x0200=OLD, 0x0300=NEW) @0xD3 → header checksum `(sum(0x00..0xDA)−0x55)&0xFF`
@@ -233,9 +235,16 @@ binaries built with Zinc Application Framework 4.0. Reads OLD GP1200/GM1200
 - Opcodes: 0x10 enter prog mode, 0x11 read block (**24-bit address**),
   0x13 query max block, 0x17 write block (0x84/0x85 result), 0x19 mode switch,
   0x20 softpot r/w, 0x21 set address, 0x22 tuning write, 0x23 identity strings.
+  GM600 firmware dispatch table (authoritative, radio side) adds 0x18 self-test,
+  0x26 factory backdoor (jump to request-supplied address), 0x2D/0x2E unknown —
+  see docs/GM600.md.
+- **GM600 firmware fully dumped** (AT29C020 flash, `motofix.BIN`): 68HC11K CPU,
+  16×16 KB banked pages via register 0x1058, dispatch table and glasgow-rib
+  findings verified byte-for-byte — docs/GM600.md.
 - ACK=`50` byte, NAK=`60`; retries 3, ACK timeout 200 ms, inter-byte gap 121 ms.
-- Personality regions are 0x7F1/0x799 bytes = .per body sizes (radio region IS
-  the .per body); alignment block 0x280 bytes @ radio addr 0xD80.
+- The whole GM600 codeplug is the 640-byte CPU internal EEPROM at 0x0D80-0x0FFF
+  (live DPS capture, glasgow-rib). The 0x7F1/0x799-byte .per body is a DPS-side
+  expansion; no such region exists in the radio.
 - `WSERIAL.EXE` is a dealer serializer (patches identity/service password into
   the EXE), not a comms tool. Service menus password-gated; default-programming
   menu requires a hardware dongle.
